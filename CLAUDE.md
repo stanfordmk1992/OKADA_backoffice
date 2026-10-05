@@ -1,6 +1,7 @@
 # OKADA 後台 — 需求工作流 — 主設定
 
 ## 版本
+v2.2(2026-10-05:新增後台功能盤點 `docs/inventory/` 與盤點工具 `tools/inventory/`)。
 v2.1(2026-10-05:開發產出定為原型(沒有後台原始碼);後台以 Playwright 瀏覽器只讀查驗,人工手動登入;原型推送到 GitHub,master 以 GitHub Pages 部署)。
 v2.0(2026-10-05:新增「已取消」狀態與「卡住」標記;定稿前清空待確認事項、定稿後內容鎖定,修改一律發起新需求;測試用例由產品寫、測試結果由測試寫、缺陷由新的開發代理修復;全部手動觸發;建立 git 分支與 worktree 流程)。
 v1.1(2026-10-05:新增四個角色檔 `roles/`)。
@@ -14,6 +15,7 @@ v1.0(2026-10-05:建立六節點需求看板與工作流)。
 | 後台(dev) | https://okada-dev-bo-2.scms2u.lol/promotions/settings/list(促銷活動設定列表) |
 | 需求看板 | https://claude.ai/artifact/1LzrjoTDoZyNa3njtoLJvP(狀態、優先級、需求內容的唯一來源) |
 | 看板頁面原始碼 | `board/okada-board.html`(改看板時改這份,再發布到上面的網址) |
+| 後台功能盤點 | `docs/inventory/`(模塊/功能點、產品說明、欄位控制、架構、驗證報告;由 `tools/inventory/` 產生,寫需求與原型前先查這裡) |
 | 原型代碼倉庫 | https://github.com/stanfordmk1992/OKADA_backoffice(remote `origin`) |
 | 原型線上版 | https://stanfordmk1992.github.io/OKADA_backoffice/(GitHub Pages,只部署 `master` 的 `prototype/`) |
 
