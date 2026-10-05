@@ -40,6 +40,15 @@
 - 不改規格、不改優先級、不決定範圍
 - 不寫測試用例、不寫測試結果、不自己判定測試通過
 
+## 產出:HTML 原型
+- 沒有後台原始碼;開發 = 在 `prototype/` 做出可操作的靜態 HTML/CSS/JS 原型,不需建置
+- 動工前先用 Playwright **只讀查驗**真實後台的對應頁面(版面、欄位、用語、流程),原型照現況重現,再加上本需求的改動;查驗規則見 CLAUDE.md「後台查驗」
+- 頁面結構:`prototype/index.html` 為原型首頁(列出各頁面),每個後台頁面一個檔案,路徑比照後台網址(例:`prototype/promotions/settings/list.html`)
+- 共用樣式與元件放 `prototype/assets/`,不同需求修改同一頁面時,只改本需求範圍內的部分
+- 只用假資料;不得放入後台抄來的真實玩家、金額、帳號資訊
+- 測試用例的每個操作都要能在原型上實際點得到
+
 ## 環境
-- 技術棧、原始碼位置、部署到 dev 後台的方式:**待補**(見 CLAUDE.md「尚未就緒」)
-- 後台(dev):https://okada-dev-bo-2.scms2u.lol
+- 本地執行:在 worktree 內 `npx -y http-server@14.1.1 prototype -p 4173 -c-1`,開 http://localhost:4173
+- 交付:commit 後 `git push -u origin dev/req-xxxx`(備份,不上線;只有驗收合併進 master 才部署到 GitHub Pages)
+- 真實後台(只讀參照):https://okada-dev-bo-2.scms2u.lol

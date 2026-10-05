@@ -1,6 +1,7 @@
 # OKADA 後台 — 需求工作流 — 主設定
 
 ## 版本
+v2.1(2026-10-05:開發產出定為原型(沒有後台原始碼);後台以 Playwright 瀏覽器只讀查驗,人工手動登入;原型推送到 GitHub,master 以 GitHub Pages 部署)。
 v2.0(2026-10-05:新增「已取消」狀態與「卡住」標記;定稿前清空待確認事項、定稿後內容鎖定,修改一律發起新需求;測試用例由產品寫、測試結果由測試寫、缺陷由新的開發代理修復;全部手動觸發;建立 git 分支與 worktree 流程)。
 v1.1(2026-10-05:新增四個角色檔 `roles/`)。
 v1.0(2026-10-05:建立六節點需求看板與工作流)。
@@ -13,6 +14,20 @@ v1.0(2026-10-05:建立六節點需求看板與工作流)。
 | 後台(dev) | https://okada-dev-bo-2.scms2u.lol/promotions/settings/list(促銷活動設定列表) |
 | 需求看板 | https://claude.ai/artifact/1LzrjoTDoZyNa3njtoLJvP(狀態、優先級、需求內容的唯一來源) |
 | 看板頁面原始碼 | `board/okada-board.html`(改看板時改這份,再發布到上面的網址) |
+| 原型代碼倉庫 | https://github.com/stanfordmk1992/OKADA_backoffice(remote `origin`) |
+| 原型線上版 | https://stanfordmk1992.github.io/OKADA_backoffice/(GitHub Pages,只部署 `master` 的 `prototype/`) |
+
+## 開發產出 = 原型
+- **沒有 OKADA 後台原始碼**。「開發」產出的是**可操作的 HTML 原型**,放在 `prototype/`(純靜態 HTML/CSS/JS,不需建置)。
+- 原型以真實後台為參照:版面、欄位、用語、操作流程先在後台查驗現況,再依需求做出修改後的樣子。
+- 原型的資料一律是假資料,不得放入從後台抄來的真實玩家、金額、帳號資訊。
+
+## 後台查驗(Playwright 瀏覽器)
+- 工具:專案 `.mcp.json` 的 Playwright MCP(Chrome,登入狀態存在 `C:\Users\Stanf\.okada-playwright-profile`,不在 OneDrive 內)。
+- **登入由人工手動完成**:Claude 開啟後台時,若看到登入頁,停下來請你在 Playwright 開出的 Chrome 視窗登入;Claude **不得輸入、詢問或記錄帳號密碼**。
+- **只讀**:在真實後台只能瀏覽、切換頁籤、篩選、搜尋、截圖、讀取頁面。**禁止任何會改資料的操作**:儲存、送出、新增、編輯、刪除、啟用/停用開關、匯入、審核。需要看編輯畫面時可以打開表單,但只能關閉或取消,不得送出。
+- 截圖存在 `.playwright-output/`(不進 git);截圖如含真實玩家或金額資料,不得放進原型或看板。
+- 登入過期或權限不足 → 標記卡住「需要重新登入 / 權限不足」。
 
 ## 角色
 執行任一角色的工作前,先讀對應的角色檔並照其規則執行。
@@ -62,7 +77,7 @@ v1.0(2026-10-05:建立六節點需求看板與工作流)。
 ## 分支與 worktree 流程
 | 分支 | 內容 | 誰寫入 |
 |---|---|---|
-| `master` | **只放已完成(驗收通過)的程式碼** + 工作流文件(`CLAUDE.md`、`roles/`、`board/`) | 程式碼只能透過「驗收合併」進入;工作流文件直接提交 |
+| `master` | **只放已完成(驗收通過)的原型**(`prototype/`)+ 工作流文件(`CLAUDE.md`、`roles/`、`board/`、`.mcp.json`、`.github/`) | 原型只能透過「驗收合併」進入;工作流文件直接提交 |
 | `dev/req-xxxx`(例 `dev/req-0001`) | 單一進行中需求的程式碼,從 `master` 開出 | 開發代理(開發與修復) |
 
 - **為什麼每個需求一條 dev 分支**:如果所有進行中的需求共用一條 `dev`,要合併其中一個完成的需求時,會把其他還沒完成的程式碼一起帶進 `master`。
@@ -81,7 +96,17 @@ v1.0(2026-10-05:建立六節點需求看板與工作流)。
   git branch -d dev/req-xxxx
   ```
   合併有衝突 → `git merge --abort`,狀態退回「已定稿」並備註「需同步 master」,修復重測後要再驗收一次。
-- **取消**:在看板 `history` 記下分支最後的 commit hash,再移除 worktree、刪除分支(`git branch -D`)。
+- **推送(部署)**:
+  - 開發完成、修復完成後:`git push -u origin dev/req-xxxx`(備份,不會上線)
+  - 驗收合併後:`git push origin master` → GitHub Actions(`.github/workflows/pages.yml`)把 `prototype/` 部署到 GitHub Pages;合併後在 `git push origin --delete dev/req-xxxx` 刪除遠端分支
+  - 工作流文件在 `master` commit 後一併推送
+- **本地執行原型**(測試與人工本地驗收都用這個,埠號固定 4173):
+  ```
+  cd worktrees/req-xxxx
+  npx -y http-server@14.1.1 prototype -p 4173 -c-1
+  ```
+  瀏覽器開 http://localhost:4173 。Playwright 預設擋 `file://`,所以一律透過本地伺服器開啟。
+- **取消**:在看板 `history` 記下分支最後的 commit hash,再移除 worktree、刪除本地與遠端分支(`git branch -D`、`git push origin --delete`)。
 - **禁止**:直接在 `master` 改程式碼、fast-forward / squash / rebase 改寫 `master` 歷史。
 - **不需開發的需求**不開分支。
 
@@ -132,7 +157,8 @@ v1.0(2026-10-05:建立六節點需求看板與工作流)。
 | 「REQ-xxxx 改 P1」 | 直接生效 |
 | 「進度」/「看板狀態」 | 項管依 `roles/pm.md` 格式回報 |
 
-## 尚未就緒(開發/測試前必須補齊)
-- OKADA 後台**原始碼**與技術棧:尚未放入本專案,`dev/req-xxxx` 分支目前沒有程式碼可改
-- **部署到 dev 後台**的方式與負責人:測試在 okada-dev-bo-2 上執行,開發完成前需先部署
-- **測試帳號**(含各後台角色)與測試用瀏覽器工具
+## 一次性設定(人工)
+- [ ] 在本資料夾開新的 Claude Code 對話,同意載入專案 MCP 伺服器 `playwright`
+- [ ] 第一次查驗時,在 Playwright 開出的 Chrome 視窗手動登入後台
+- [ ] GitHub repo → Settings → Branches:預設分支改成 `master`,再刪除 `main`
+- [ ] GitHub repo → Settings → Pages → Source 選「GitHub Actions」(私有 repo 需付費方案才能用 Pages)

@@ -12,7 +12,12 @@
 ## 開測前
 1. 看板狀態為「開發完成」且沒有標記卡住
 2. 在 `worktrees/req-xxxx/` 執行 `git merge master`,同步最新已完成的程式碼;衝突無法判斷 → 標記卡住
-3. 確認測試對象已部署到測試環境(部署方式待補,見 CLAUDE.md「尚未就緒」)
+3. 在 worktree 啟動原型:`npx -y http-server@14.1.1 prototype -p 4173 -c-1`,用 Playwright 開 http://localhost:4173 逐條操作
+
+## 測試環境
+- **原型**:用 Playwright 實際點擊、輸入、截圖,這是測試結果的依據
+- **真實後台**:測試用例要求「與現況一致」時,用 Playwright **只讀查驗**對照(規則見 CLAUDE.md「後台查驗」)。禁止在後台做任何會改資料的操作;遇到登入頁停下來請人工登入
+- 截圖存 `.playwright-output/`,在測試結果裡寫檔名
 
 ## 測試規則
 1. **逐條**執行 `testCases`,每條記錄:✅ 通過 / ❌ 失敗 / ⚠️ 無法測試(附原因)

@@ -11,7 +11,7 @@
 | 定稿把關 | 「REQ-xxxx 定稿」時檢查:標題、測試用例已填;待確認事項已清空;`waitFor` 的需求已結束;沒有卡住。不符就回報缺什麼,不推進 |
 | 規則把關 | 已定稿未判斷範圍不得開發;不需開發、退回、取消、卡住必填原因;不得跳節點;定稿後內容不得修改 |
 | 等待關係 | `waitFor` 的需求進入已完成/已取消時,提醒人工:「REQ-yyyy 可以再次確認」 |
-| 驗收合併 | 「REQ-xxxx 驗收通過」時執行合併至 `master` 並清理 worktree 與分支(見 CLAUDE.md 分支流程) |
+| 驗收合併 | 「REQ-xxxx 驗收通過」時執行合併至 `master`、`git push origin master`(觸發 GitHub Pages 部署)、清理 worktree 與本地/遠端分支(見 CLAUDE.md 分支流程) |
 | 取消清理 | 「REQ-xxxx 取消」時在 `history` 記下分支最後的 commit hash,再移除 worktree、刪除分支 |
 | 進度回報 | 人工問「進度」或「看板狀態」時輸出回報 |
 

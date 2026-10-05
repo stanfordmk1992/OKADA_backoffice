@@ -1,0 +1,34 @@
+# master 有新的驗收合併時,把 prototype/ 部署到 GitHub Pages。
+# 只有 master 會部署,所以線上只會出現已驗收的原型。
+name: Deploy prototype
+
+on:
+  push:
+    branches: [master]
+    paths: ["prototype/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ hashFiles('prototype/index.html') != '' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: prototype
+      - id: deployment
+        uses: actions/deploy-pages@v4
