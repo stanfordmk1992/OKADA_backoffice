@@ -321,13 +321,13 @@ for (const m of MODS) {
   // 已知可疑
   const pat = pages.find(p => p.path === "/reports/player-account-transaction/view/:id()");
   if (pat && pat.meta && pat.meta.subject === "cashless-liability-report") issues.push(liveOf(pat) && liveOf(pat).status === "一致"
-    ? { owner: "人工決定", id: PG[pat.path], what: "玩家帳戶交易報表的詳情頁,實機顯示的是「Player Cashless Liability」頁(與無現金負債報表詳情相同,權限也用 cashless-liability-report),判定為前端複製錯誤", fix: "決定是否回報後台團隊修正", status: "已實機確認,待決定" }
+    ? { owner: "人工決定", id: PG[pat.path], what: "【前端缺陷】玩家帳戶交易報表的詳情頁是無現金負債報表詳情頁的複製品:實機顯示「Player Cashless Liability」、權限用 cashless-liability-report、API 打 /report/cashless/player/list;列表的 View 按鈕也連到 /reports/cashless-liability/view/{daily_wallet_summary_id}。使用者點 View 看不到玩家帳戶交易明細,且只有玩家帳戶交易報表權限的人會被擋", fix: "決定是否回報後台團隊修正", status: "已實機確認,待決定" }
     : { owner: "產品", id: PG[pat.path], what: "玩家帳戶交易報表的詳情頁使用「無現金負債報表」的權限與 API(/report/cashless/player/list)", fix: "實機確認此頁實際顯示內容,是否為前端複製錯誤" });
   // 實機才看得到的缺陷
   if (LIVE) {
     const pal = LIVE.pages.find(x => x.path === "/reports/player-account-transaction/list");
-    if (pal && (pal.liveGets || []).some(g => /\/undefined$/.test(g))) issues.push({ owner: "人工決定", id: PG[pal.path], what: "玩家帳戶交易報表列表一進頁面就呼叫 GET /report/player-account-transaction/undefined(尚未選玩家就帶 undefined 送出),屬前端缺陷", fix: "決定是否回報後台團隊修正", status: "已實機確認,待決定" });
-    for (const x of LIVE.pages.filter(x => x.status === "無權限")) issues.push({ owner: "人工決定", id: PG[x.path], what: `目前登入帳號沒有 ${x.path} 的權限(${perm(pg(x.path))}),此頁只做了靜態盤點`, fix: "如需實機查驗,請提供有此權限的帳號", status: "待決定" });
+    if (pal && (pal.liveGets || []).some(g => /\/undefined$/.test(g))) issues.push({ owner: "人工決定", id: PG[pal.path], what: "【前端缺陷 + 後端未驗證】玩家帳戶交易報表一進頁面就呼叫 GET /report/player-account-transaction/undefined(尚未選玩家就把 undefined 當 id 送出);後端回 200、0 筆,沒有擋下無效 id。結果是頁面先顯示空表,且多一次無效請求", fix: "決定是否回報後台團隊修正", status: "已實機確認,待決定" });
+    for (const x of LIVE.pages.filter(x => x.status === "無權限")) issues.push({ owner: "人工決定", id: PG[x.path], what: `【查驗範圍限制,非後台問題】目前登入帳號沒有 ${x.path} 的權限(${perm(pg(x.path))}),實機顯示 401 頁,此頁只做了靜態盤點`, fix: "如需實機查驗,請提供有此權限的帳號", status: "待決定" });
     for (const x of LIVE.pages.filter(x => x.status === "略過")) issues.push({ owner: "測試", id: PG[x.path], what: `${x.path} 未能實機開啟:${x.reason}(dev 環境沒有資料)`, fix: "dev 有資料後重跑 node live.mjs --only-skipped", status: "環境限制" });
   }
 
@@ -335,14 +335,14 @@ for (const m of MODS) {
   if (dupRoutes.length === 4) {
     if (MENU_TO) {
       const used = dupRoutes.filter(r => MENU_TO.has(pg(r).name));
-      issues.push({ owner: "人工決定", id: "M16", what: `自我排除、投注限額報表各有兩個路由。實機選單只使用 ${used.join("、") || "(都沒有)"};${dupRoutes.filter(r => !used.includes(r)).join("、")} 不在選單(可直接輸入網址開啟)`, fix: "決定不在選單的頁面是否下架;自我排除報表不在此帳號選單,確認是否為權限設定或已停用", status: "已實機確認,待決定" });
+      issues.push({ owner: "人工決定", id: "M16", what: `【選單設定缺漏 + 重複路由】登入回傳的權限清單裡,本帳號有 self-exclusion-report 的 view、edit 權限(edit 可切換玩家自我排除狀態),但選單沒有自我排除報表,只能直接輸入網址開啟。另外兩份報表各有兩個網址、內容相同:選單只用 ${used.join("、") || "(都沒有)"},其餘(${dupRoutes.filter(r => !used.includes(r)).join("、")})不在選單`, fix: "決定不在選單的頁面是否下架;自我排除報表不在此帳號選單,確認是否為權限設定或已停用", status: "已實機確認,待決定" });
     } else issues.push({ owner: "產品", id: "M16", what: "自我排除、投注限額報表各有兩個路由(/reports/... 與 /responsible-gaming-report/...),內容幾乎相同", fix: "實機確認選單實際使用哪一個,另一個是否為舊版" });
   }
   for (const r of ["/reports/revenue-old/list", "/reports/cashless-liability-old/list"]) if (pg(r)) {
-    if (MENU_TO) issues.push({ owner: "人工決定", id: PG[r], what: `舊版報表 ${r} ${MENU_TO.has(pg(r).name) ? "仍在選單中(名稱前綴「Old-」)" : "不在選單"}`, fix: "決定是否保留舊版報表", status: "已實機確認,待決定" });
+    if (MENU_TO) issues.push({ owner: "人工決定", id: PG[r], what: `【技術債】舊版報表 ${r} ${MENU_TO.has(pg(r).name) ? "仍在選單中(名稱前綴「Old-」)" : "不在選單"},與新版共用同一個權限(${perm(pg(r))}),無法只開新版不開舊版`, fix: "決定是否保留舊版報表", status: "已實機確認,待決定" });
     else issues.push({ owner: "產品", id: PG[r], what: `舊版報表 ${r} 仍存在`, fix: "實機確認是否仍在選單中、與新版差異" });
   }
-  if (pg("/second-page")) issues.push({ owner: MENU_TO ? "人工決定" : "項管", id: PG["/second-page"], what: "範本殘留頁 /second-page(權限 view:users)" + (MENU_TO && !MENU_TO.has("second-page") ? ",不在選單" : ""), fix: "決定是否請後台團隊移除", status: MENU_TO ? "已實機確認,待決定" : undefined });
+  if (pg("/second-page")) issues.push({ owner: MENU_TO ? "人工決定" : "項管", id: PG["/second-page"], what: "【範本殘留】/second-page 是後台範本(Vuexy)的示範頁,實機標題「Create Awesome 🙌」、沒有功能;有使用者檢視權限(view:users)的人輸入網址就能開" + (MENU_TO && !MENU_TO.has("second-page") ? ",不在選單" : ""), fix: "決定是否請後台團隊移除", status: MENU_TO ? "已實機確認,待決定" : undefined });
   const navTitles = Object.keys(EN).filter(k => /^navigation\.(menu|submenu|subsubmenu)\./.test(k)).map(k => k);
   const used = new Set(pages.flatMap(allKeys));
   const navUnused = navTitles.filter(k => !used.has(k) && !MODS.some(m => m.nav === k));

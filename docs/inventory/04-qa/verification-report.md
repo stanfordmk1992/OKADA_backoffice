@@ -30,18 +30,18 @@
 | # | 退回角色 | 頁面/模塊 | 問題 | 補全方式 | 狀態 |
 |---|---|---|---|---|---|
 | 1 | 產品 | M13-P03 | 編輯頁只有 Status 可修改,其餘 9 個欄位為灰色唯讀(Title、Period From、Period To、Payout Frequency、Payout Frequency、Payout Type、Payout Option、Deposit Option、Terms and Conditions) | 已寫入產品說明「實際可修改的欄位」 | 已實機確認,已補全 |
-| 2 | 人工決定 | M12-P09 | 玩家帳戶交易報表的詳情頁,實機顯示的是「Player Cashless Liability」頁(與無現金負債報表詳情相同,權限也用 cashless-liability-report),判定為前端複製錯誤 | 決定是否回報後台團隊修正 | 已實機確認,待決定 |
-| 3 | 人工決定 | M12-P08 | 玩家帳戶交易報表列表一進頁面就呼叫 GET /report/player-account-transaction/undefined(尚未選玩家就帶 undefined 送出),屬前端缺陷 | 決定是否回報後台團隊修正 | 已實機確認,待決定 |
-| 4 | 人工決定 | M08-P01 | 目前登入帳號沒有 /psp/add 的權限(create:psp),此頁只做了靜態盤點 | 如需實機查驗,請提供有此權限的帳號 | 待決定 |
+| 2 | 人工決定 | M12-P09 | 【前端缺陷】玩家帳戶交易報表的詳情頁是無現金負債報表詳情頁的複製品:實機顯示「Player Cashless Liability」、權限用 cashless-liability-report、API 打 /report/cashless/player/list;列表的 View 按鈕也連到 /reports/cashless-liability/view/{daily_wallet_summary_id}。使用者點 View 看不到玩家帳戶交易明細,且只有玩家帳戶交易報表權限的人會被擋 | 決定是否回報後台團隊修正 | 已實機確認,待決定 |
+| 3 | 人工決定 | M12-P08 | 【前端缺陷 + 後端未驗證】玩家帳戶交易報表一進頁面就呼叫 GET /report/player-account-transaction/undefined(尚未選玩家就把 undefined 當 id 送出);後端回 200、0 筆,沒有擋下無效 id。結果是頁面先顯示空表,且多一次無效請求 | 決定是否回報後台團隊修正 | 已實機確認,待決定 |
+| 4 | 人工決定 | M08-P01 | 【查驗範圍限制,非後台問題】目前登入帳號沒有 /psp/add 的權限(create:psp),實機顯示 401 頁,此頁只做了靜態盤點 | 如需實機查驗,請提供有此權限的帳號 | 待決定 |
 | 5 | 測試 | M05-P02 | /reports/deposit/view/:id() 未能實機開啟:列表沒有資料可取得 id(dev 環境沒有資料) | dev 有資料後重跑 node live.mjs --only-skipped | 環境限制 |
 | 6 | 測試 | M13-P06 | /reports/referral-report/view/:id() 未能實機開啟:列表沒有資料可取得 id(dev 環境沒有資料) | dev 有資料後重跑 node live.mjs --only-skipped | 環境限制 |
 | 7 | 測試 | M05-P04 | /reports/withdrawal/view/:id() 未能實機開啟:列表沒有資料可取得 id(dev 環境沒有資料) | dev 有資料後重跑 node live.mjs --only-skipped | 環境限制 |
 | 8 | 測試 | M06-P12 | /status-declaration/update/:id() 未能實機開啟:列表沒有資料可取得 id(dev 環境沒有資料) | dev 有資料後重跑 node live.mjs --only-skipped | 環境限制 |
 | 9 | 測試 | M05-P07 | /wallets/adjustment/view/:id() 未能實機開啟:列表沒有資料可取得 id(dev 環境沒有資料) | dev 有資料後重跑 node live.mjs --only-skipped | 環境限制 |
-| 10 | 人工決定 | M16 | 自我排除、投注限額報表各有兩個路由。實機選單只使用 /responsible-gaming-report/betting-limit/list;/reports/self-exclusion/list、/responsible-gaming-report/self-exclusion/list、/reports/betting-limit/list 不在選單(可直接輸入網址開啟) | 決定不在選單的頁面是否下架;自我排除報表不在此帳號選單,確認是否為權限設定或已停用 | 已實機確認,待決定 |
-| 11 | 人工決定 | M12-P10 | 舊版報表 /reports/revenue-old/list 仍在選單中(名稱前綴「Old-」) | 決定是否保留舊版報表 | 已實機確認,待決定 |
-| 12 | 人工決定 | M12-P01 | 舊版報表 /reports/cashless-liability-old/list 仍在選單中(名稱前綴「Old-」) | 決定是否保留舊版報表 | 已實機確認,待決定 |
-| 13 | 人工決定 | M01-P03 | 範本殘留頁 /second-page(權限 view:users),不在選單 | 決定是否請後台團隊移除 | 已實機確認,待決定 |
+| 10 | 人工決定 | M16 | 【選單設定缺漏 + 重複路由】登入回傳的權限清單裡,本帳號有 self-exclusion-report 的 view、edit 權限(edit 可切換玩家自我排除狀態),但選單沒有自我排除報表,只能直接輸入網址開啟。另外兩份報表各有兩個網址、內容相同:選單只用 /responsible-gaming-report/betting-limit/list,其餘(/reports/self-exclusion/list、/responsible-gaming-report/self-exclusion/list、/reports/betting-limit/list)不在選單 | 決定不在選單的頁面是否下架;自我排除報表不在此帳號選單,確認是否為權限設定或已停用 | 已實機確認,待決定 |
+| 11 | 人工決定 | M12-P10 | 【技術債】舊版報表 /reports/revenue-old/list 仍在選單中(名稱前綴「Old-」),與新版共用同一個權限(view:revenue-report),無法只開新版不開舊版 | 決定是否保留舊版報表 | 已實機確認,待決定 |
+| 12 | 人工決定 | M12-P01 | 【技術債】舊版報表 /reports/cashless-liability-old/list 仍在選單中(名稱前綴「Old-」),與新版共用同一個權限(view:cashless-liability-report),無法只開新版不開舊版 | 決定是否保留舊版報表 | 已實機確認,待決定 |
+| 13 | 人工決定 | M01-P03 | 【範本殘留】/second-page 是後台範本(Vuexy)的示範頁,實機標題「Create Awesome 🙌」、沒有功能;有使用者檢視權限(view:users)的人輸入網址就能開,不在選單 | 決定是否請後台團隊移除 | 已實機確認,待決定 |
 
 ## A-2. 前端有定義但沒有頁面使用的選單名稱
 
