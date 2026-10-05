@@ -1,6 +1,6 @@
 # 系統層面交互架構(開發)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。後端內部架構看不到,圖中標「外部 / 推定」的部分只根據前端呼叫的端點推斷,需後端或實機確認。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 實機只讀查驗(登入流程、選單來源、API 呼叫已對照)。後端內部架構看不到,圖中標「外部 / 推定」的部分只根據前端呼叫的端點推斷,需後端確認。
 
 ## 1. 系統全景
 
@@ -115,23 +115,30 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  M02["M02 錢包管理"] --> A1["/wallet_adjustment、/wallets/refund<br>/report/deposit、/report/withdraw"]
-  M03["M03 玩家管理"] --> A2["/players、/player/profile-update-request"]
+  M02["M02 玩家管理"] --> A2["/players、/player/profile-update-request"]
+  M03["M03 通知"] --> A7["/notification"]
   M04["M04 促銷活動"] --> A3["/promotion_setting、/promotion_opt_in、/promotion_payout"]
-  M05["M05 免費旋轉"] --> A4["/freespin、/pragmatic-play/freespin、/{vendor}/freespin"]
-  M06["M06 推薦獎勵"] --> A5["/referral_setting、/referral_report"]
-  M07["M07 內容中心"] --> A6["/advertisement、/announcement<br>/term_and_condition、/responsible_gaming"]
-  M08["M08 通知"] --> A7["/notification"]
-  M09["M09 遊戲中心"] --> A8["/games、/game_type、/provider/game_category<br>/game_provider、/game_offerings、/featured_games<br>/quick_access、/report/game_records"]
-  M10["M10 支付通道"] --> A9["/psp"]
-  M11["M11 維護"] --> A10["/maintenance_record"]
-  M12["M12 合規"] --> A11["/audits、/report/self_exclusion、/report/betting_limit"]
-  M13["M13 報表"] --> A12["/report/cashless、/report/fund_transaction<br>/report/player-account-transaction、/report/downloads"]
-  M14["M14 系統設定"] --> A13["/users、/roles、/menus、/menu_permissions"]
+  M05["M05 錢包管理"] --> A1["/wallet_adjustment、/wallets/refund<br>/report/deposit、/report/withdraw"]
+  M06["M06 內容中心"] --> A6["/advertisement、/announcement<br>/term_and_condition、/responsible_gaming"]
+  M07["M07 遊戲中心"] --> A8["/games、/game_type、/provider/game_category<br>/game_provider、/game_offerings、/featured_games<br>/quick_access"]
+  M08["M08 支付通道"] --> A9["/psp"]
+  M09["M09 維護"] --> A10["/maintenance_record"]
+  M10["M10 合規"] --> A11["/audits"]
+  M11["M11 系統設定"] --> A13["/users、/roles、/menus、/menu_permissions"]
+  M12["M12 報表"] --> A12["/report/cashless、/report/fund_transaction、/report/game_records<br>/report/player-account-transaction、/report/downloads"]
+  M13["M13 推薦獎勵"] --> A5["/referral_setting、/referral_report"]
+  M15["M15 免費旋轉"] --> A4["Playtech /freespin<br>Pragmatic Play /pragmatic-play/freespin<br>Omniplay /jumbo-v2/freespin"]
+  M16["M16 責任博彩報表"] --> A14["/report/betting_limit、/report/self_exclusion"]
 ```
 
-## 6. 待確認(需後端或實機)
+- Omniplay 的 `{vendor}` 實機為 `jumbo-v2`(`GET /jumbo-v2/freespin/list`)。
+- M14 OkadaPlay 是 iframe,不呼叫本後台 API。
+
+## 6. 選單來源(已實機確認)
+
+側欄選單由 `GET /get_role_menu` 回傳 `{menu: [...]}`,每個項目包含 `title`(i18n 鍵)、`icon`、`action`、`subject`、`sequence`、`to`(前端路由名稱)、`children`。前端依此畫出選單;登入帳號的角色決定回傳哪些項目。實機選單結構見 [../01-pm-modules.md](../01-pm-modules.md)。
+
+## 7. 待確認(需後端)
 
 - 後端內部服務、資料庫、與供應商、PSP 的串接方式
 - 下載中心的非同步工作流程(排隊、產出、失效時間)
-- `/get_role_menu` 回傳的選單結構與前端路由的對應

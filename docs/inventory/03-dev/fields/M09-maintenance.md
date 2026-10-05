@@ -1,12 +1,12 @@
-# M11 維護排程 — 欄位控制規格(開發)
+# M09 維護排程 — 欄位控制規格(開發)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 - **送出參數**:前端送到 API 的欄位名稱(FormData / JSON key),空白表示靜態分析無法確定或屬於篩選條件。
 - 欄位名稱後的 ⁱ 表示標籤取自元件旁的文字,不是元件本身的 label,需實機確認。
 - **驗證規則**:前端表單驗證;後端驗證需登入後以實際送出結果補充(只讀查驗不送出,故標為未驗證)。
 
-## M11-P01 maintenance(新增)`/maintenance/add`
+## M09-P01 maintenance(新增)`/maintenance/add`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -17,7 +17,15 @@
 
 **API**:`POST /maintenance_record`、`GET /maintenance_type`、`GET /maintenance_status`、`GET /maintenance_target`
 
-## M11-P02 Maintenance Listing(列表)`/maintenance/list`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/maintenance_type` | Schedule Maintenance、Schedule Deployment、Urgent、Urgent Bug Fixed |
+| `/maintenance_status` | Scheduled & Pending、Maintenance in Progress、Completed、Cancelled |
+| `/maintenance_target` | iGaming、YellowBat、ETG、Zitro、Jili、Fachai、Live Slots、Live Tables、eGaming、Credit/Debit Card、GCash、Maya、Omniplay、JDB、Playtech、Skivot、Light & Wonder、Habanero、Pragmatic Play、Remote Play Slots、Inferno Play、Sportsbook |
+
+## M09-P02 Maintenance Listing(列表)`/maintenance/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -44,16 +52,34 @@
 
 **API**:`GET /maintenance_record`、`GET /maintenance_type`、`GET /maintenance_status`、`GET /maintenance_target`
 
-## M11-P03 maintenance(編輯)`/maintenance/update/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/maintenance_type` | Schedule Maintenance、Schedule Deployment、Urgent、Urgent Bug Fixed |
+| `/maintenance_status` | Scheduled & Pending、Maintenance in Progress、Completed、Cancelled |
+| `/maintenance_target` | iGaming、YellowBat、ETG、Zitro、Jili、Fachai、Live Slots、Live Tables、eGaming、Credit/Debit Card、GCash、Maya、Omniplay、JDB、Playtech、Skivot、Light & Wonder、Habanero、Pragmatic Play、Remote Play Slots、Inferno Play、Sportsbook |
+
+## M09-P03 maintenance(編輯)`/maintenance/update/:id`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Reason | AppTextField | `reason` | 是 | 必填 |  |  | 頁面 |
 | 2 | Status | VAutocomplete | `maintenance_status_id` | 是 | 必填 | API 動態載入 | disabled=e(O) clearable="" item-title="maintenance_status_name" item-value="maintenance_status_id" | 頁面 |
 
+> 頁面說明:編輯頁只能改 Reason 與 Status;Type、Target、排程時間只顯示
+
 **API**:`GET /maintenance_record/:id`、`PUT /maintenance_record/:id`、`GET /maintenance_status`
 
-## M11-P04 maintenance(詳情)`/maintenance/view/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/maintenance_status` | Scheduled & Pending、Maintenance in Progress、Completed、Cancelled |
+
+## M09-P04 maintenance(詳情)`/maintenance/view/:id`
+
+**唯讀顯示欄位(實機畫面)**:Reason、Type、Status、Target、Schedule Start DateTime、Schedule End DateTime、Actual Start DateTime、Actual End DateTime、Start By、Stop By、Created At
 
 **API**:`GET /maintenance_record/:id`
 

@@ -1,0 +1,16 @@
+{
+  "name": "inventory",
+  "version": "1.0.0",
+  "description": "從後台前端的公開靜態檔(`/_nuxt/*.js`,不需登入)靜態分析出模塊、頁面、欄位、驗證規則、API,產生 `docs/inventory/`。",
+  "main": "entry.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}

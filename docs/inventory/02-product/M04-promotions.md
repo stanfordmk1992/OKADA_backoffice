@@ -1,6 +1,6 @@
 # M04 促銷活動(Promotions)— 模塊內容與操作流程(產品)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 ## 模塊說明
 
@@ -44,8 +44,8 @@ flowchart LR
 - 路由:`/promotions/opt-in/list`  權限:`view:promotions-opt-in`
 - 功能點:M04-F01 查詢列表、M04-F02 欄位排序、M04-F03 分頁、M04-F04 匯出
 - 表格欄位:ID、Player ID、Promotion Name、Game Provider、Min/Max Deposit、Deposit Information、Turnover Information、Tier Points Information、Join Date、Payment Method、Created At、Updated At
-- 篩選條件:navigation.submenu.promotionOptInList、features.promotions.placeholders.searchPlayerId、Items per page(欄位規則見 03 開發欄位控制)
-- 實機狀態:待實機查驗
+- 篩選條件:Search Player ID、Search Promotion Name、Items per page(欄位規則見 03 開發欄位控制)
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/promotions_opt-in_list.png`
 
 **操作步驟**
 
@@ -59,8 +59,8 @@ flowchart LR
 - 路由:`/promotions/payout/list`  權限:`view:promotions-payout`
 - 功能點:M04-F05 查詢列表、M04-F06 欄位排序、M04-F07 分頁、M04-F08 匯出
 - 表格欄位:ID、Player ID、Promotion Name、Payout Amount、Payout Method、Payout Date、Status
-- 篩選條件:navigation.submenu.promotionPayout、features.promotions.placeholders.searchPlayerId、Items per page(欄位規則見 03 開發欄位控制)
-- 實機狀態:待實機查驗
+- 篩選條件:Search Player ID、Search Promotion Name、Items per page(欄位規則見 03 開發欄位控制)
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/promotions_payout_list.png`
 
 **操作步驟**
 
@@ -73,9 +73,9 @@ flowchart LR
 
 - 路由:`/promotions/settings/add`  權限:`create:promotions-settings`
 - 功能點:M04-F09 新增
-- 表單欄位:Promotion Name、Start Date ~ End Date、Player Ranking、Deposit Option、Minimum Deposit、Maximum Deposit、Payout Frequency、Vendors、Terms and Conditions、Payout Method、Percentage、Max Campaign Amount、Turnover Amount、Earn Points(Tier Points)、Upload Banner(欄位規則見 03 開發欄位控制)
+- 表單欄位:Promotion Name、Start Date ~ End Date、Player Ranking、Deposit Option、Minimum Deposit、Maximum Deposit、Payout Frequency、Vendors、Terms and Conditions、Payout Method、Percentage(%)、Max Campaign Amount、Turnover Amount、Earn Points(Tier Points)、Banner(欄位規則見 03 開發欄位控制)
 - 系統提示:「Promotion created successfully」、「Error creating promotion」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/promotions_settings_add.png`
 
 **操作步驟**
 
@@ -104,7 +104,7 @@ flowchart TD
 - 功能點:M04-F10 查詢列表、M04-F11 欄位排序、M04-F12 分頁
 - 表格欄位:ID、Promotion Name、Start Date、End Date、Payout Frequency、Created At、Updated At、Actions
 - 篩選條件:Search Promotion Name、Search Payout Frequency、Start Date (FROM) ~ Start Date (TO)、Items per page(欄位規則見 03 開發欄位控制)
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/promotions_settings_list.png`
 
 **操作步驟**
 
@@ -116,9 +116,11 @@ flowchart TD
 
 - 路由:`/promotions/settings/view/:id`  權限:`view:promotions-settings`
 - 功能點:M04-F13 檢視詳情、M04-F14 啟用/停用切換
+- 顯示內容(實機):Promotion Name、Start Date、End Date、Player Ranking、Deposit Option、Minimum Amount、Maximum Amount、Payout Frequency、Vendors、Terms and Conditions、Payment Method、Percentage、Max Campaign Amount、Turnover Amount、Tier Points、Created By、Created At、Updated By、Updated At、Banner
+- 條件顯示的欄位:Email(按 Activate / Deactivate 後的確認對話框內,需輸入管理員帳密)、Password(按 Activate / Deactivate 後的確認對話框內,需輸入管理員帳密)
 - 表單欄位:Email、Password(欄位規則見 03 開發欄位控制)
 - 系統提示:「Promotion activated successfully」、「Promotion deactivated successfully」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/promotions_settings_view_id.png`
 
 **操作步驟**
 

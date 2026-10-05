@@ -1,6 +1,6 @@
-# M11 維護排程(Maintenance)— 模塊內容與操作流程(產品)
+# M09 維護排程(Maintenance)— 模塊內容與操作流程(產品)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 ## 模塊說明
 
@@ -10,38 +10,38 @@
 
 | 頁面 | 名稱 | 類型 | 路由 | 主要操作 |
 |---|---|---|---|---|
-| M11-P01 | maintenance | 新增 | `/maintenance/add` | Cancel、Save |
-| M11-P02 | Maintenance Listing | 列表 | `/maintenance/list` | Clear、Search、View、Edit |
-| M11-P03 | maintenance | 編輯 | `/maintenance/update/:id` | Cancel、Update |
-| M11-P04 | maintenance | 詳情 | `/maintenance/view/:id` | Edit |
+| M09-P01 | maintenance | 新增 | `/maintenance/add` | Cancel、Save |
+| M09-P02 | Maintenance Listing | 列表 | `/maintenance/list` | Clear、Search、View、Edit |
+| M09-P03 | maintenance | 編輯 | `/maintenance/update/:id` | Cancel、Update |
+| M09-P04 | maintenance | 詳情 | `/maintenance/view/:id` | Edit |
 
 ## 頁面流程圖
 
 ```mermaid
 flowchart LR
   subgraph G1["Maintenance Listing"]
-    M11_P01["M11-P01 新增"]
-    M11_P02["M11-P02 列表"]
-    M11_P03["M11-P03 編輯"]
-    M11_P04["M11-P04 詳情"]
+    M09_P01["M09-P01 新增"]
+    M09_P02["M09-P02 列表"]
+    M09_P03["M09-P03 編輯"]
+    M09_P04["M09-P04 詳情"]
   end
-  M11_P02 -->|新增| M11_P01
-  M11_P01 -->|儲存成功| M11_P02
-  M11_P02 -->|檢視| M11_P04
-  M11_P02 -->|編輯| M11_P03
-  M11_P04 -->|編輯| M11_P03
-  M11_P03 -->|更新成功| M11_P02
+  M09_P02 -->|新增| M09_P01
+  M09_P01 -->|儲存成功| M09_P02
+  M09_P02 -->|檢視| M09_P04
+  M09_P02 -->|編輯| M09_P03
+  M09_P04 -->|編輯| M09_P03
+  M09_P03 -->|更新成功| M09_P02
 ```
 
 ## 頁面內容與操作說明
 
-### M11-P01 maintenance(新增)
+### M09-P01 maintenance(新增)
 
 - 路由:`/maintenance/add`  權限:`create:maintenance-listing`
-- 功能點:M11-F01 新增
+- 功能點:M09-F01 新增
 - 表單欄位:Reason、Type、Target、Schedule Start DateTime ~ Schedule End DateTime(欄位規則見 03 開發欄位控制)
 - 系統提示:「Maintenance created successfully」、「Error creating Maintenance: {error}」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/maintenance_add.png`
 
 **操作步驟**
 
@@ -64,13 +64,13 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M11-P02 Maintenance Listing(列表)
+### M09-P02 Maintenance Listing(列表)
 
 - 路由:`/maintenance/list`  權限:`view:maintenance-listing`
-- 功能點:M11-F02 查詢列表、M11-F03 欄位排序、M11-F04 分頁
+- 功能點:M09-F02 查詢列表、M09-F03 欄位排序、M09-F04 分頁
 - 表格欄位:Schedule Start DateTime、Schedule End DateTime、Reason、Type、Target、Status、Actual Start DateTime、Actual End DateTime、Created At、Actions
 - 篩選條件:Type、Status、Target、Schedule Start Date (FROM) ~ Schedule Start Date (TO)、Items per page(欄位規則見 03 開發欄位控制)
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/maintenance_list.png`
 
 **操作步驟**
 
@@ -78,13 +78,14 @@ flowchart TD
 2. 輸入篩選條件後按「Search」查詢;按「Clear」清除條件
 3. 點欄位標題排序
 
-### M11-P03 maintenance(編輯)
+### M09-P03 maintenance(編輯)
 
 - 路由:`/maintenance/update/:id`  權限:`edit:maintenance-listing`
-- 功能點:M11-F05 編輯
+- 功能點:M09-F05 編輯
+- 頁面說明:編輯頁只能改 Reason 與 Status;Type、Target、排程時間只顯示
 - 表單欄位:Reason、Status(欄位規則見 03 開發欄位控制)
 - 系統提示:「maintenance not found」、「Maintenance updated successfully」、「Error updating maintenance: {error}」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/maintenance_update_id.png`
 
 **操作步驟**
 
@@ -107,12 +108,13 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M11-P04 maintenance(詳情)
+### M09-P04 maintenance(詳情)
 
 - 路由:`/maintenance/view/:id`  權限:`view:maintenance-listing`
-- 功能點:M11-F06 檢視詳情
+- 功能點:M09-F06 檢視詳情
+- 顯示內容(實機):Reason、Type、Status、Target、Schedule Start DateTime、Schedule End DateTime、Actual Start DateTime、Actual End DateTime、Start By、Stop By、Created At
 - 系統提示:「maintenance not found」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/maintenance_view_id.png`
 
 **操作步驟**
 

@@ -12,6 +12,22 @@ node extract.cjs     # 逐頁分析 → pages.json
 node gen.cjs ../../docs/inventory
 ```
 
+## 實機只讀查驗(需人工登入)
+
+```
+cd tools/inventory
+npm install                      # 第一次:安裝 playwright-core(使用本機 Chrome)
+node live.mjs                    # 開出 Chrome 視窗 → 人工登入 → 自動逐頁查驗
+node live.mjs --only-skipped     # 只重跑上次略過的頁面(例如 dev 有資料後)
+node compare.cjs                 # 實機結果 vs 靜態盤點 → live/compare.json
+node gen.cjs ../../docs/inventory
+```
+
+- 安全:登入完成後,所有送往 API 的 POST/PUT/PATCH/DELETE 都會被攔截,`live/blocked.json` 記錄攔截次數。
+- 登入狀態存在 `C:\Users\Stanf\.okada-playwright-profile`,過期時重新登入即可。
+- 截圖存在 `.playwright-output/live/`,`live/` 內含實機資料片段,兩者都不進 git。
+- 比對有差異時:對照截圖,把顯示條件、正確名稱寫進 `overrides.cjs`(開發),再重跑 `compare.cjs` 與 `gen.cjs`。
+
 ## 檔案
 
 | 檔案 | 用途 | 誰維護 |

@@ -1,12 +1,12 @@
-# M06 推薦獎勵 — 欄位控制規格(開發)
+# M13 推薦獎勵 — 欄位控制規格(開發)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 - **送出參數**:前端送到 API 的欄位名稱(FormData / JSON key),空白表示靜態分析無法確定或屬於篩選條件。
 - 欄位名稱後的 ⁱ 表示標籤取自元件旁的文字,不是元件本身的 label,需實機確認。
 - **驗證規則**:前端表單驗證;後端驗證需登入後以實際送出結果補充(只讀查驗不送出,故標為未驗證)。
 
-## M06-P01 referral-setting(新增)`/referral-setting/add`
+## M13-P01 referral-setting(新增)`/referral-setting/add`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -17,7 +17,7 @@
 | 5 | Period To * | AppDateTimePicker | `date_to` | 是(標示) |  |  |  | 頁面 |
 | 6 | Payout Type * | VAutocomplete | `payout_type` | 是 | 必填 | [] | clearable="" item-title="name" item-value="value" | 頁面 |
 | 7 | Payout Percentage / Payout Amount | AppTextField | `total_max_payout_percent` | 否 |  |  | 說明:標籤依 Payout Type 切換:percentage_by_deposit 顯示 %,fixed_amount 顯示金額 type="number" step="0.01" suffix=a(i) | 人工補全 |
-| 8 | Max Cap Amount * | AppTextField | `max_cap_amount` | 是(標示) |  |  | 說明:選填,轉成數字送出 type="number" step="0.01" | 人工補全 |
+| 8 | Max Cap Amount * | AppTextField | `max_cap_amount` | 是(標示) |  |  | 顯示條件:Payout Type 選 percentage_by_deposit 時顯示 說明:選填,轉成數字送出 type="number" step="0.01" | 人工補全 |
 | 9 | Pool Amount * | AppTextField | `max_pool_amount` | 是(標示) |  |  | type="number" step="0.01" | 頁面 |
 | 10 | Min Turnover * | AppTextField | `min_turnover_amount` | 是 | 必填 |  | type="number" step="0.01" | 頁面 |
 | 11 | Payout Option * | VAutocomplete | `payout_option_id` | 是 | 必填 | [] | clearable="" item-title="payout_option_name" item-value="payout_option_id" | 頁面 |
@@ -27,7 +27,17 @@
 
 **API**:`GET /settings/referral_payout_frequency`、`GET /settings/referral_payout_type`、`GET /setting/deposit/option/referral`、`GET /setting/payout/option/referral`、`GET /settings/referral_payout_status`、`POST /referral_setting`
 
-## M06-P02 Referral Setting(列表)`/referral-setting/list`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/settings/referral_payout_frequency` | every_5_minutes、hourly、daily |
+| `/settings/referral_payout_status` | active、ended |
+| `/settings/referral_payout_type` | fixed_amount、percentage_by_deposit |
+| `/setting/payout/option/referral` | OKash Balance、Free Play (HaLo) |
+| `/setting/deposit/option/referral` | first_deposit |
+
+## M13-P02 Referral Setting(列表)`/referral-setting/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -50,7 +60,7 @@
 
 **API**:`GET /referral_setting`、`PUT /referral_setting/:id`
 
-## M06-P03 Title(編輯)`/referral-setting/update/:id`
+## M13-P03 Title(編輯)`/referral-setting/update/:id`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -67,15 +77,17 @@
 | 11 | Max Cap Amount | AppTextField | `—(不送出)` | 否 |  |  | 說明:只顯示;此頁送出內容只有 active_status readonly="" disabled="" | 人工補全 |
 | 12 | Min Turnover Amount | AppTextField | `—(不送出)` | 否 |  |  | 說明:只顯示;此頁送出內容只有 active_status readonly="" disabled="" | 人工補全 |
 | 13 | Pool Amount | AppTextField | `—(不送出)` | 否 |  |  | 說明:只顯示;此頁送出內容只有 active_status readonly="" disabled="" | 人工補全 |
-| 14 | Terms and Conditionsⁱ | TiptapEditor | —(只顯示,不送出;資料來自 `term_and_condition`) | 否 |  |  |  | 頁面 |
+| 14 | Terms and Conditions | TiptapEditor | —(只顯示,不送出;資料來自 `term_and_condition`) | 否 |  |  |  | 人工補全 |
 
 **API**:`GET /referral_setting/:id`、`PUT /referral_setting/:id`
 
-## M06-P04 Title(詳情)`/referral-setting/view/:id`
+## M13-P04 Title(詳情)`/referral-setting/view/:id`
+
+**唯讀顯示欄位(實機畫面)**:Title、Payout Frequency、Status、Period From、Period To、Payout Type、Max Cap Amount、Payout Amount、Pool Amount、Min Turnover Amount、Payout Option、Deposit Option、Min Deposit Amount、Created By、Created At、Updated By、Updated At、Terms and Conditions
 
 **API**:`GET /referral_setting/:id`
 
-## M06-P05 Player Referral Batch Report(列表)`/reports/referral-report/list`
+## M13-P05 Player Referral Batch Report(列表)`/reports/referral-report/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -99,7 +111,7 @@
 
 **API**:`GET /referral_report`
 
-## M06-P06 referral-report(詳情)`/reports/referral-report/view/:id`
+## M13-P06 referral-report(詳情)`/reports/referral-report/view/:id`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|

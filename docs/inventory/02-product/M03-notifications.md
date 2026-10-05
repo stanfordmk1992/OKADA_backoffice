@@ -1,6 +1,6 @@
-# M08 通知(Notifications)— 模塊內容與操作流程(產品)
+# M03 通知(Notifications)— 模塊內容與操作流程(產品)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 ## 模塊說明
 
@@ -10,40 +10,41 @@
 
 | 頁面 | 名稱 | 類型 | 路由 | 主要操作 |
 |---|---|---|---|---|
-| M08-P01 | notifications | 新增 | `/notifications/add` | Cancel、Save |
-| M08-P02 | Notifications List | 列表 | `/notifications/list` | Clear、Search、View、Edit |
-| M08-P03 | notifications | 編輯 | `/notifications/update/:id` | Cancel、Update |
-| M08-P04 | notifications | 詳情 | `/notifications/view/:id` | Edit、Clear、Search、View |
+| M03-P01 | notifications | 新增 | `/notifications/add` | Cancel、Save |
+| M03-P02 | Notifications List | 列表 | `/notifications/list` | Clear、Search、View、Edit |
+| M03-P03 | notifications | 編輯 | `/notifications/update/:id` | Cancel、Update |
+| M03-P04 | notifications | 詳情 | `/notifications/view/:id` | Edit、Clear、Search、View |
 
 ## 頁面流程圖
 
 ```mermaid
 flowchart LR
   subgraph G1["Notifications List"]
-    M08_P01["M08-P01 新增"]
-    M08_P02["M08-P02 列表"]
-    M08_P03["M08-P03 編輯"]
-    M08_P04["M08-P04 詳情"]
+    M03_P01["M03-P01 新增"]
+    M03_P02["M03-P02 列表"]
+    M03_P03["M03-P03 編輯"]
+    M03_P04["M03-P04 詳情"]
   end
-  M08_P02 -->|新增| M08_P01
-  M08_P01 -->|儲存成功| M08_P02
-  M08_P02 -->|檢視| M08_P04
-  M08_P02 -->|編輯| M08_P03
-  M08_P04 -->|編輯| M08_P03
-  M08_P03 -->|更新成功| M08_P02
-  M08_P02 -.-> M08_P02_5548(["啟用/停用切換"])
-  M08_P04 -.-> M08_P04_1125(["查看通知對象名單"])
+  M03_P02 -->|新增| M03_P01
+  M03_P01 -->|儲存成功| M03_P02
+  M03_P02 -->|檢視| M03_P04
+  M03_P02 -->|編輯| M03_P03
+  M03_P04 -->|編輯| M03_P03
+  M03_P03 -->|更新成功| M03_P02
+  M03_P02 -.-> M03_P02_5548(["啟用/停用切換"])
+  M03_P04 -.-> M03_P04_1125(["查看通知對象名單"])
 ```
 
 ## 頁面內容與操作說明
 
-### M08-P01 notifications(新增)
+### M03-P01 notifications(新增)
 
 - 路由:`/notifications/add`  權限:`create:notifications-listing`
-- 功能點:M08-F01 新增
+- 功能點:M03-F01 新增
+- 條件顯示的欄位:Player ID(未勾選全部玩家(notification_all_patron)時顯示)
 - 表單欄位:Notification Name、Frequency、Start Date ~ End Date、Pop Up、Status、All Players、Player ID、Content(欄位規則見 03 開發欄位控制)
 - 系統提示:「Notification created successfully」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/notifications_add.png`
 
 **操作步驟**
 
@@ -66,14 +67,14 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M08-P02 Notifications List(列表)
+### M03-P02 Notifications List(列表)
 
 - 路由:`/notifications/list`  權限:`view:notifications-listing`
-- 功能點:M08-F02 查詢列表、M08-F03 欄位排序、M08-F04 分頁、M08-F05 啟用/停用切換
+- 功能點:M03-F02 查詢列表、M03-F03 欄位排序、M03-F04 分頁、M03-F05 啟用/停用切換
 - 表格欄位:ID、Notification Name、Start Date、End Date、Pop Up、Frequency、Status、Actions
 - 篩選條件:Notification Name、Start Date (FROM) ~ Start Date (TO)、Pop Up、Frequency、Status、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Notification status changed successfully」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/notifications_list.png`
 
 **操作步驟**
 
@@ -82,13 +83,14 @@ flowchart TD
 3. 點欄位標題排序
 4. 啟用/停用切換(PUT /notification/status/:id)
 
-### M08-P03 notifications(編輯)
+### M03-P03 notifications(編輯)
 
 - 路由:`/notifications/update/:id`  權限:`edit:notifications-listing`
-- 功能點:M08-F06 編輯
+- 功能點:M03-F06 編輯
+- 條件顯示的欄位:Player ID(未勾選全部玩家(notification_all_patron)時顯示)
 - 表單欄位:Notification Name、Frequency、Start Date ~ End Date、Status、Pop Up、All Players、Player ID、Content(欄位規則見 03 開發欄位控制)
 - 系統提示:「Notification updated successfully」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/notifications_update_id.png`
 
 **操作步驟**
 
@@ -111,13 +113,14 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M08-P04 notifications(詳情)
+### M03-P04 notifications(詳情)
 
 - 路由:`/notifications/view/:id`  權限:`view:notifications-listing`
-- 功能點:M08-F07 檢視詳情、M08-F08 查看通知對象名單
+- 功能點:M03-F07 檢視詳情、M03-F08 查看通知對象名單
 - 表格欄位:Player ID、Sent Date
+- 顯示內容(實機):Notification Name、Frequency、Pop Up、Status、Created At、Updated At
 - 表單欄位:Search Name、Start Date (FROM) ~ Start Date (TO)、Items per page(欄位規則見 03 開發欄位控制)
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/notifications_view_id.png`
 
 **操作步驟**
 

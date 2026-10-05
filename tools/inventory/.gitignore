@@ -5,3 +5,5 @@ routes.json
 pages.json
 i18n-*.json
 locale-chunk.txt
+node_modules/
+live/

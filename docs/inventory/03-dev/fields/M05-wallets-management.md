@@ -1,12 +1,12 @@
-# M02 錢包管理 — 欄位控制規格(開發)
+# M05 錢包管理 — 欄位控制規格(開發)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 - **送出參數**:前端送到 API 的欄位名稱(FormData / JSON key),空白表示靜態分析無法確定或屬於篩選條件。
 - 欄位名稱後的 ⁱ 表示標籤取自元件旁的文字,不是元件本身的 label,需實機確認。
 - **驗證規則**:前端表單驗證;後端驗證需登入後以實際送出結果補充(只讀查驗不送出,故標為未驗證)。
 
-## M02-P01 Deposit Report(列表)`/reports/deposit/list`
+## M05-P01 Deposit Report(列表)`/reports/deposit/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -36,11 +36,11 @@
 
 **API**:`GET /report/deposit/list`、`GET /report/bank/list`
 
-## M02-P02 Deposit Log(詳情)`/reports/deposit/view/:id`
+## M05-P02 Deposit Log(詳情)`/reports/deposit/view/:id`
 
 **API**:`GET /report/deposit/:id`
 
-## M02-P03 Withdrawal Report(列表)`/reports/withdrawal/list`
+## M05-P03 Withdrawal Report(列表)`/reports/withdrawal/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -70,11 +70,11 @@
 
 **API**:`GET /report/withdraw/list`、`GET /report/bank/list`
 
-## M02-P04 Withdrawal Log(詳情)`/reports/withdrawal/view/:id`
+## M05-P04 Withdrawal Log(詳情)`/reports/withdrawal/view/:id`
 
 **API**:`GET /report/withdraw/:id`
 
-## M02-P05 wallets / adjustment(新增)`/wallets/adjustment/add`
+## M05-P05 wallets / adjustment(新增)`/wallets/adjustment/add`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -88,7 +88,7 @@
 
 **API**:`GET /players`、`GET /players/:id/wallets/:id`、`POST /wallet_adjustment`、`GET /lookup/wallet_types`
 
-## M02-P06 Wallet Adjustment(列表)`/wallets/adjustment/list`
+## M05-P06 Wallet Adjustment(列表)`/wallets/adjustment/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -114,17 +114,23 @@
 
 **API**:`GET /lookup/wallet_types`、`GET /wallet_adjustment`
 
-## M02-P07 wallets / adjustment(詳情)`/wallets/adjustment/view/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/lookup/wallet_types` | iGaming Bonus Wallet、iSlot Wallet、iTable Wallet、Live Slot Bonus Wallet、Live Table Bonus Wallet、OKash Balance、OKASH Wallet、Provider Wallet、Safekeeping Wallet、Temp Wallet |
+
+## M05-P07 wallets / adjustment(詳情)`/wallets/adjustment/view/:id`
 
 **API**:`GET /wallet_adjustment/:id`
 
-## M02-P08 Credit Reversal(列表)`/wallets/refund/list`
+## M05-P08 Credit Reversal(列表)`/wallets/refund/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Credit Reversalⁱ | AppTextField | `name` | 否 |  |  |  | 頁面 |
-| 2 | Credit Reversalⁱ | AppTextField | `transaction_ref_id` | 否 |  |  |  | 頁面 |
-| 3 | Credit Reversalⁱ | VAutocomplete | `status` | 否 |  | [{id:0,name:"Pending Approval"},{id:1,name:"Pending"},{id:2,name:"Approved"},{id:3,name:"Rejected"}] | clearable="" item-title="name" item-value="id" | 頁面 |
+| 1 | Search Player ID | AppTextField | `name` | 否 |  |  |  | 頁面 |
+| 2 | Search Transaction Ref ID | AppTextField | `transaction_ref_id` | 否 |  |  |  | 頁面 |
+| 3 | Search Status | VAutocomplete | `status` | 否 |  | [{id:0,name:"Pending Approval"},{id:1,name:"Pending"},{id:2,name:"Approved"},{id:3,name:"Rejected"}] | clearable="" item-title="name" item-value="id" | 頁面 |
 | 4 | per_page | AppSelect | `per_page` | 否 |  | [5,10,20,25,50] |  | 頁面 |
 
 **表格欄位**

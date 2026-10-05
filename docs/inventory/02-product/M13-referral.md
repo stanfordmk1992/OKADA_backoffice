@@ -1,6 +1,6 @@
-# M06 推薦獎勵(Referral)— 模塊內容與操作流程(產品)
+# M13 推薦獎勵(Referral)— 模塊內容與操作流程(產品)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 ## 模塊說明
 
@@ -10,45 +10,46 @@
 
 | 頁面 | 名稱 | 類型 | 路由 | 主要操作 |
 |---|---|---|---|---|
-| M06-P01 | referral-setting | 新增 | `/referral-setting/add` | Cancel、Save |
-| M06-P02 | Referral Setting | 列表 | `/referral-setting/list` | Clear、Search、View、Edit、Deactivate |
-| M06-P03 | Title | 編輯 | `/referral-setting/update/:id` | Cancel、Save |
-| M06-P04 | Title | 詳情 | `/referral-setting/view/:id` | Edit |
-| M06-P05 | Player Referral Batch Report | 列表 | `/reports/referral-report/list` | Clear、Download、Search、View |
-| M06-P06 | referral-report | 詳情 | `/reports/referral-report/view/:id` | Download |
+| M13-P01 | referral-setting | 新增 | `/referral-setting/add` | Cancel、Save |
+| M13-P02 | Referral Setting | 列表 | `/referral-setting/list` | Clear、Search、View、Edit、Deactivate |
+| M13-P03 | Title | 編輯 | `/referral-setting/update/:id` | Cancel、Save |
+| M13-P04 | Title | 詳情 | `/referral-setting/view/:id` | Edit |
+| M13-P05 | Player Referral Batch Report | 列表 | `/reports/referral-report/list` | Clear、Download、Search、View |
+| M13-P06 | referral-report | 詳情 | `/reports/referral-report/view/:id` | Download |
 
 ## 頁面流程圖
 
 ```mermaid
 flowchart LR
   subgraph G1["Referral Setting"]
-    M06_P01["M06-P01 新增"]
-    M06_P02["M06-P02 列表"]
-    M06_P03["M06-P03 編輯"]
-    M06_P04["M06-P04 詳情"]
+    M13_P01["M13-P01 新增"]
+    M13_P02["M13-P02 列表"]
+    M13_P03["M13-P03 編輯"]
+    M13_P04["M13-P04 詳情"]
   end
-  M06_P02 -->|新增| M06_P01
-  M06_P01 -->|儲存成功| M06_P02
-  M06_P02 -->|檢視| M06_P04
-  M06_P02 -->|編輯| M06_P03
-  M06_P04 -->|編輯| M06_P03
-  M06_P03 -->|更新成功| M06_P02
+  M13_P02 -->|新增| M13_P01
+  M13_P01 -->|儲存成功| M13_P02
+  M13_P02 -->|檢視| M13_P04
+  M13_P02 -->|編輯| M13_P03
+  M13_P04 -->|編輯| M13_P03
+  M13_P03 -->|更新成功| M13_P02
   subgraph G2["Player Referral Batch Report"]
-    M06_P05["M06-P05 列表"]
-    M06_P06["M06-P06 詳情"]
+    M13_P05["M13-P05 列表"]
+    M13_P06["M13-P06 詳情"]
   end
-  M06_P05 -->|檢視| M06_P06
+  M13_P05 -->|檢視| M13_P06
 ```
 
 ## 頁面內容與操作說明
 
-### M06-P01 referral-setting(新增)
+### M13-P01 referral-setting(新增)
 
 - 路由:`/referral-setting/add`  權限:`create:referral-setting`
-- 功能點:M06-F01 新增
+- 功能點:M13-F01 新增
+- 條件顯示的欄位:Max Cap Amount *(Payout Type 選 percentage_by_deposit 時顯示)
 - 表單欄位:Title *、Payout/Earning Frequency *、Status *、Period From *、Period To *、Payout Type *、Payout Percentage / Payout Amount、Max Cap Amount *、Pool Amount *、Min Turnover *、Payout Option *、Deposit Option *、Minimum Deposit Amount *、Terms and Conditions *(欄位規則見 03 開發欄位控制)
 - 系統提示:「Referral Setting created successfully」、「Error creating referral setting」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/referral-setting_add.png`
 
 **操作步驟**
 
@@ -71,14 +72,14 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M06-P02 Referral Setting(列表)
+### M13-P02 Referral Setting(列表)
 
 - 路由:`/referral-setting/list`  權限:`view:referral-setting`
-- 功能點:M06-F02 查詢列表、M06-F03 欄位排序、M06-F04 分頁
+- 功能點:M13-F02 查詢列表、M13-F03 欄位排序、M13-F04 分頁
 - 表格欄位:ID、Title、Frequency、Period From、Period To、Status、Actions
 - 篩選條件:Title、Status、Start Date (FROM) ~ Start Date (TO)、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Referral setting deactivated successfully」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/referral-setting_list.png`
 
 **操作步驟**
 
@@ -86,14 +87,14 @@ flowchart TD
 2. 輸入篩選條件後按「Search」查詢;按「Clear」清除條件
 3. 點欄位標題排序
 
-### M06-P03 Title(編輯)
+### M13-P03 Title(編輯)
 
 - 路由:`/referral-setting/update/:id`  權限:`edit:referral-setting`
-- 功能點:M06-F05 編輯
+- 功能點:M13-F05 編輯
 - 表單欄位:Title、Status、Period From、Period To、Payout Frequency、Payout Frequency、Payout Type、Payout Option、Deposit Option、Min Deposit Amount、Max Cap Amount、Min Turnover Amount、Pool Amount、Terms and Conditions(欄位規則見 03 開發欄位控制)
 - ⚠ **實際可修改的欄位**:Status;其餘 13 個欄位只顯示、不會送出(Title、Period From、Period To、Payout Frequency、Payout Frequency、Payout Type、Payout Option、Deposit Option、Min Deposit Amount、Max Cap Amount、Min Turnover Amount、Pool Amount、Terms and Conditions)
 - 系統提示:「Referral Setting not found」、「Error updating referral setting」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/referral-setting_update_id.png`
 
 **操作步驟**
 
@@ -116,26 +117,27 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M06-P04 Title(詳情)
+### M13-P04 Title(詳情)
 
 - 路由:`/referral-setting/view/:id`  權限:`view:referral-setting`
-- 功能點:M06-F06 檢視詳情
+- 功能點:M13-F06 檢視詳情
+- 顯示內容(實機):Title、Payout Frequency、Status、Period From、Period To、Payout Type、Max Cap Amount、Payout Amount、Pool Amount、Min Turnover Amount、Payout Option、Deposit Option、Min Deposit Amount、Created By、Created At、Updated By、Updated At、Terms and Conditions
 - 系統提示:「Referral Setting not found」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/referral-setting_view_id.png`
 
 **操作步驟**
 
 1. 由列表按「View」進入,系統載入單筆資料(/referral_setting/:id)
 2. 按「Edit」進入編輯頁
 
-### M06-P05 Player Referral Batch Report(列表)
+### M13-P05 Player Referral Batch Report(列表)
 
 - 路由:`/reports/referral-report/list`  權限:`view:referral-report`
-- 功能點:M06-F07 查詢列表、M06-F08 欄位排序、M06-F09 分頁、M06-F10 匯出
+- 功能點:M13-F07 查詢列表、M13-F08 欄位排序、M13-F09 分頁、M13-F10 匯出
 - 表格欄位:ID、Title、Date、Frequency、Option、Pool Amount、Total Payout、Status、Actions
 - 篩選條件:Title、Date From ~ Date To、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「No data available to download. Please search for data first.」、「Referral report downloaded successfully」、「Failed to download referral report. Please try again.」、「No data found」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/reports_referral-report_list.png`
 
 **操作步驟**
 
@@ -144,14 +146,14 @@ flowchart TD
 3. 點欄位標題排序
 4. 按「Download CSV / Download」匯出目前查詢結果
 
-### M06-P06 referral-report(詳情)
+### M13-P06 referral-report(詳情)
 
 - 路由:`/reports/referral-report/view/:id`  權限:`view:referral-report`
-- 功能點:M06-F11 檢視詳情
+- 功能點:M13-F11 檢視詳情
 - 表格欄位:Referral、Referee、Transaction Date、Deposit Amount、Turnover Amount、Payout Amount、Status
 - 表單欄位:Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Failed to download referral report. Please try again.」、「Referral report downloaded successfully」、「No transaction details found for this report」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:略過(列表沒有資料可取得 id)
 
 **操作步驟**
 

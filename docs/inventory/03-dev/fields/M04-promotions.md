@@ -1,6 +1,6 @@
 # M04 促銷活動 — 欄位控制規格(開發)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 - **送出參數**:前端送到 API 的欄位名稱(FormData / JSON key),空白表示靜態分析無法確定或屬於篩選條件。
 - 欄位名稱後的 ⁱ 表示標籤取自元件旁的文字,不是元件本身的 label,需實機確認。
@@ -10,8 +10,8 @@
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | navigation.submenu.promotionOptInListⁱ | AppTextField | `player_id` | 否 |  |  | clearable="" | 頁面 |
-| 2 | features.promotions.placeholders.searchPlayerIdⁱ | AppTextField | `bonus_name` | 否 |  |  | clearable="" | 頁面 |
+| 1 | Search Player ID | AppTextField | `player_id` | 否 |  |  | clearable="" | 頁面 |
+| 2 | Search Promotion Name | AppTextField | `bonus_name` | 否 |  |  | clearable="" | 頁面 |
 | 3 | Items per page | AppSelect | `per_page` | 否 |  | [5,10,20,25,50] |  | 頁面 |
 
 **表格欄位**
@@ -37,8 +37,8 @@
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | navigation.submenu.promotionPayoutⁱ | AppTextField | `name` | 否 |  |  | clearable="" | 頁面 |
-| 2 | features.promotions.placeholders.searchPlayerIdⁱ | AppTextField | `bonus_name` | 否 |  |  | clearable="" | 頁面 |
+| 1 | Search Player ID | AppTextField | `name` | 否 |  |  | clearable="" | 頁面 |
+| 2 | Search Promotion Name | AppTextField | `bonus_name` | 否 |  |  | clearable="" | 頁面 |
 | 3 | Items per page | AppSelect | `per_page` | 否 |  | [5,10,20,25,50] |  | 頁面 |
 
 **表格欄位**
@@ -67,15 +67,23 @@
 | 6 | Maximum Deposit | AppTextField | `max_amount` | 是 | 必填;自訂:Maximum deposit cannot be less than minimum deposit |  |  | 頁面 |
 | 7 | Payout Frequency | VAutocomplete | `frequency_code` | 是 | 必填 | API 動態載入 | clearable="" item-title="frequency_name" item-value="frequency_code" | 頁面 |
 | 8 | Vendors | VAutocomplete | `vendor_id` | 是 | 必填 | [] | multiple="" clearable="" chips="" item-title="game_provider_name" item-value="game_provider_id" closable-chips="" | 頁面 |
-| 9 | Terms and Conditionsⁱ | TiptapEditor | `term_and_condition` | 否 |  |  | rows="5" | 頁面 |
+| 9 | Terms and Conditions | TiptapEditor | `term_and_condition` | 否 |  |  | 說明:富文本編輯器 rows="5" | 人工補全 |
 | 10 | Payout Method | VAutocomplete | `payout_option_code` | 是 | 必填 | [{payout_name:"OKash Balance",payout_code:"igaming_credit"},{payout_name:"Free Play (HALO)",payout_code:"free_play_halo"}] | clearable="" item-title="payout_name" item-value="payout_code" | 頁面 |
-| 11 | Percentage | AppTextField | `percentage` | 是 | 必填;自訂:Percentage must be between 0.0001 and 100 |  | type="number" min="0.0001" max="100" step="0.0001" | 頁面 |
+| 11 | Percentage(%) | AppTextField | `percentage` | 是 | 必填;自訂:Percentage must be between 0.0001 and 100 |  | type="number" min="0.0001" max="100" step="0.0001" | 人工補全 |
 | 12 | Max Campaign Amount | AppTextField | `max_campaign_amount` | 是 | 必填 |  |  | 頁面 |
 | 13 | Turnover Amount | AppTextField | `turnover_amount` | 是 | 必填 |  |  | 頁面 |
 | 14 | Earn Points(Tier Points) | AppTextField | `tier_points` | 否 |  |  |  | 頁面 |
-| 15 | Upload Banner | VFileInput | `banner_image` | 否 |  |  | accept="image/png,image/jpeg,image/jpg" | 頁面 |
+| 15 | Banner | VFileInput | `banner_image` | 否 |  |  | accept="image/png,image/jpeg,image/jpg" | 人工補全 |
 
 **API**:`GET /setting/player_rank`、`GET /setting/deposit_option`、`GET /game_providers`、`POST /promotion_setting`
+
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/game_providers` | YellowBat、ETG、Zitro、Nsoft、Jili、Fachai、iTable、iSLot、Skivot、Omniplay、JDB、Playtech、Rps、Light & Wonder、Habanero、Pragmatic Play、Inferno Play |
+| `/setting/deposit_option` | accumulative_deposit、first_deposit、first_promo_deposit、highest_deposit |
+| `/setting/player_rank` | Prime、Elite、Premium、Supreme、Maharlika、Okada Club、Okada VIP - Prime、Okada VIP - Premium、Okada VIP - Supreme、Okada VIP - Maharlika、Slot VVIP、All Member、Okada VIP - Elite、Bronze、Silver、Gold、Platinum、Ruby、Diamond、Chairman、Okada Club Emerald、Okada Club Diamond |
 
 ## M04-P04 Promotion Settings(列表)`/promotions/settings/list`
 
@@ -105,8 +113,10 @@
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Email | AppTextField | `email` | 否 |  |  | type="email" | 頁面 |
-| 2 | Password | AppTextField | `password` | 否 |  |  | type="password" | 頁面 |
+| 1 | Email | AppTextField | `email` | 否 |  |  | 顯示條件:按 Activate / Deactivate 後的確認對話框內,需輸入管理員帳密 type="email" | 人工補全 |
+| 2 | Password | AppTextField | `password` | 否 |  |  | 顯示條件:按 Activate / Deactivate 後的確認對話框內,需輸入管理員帳密 type="password" | 人工補全 |
+
+**唯讀顯示欄位(實機畫面)**:Promotion Name、Start Date、End Date、Player Ranking、Deposit Option、Minimum Amount、Maximum Amount、Payout Frequency、Vendors、Terms and Conditions、Payment Method、Percentage、Max Campaign Amount、Turnover Amount、Tier Points、Created By、Created At、Updated By、Updated At、Banner
 
 **API**:`POST /promotion_setting/status/:id`、`GET /promotion_setting/:id`
 

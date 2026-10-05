@@ -1,12 +1,12 @@
-# M07 內容中心 — 欄位控制規格(開發)
+# M06 內容中心 — 欄位控制規格(開發)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 - **送出參數**:前端送到 API 的欄位名稱(FormData / JSON key),空白表示靜態分析無法確定或屬於篩選條件。
 - 欄位名稱後的 ⁱ 表示標籤取自元件旁的文字,不是元件本身的 label,需實機確認。
 - **驗證規則**:前端表單驗證;後端驗證需登入後以實際送出結果補充(只讀查驗不送出,故標為未驗證)。
 
-## M07-P01 announcements(新增)`/announcements/add`
+## M06-P01 announcements(新增)`/announcements/add`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -14,15 +14,21 @@
 | 2 | Category | VAutocomplete | `announcement_category_id` | 是 | 自訂:is required;自訂:Please enter a valid integer | [] | required="" item-title="name" item-value="id" | 頁面 |
 | 3 | Statusⁱ | VSwitch | `active_status` | 否 |  |  | color="success" | 人工補全 |
 | 4 | Enable Popupⁱ | VSwitch | `is_enable_pop_up` | 否 |  |  | 說明:開啟後才顯示媒體類型、影片連結 color="primary" | 人工補全 |
-| 5 | Media Type | VAutocomplete | `media_type` | 否 |  | [{name:"Image",value:"image"},{name:"Video",value:"video"}] | item-title="name" item-value="value" | 頁面 |
-| 6 | Video Link | AppTextField | `video_link` | 是 | 必填;URL 格式(http/https) |  |  | 頁面 |
-| 7 | Banner Imageⁱ |  | `banner` | 否 |  |  | 說明:開啟彈窗且媒體類型為 video 時不送出,改送 video_link accept="image/jpeg,image/png,image/jpg,image/gif,image/svg+xml" type="file" | 人工補全 |
+| 5 | Media Type | VAutocomplete | `media_type` | 否 |  | [{name:"Image",value:"image"},{name:"Video",value:"video"}] | 顯示條件:開啟 Enable Popup 後顯示 item-title="name" item-value="value" | 人工補全 |
+| 6 | Video Link | AppTextField | `video_link` | 是 | 必填;URL 格式(http/https) |  | 顯示條件:開啟 Enable Popup 且 Media Type 選 Video 後顯示 | 人工補全 |
+| 7 | Banner Imageⁱ |  | `banner` | 否 |  |  | 顯示條件:開啟 Enable Popup 且 Media Type 選 Image 時顯示 說明:Media Type 為 Video 時不送出,改送 video_link accept="image/jpeg,image/png,image/jpg,image/gif,image/svg+xml" type="file" | 人工補全 |
 | 8 | Start Date ~ End Date | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 人工補全 |
 | 9 | Content | TiptapEditor | `announcement_content` | 是 | 自訂:is required |  | 說明:送出前以 Base64 編碼 HTML rows="5" | 人工補全 |
 
 **API**:`GET /announcement_categories`、`POST /announcement`
 
-## M07-P02 Announcements(列表)`/announcements/list`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/announcement_categories` | News、Features Update、Maintenance、Promotion |
+
+## M06-P02 Announcements(列表)`/announcements/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -49,7 +55,13 @@
 
 **API**:`GET /announcement_categories`、`GET /announcement`、`POST /announcement/sequence/update`
 
-## M07-P03 announcements(編輯)`/announcements/update/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/announcement_categories` | News、Features Update、Maintenance、Promotion |
+
+## M06-P03 announcements(編輯)`/announcements/update/:id`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -60,16 +72,22 @@
 | 5 | Start Date ~ End Date | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 人工補全 |
 | 6 | Media Type | VAutocomplete | `media_type` | 否 |  | [{name:"Image",value:"image"},{name:"Video",value:"video"}] | disabled=e(p) item-title="name" item-value="value" | 頁面 |
 | 7 | Video Link | AppTextField | `video_link` | 是 | 必填;URL 格式(http/https) |  | disabled=e(p) | 頁面 |
-| 8 | Banner Imageⁱ |  | `banner` | 否 |  |  | 說明:未保留原圖時送 remove_banner=1 accept="image/jpeg,image/png,image/jpg,image/gif,image/svg+xml" type="file" | 人工補全 |
+| 8 | Banner Imageⁱ |  | `banner` | 否 |  |  | 顯示條件:開啟 Enable Popup 且 Media Type 選 Image 時顯示 說明:未保留原圖時送 remove_banner=1 accept="image/jpeg,image/png,image/jpg,image/gif,image/svg+xml" type="file" | 人工補全 |
 | 9 | Content | TiptapEditor | `announcement_content` | 是 | 自訂:is required |  | 說明:送出前以 Base64 編碼 HTML disabled=e(p) rows="5" | 人工補全 |
 
 **API**:`GET /announcement_categories`、`GET /announcement/:id`、`POST /announcement/:id`
 
-## M07-P04 Announcements(詳情)`/announcements/view/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/announcement_categories` | News、Features Update、Maintenance、Promotion |
+
+## M06-P04 Announcements(詳情)`/announcements/view/:id`
 
 **API**:`GET /announcement/:id`
 
-## M07-P05 banners(新增)`/banners/add`
+## M06-P05 banners(新增)`/banners/add`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -79,16 +97,25 @@
 | 4 | Statusⁱ | VSwitch | `advertisement_status` | 否 |  |  |  | 頁面 |
 | 5 | Start Date ~ End Date | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 頁面 |
 | 6 | Media Type | VAutocomplete | `media_type` | 是 | 必填 | [{name:"Image",value:"image"},{name:"Video",value:"video"}] | clearable="" item-title="name" item-value="value" | 頁面 |
-| 7 | Video Link (Large) | AppTextField | `video_link_large` | 是 | 必填;URL 格式(http/https) |  |  | 頁面 |
-| 8 | Video Link (Medium) | AppTextField | `video_link_medium` | 是 | 必填;URL 格式(http/https) |  |  | 頁面 |
-| 9 | Video Link (Small) | AppTextField | `video_link_small` | 是 | 必填;URL 格式(http/https) |  |  | 頁面 |
+| 7 | Video Link (Large) | AppTextField | `video_link_large` | 是 | 必填;URL 格式(http/https) |  | 顯示條件:Media Type 選 Video 後顯示 | 人工補全 |
+| 8 | Video Link (Medium) | AppTextField | `video_link_medium` | 是 | 必填;URL 格式(http/https) |  | 顯示條件:Media Type 選 Video 後顯示 | 人工補全 |
+| 9 | Video Link (Small) | AppTextField | `video_link_small` | 是 | 必填;URL 格式(http/https) |  | 顯示條件:Media Type 選 Video 後顯示 | 人工補全 |
 | 10 | Desktop(1368x360) | VFileInput | `banner_image_large` | 否 |  |  | accept="image/png,image/jpeg,image/jpg" | 頁面 |
 | 11 | Tablet(768x360) | VFileInput | `banner_image_medium` | 否 |  |  | accept="image/png,image/jpeg,image/jpg" | 頁面 |
 | 12 | Mobile(500x500) | VFileInput | `banner_image_small` | 否 |  |  | accept="image/png,image/jpeg,image/jpg" | 頁面 |
 
+> 頁面說明:圖片上傳分 Large / Medium / Small Banner 三區,各對應 Desktop(1368x360)、Tablet(768x360)、Mobile(500x500)
+
 **API**:`POST /advertisement`、`GET /advertisement_position_list`、`GET /advertisement_page_list`
 
-## M07-P06 Banners(列表)`/banners/list`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/advertisement_page_list` | Login、Sign Up、Main Lobby、Live Slots、Live Tables、eGaming、RPS |
+| `/advertisement_position_list` | Position 1 |
+
+## M06-P06 Banners(列表)`/banners/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -115,7 +142,13 @@
 
 **API**:`GET /advertisement`、`PUT /advertisement/status/:id`、`GET /advertisement_page_list`、`POST /advertisement/sequence/update`
 
-## M07-P07 banners(編輯)`/banners/update/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/advertisement_page_list` | Login、Sign Up、Main Lobby、Live Slots、Live Tables、eGaming、RPS |
+
+## M06-P07 banners(編輯)`/banners/update/:id`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -125,41 +158,66 @@
 | 4 | Statusⁱ | VSwitch | `advertisement_status` | 否 |  |  |  | 頁面 |
 | 5 | Start Date ~ End Date | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 頁面 |
 | 6 | Media Type | VAutocomplete | `media_type` | 是 | 必填 | [{name:"Image",value:"image"},{name:"Video",value:"video"}] | clearable="" item-title="name" item-value="value" | 頁面 |
-| 7 | Video Link (Large) | AppTextField | `video_link_large` | 是 | 必填;URL 格式(http/https) |  |  | 頁面 |
-| 8 | Video Link (Medium) | AppTextField | `video_link_medium` | 是 | 必填;URL 格式(http/https) |  |  | 頁面 |
-| 9 | Video Link (Small) | AppTextField | `video_link_small` | 是 | 必填;URL 格式(http/https) |  |  | 頁面 |
-| 10 | Desktop(1368x360) | VFileInput | `banner_image_large` | 否 |  |  | accept="image/*" | 頁面 |
-| 11 | Tablet(768x360) | VFileInput | `banner_image_medium` | 否 |  |  | accept="image/*" | 頁面 |
-| 12 | Mobile(500x500) | VFileInput | `banner_image_small` | 否 |  |  | accept="image/*" | 頁面 |
+| 7 | Video Link (Large) | AppTextField | `video_link_large` | 是 | 必填;URL 格式(http/https) |  | 顯示條件:Media Type 為 Video 時顯示 | 人工補全 |
+| 8 | Video Link (Medium) | AppTextField | `video_link_medium` | 是 | 必填;URL 格式(http/https) |  | 顯示條件:Media Type 為 Video 時顯示 | 人工補全 |
+| 9 | Video Link (Small) | AppTextField | `video_link_small` | 是 | 必填;URL 格式(http/https) |  | 顯示條件:Media Type 為 Video 時顯示 | 人工補全 |
+| 10 | Desktop(1368x360) | VFileInput | `banner_image_large` | 否 |  |  | 顯示條件:Media Type 為 Image 時顯示 accept="image/*" | 人工補全 |
+| 11 | Tablet(768x360) | VFileInput | `banner_image_medium` | 否 |  |  | 顯示條件:Media Type 為 Image 時顯示 accept="image/*" | 人工補全 |
+| 12 | Mobile(500x500) | VFileInput | `banner_image_small` | 否 |  |  | 顯示條件:Media Type 為 Image 時顯示 accept="image/*" | 人工補全 |
 
 **API**:`GET /advertisement/:id`、`POST /advertisement/:id`、`GET /advertisement_position_list`、`GET /advertisement_page_list`
 
-## M07-P08 banners(詳情)`/banners/view/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/advertisement_page_list` | Login、Sign Up、Main Lobby、Live Slots、Live Tables、eGaming、RPS |
+| `/advertisement_position_list` | Position 1 |
+
+## M06-P08 banners(詳情)`/banners/view/:id`
+
+**唯讀顯示欄位(實機畫面)**:Name、Position、Page、Status、Sequence No.、Start Date、End Date、Created By、Created At、Updated By、Updated At、Video Link (Large)、Video Link (Medium)、Video Link (Small)
 
 **API**:`GET /advertisement/:id`
 
-## M07-P09 Responsible Gaming(列表)`/responsible-gaming/list`
+## M06-P09 Responsible Gaming(列表)`/responsible-gaming/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Language | VAutocomplete | `modelValue` | 否 |  | API 動態載入 | item-title="general_name" item-value=i | 頁面 |
 
+> 頁面說明:每個語系一張卡片,顯示 Title、Content、Updated At / By,按 Edit 進入該語系編輯
+
+**唯讀顯示欄位(實機畫面)**:Updated At、Updated By
+
 **API**:`GET /get_language`
 
-## M07-P10 Title(編輯)`/responsible-gaming/update/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/get_language` | en、zh、ko、ja |
+
+## M06-P10 Title(編輯)`/responsible-gaming/update/:id`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Title | AppTextField | `title` | 是 | 必填 |  |  | 頁面 |
 | 2 | Contentⁱ | TiptapEditor | —(只顯示,不送出;資料來自 `content`) | 否 |  |  |  | 頁面 |
 
+> 頁面說明:依語系編輯,Language 只顯示
+
 **API**:`PUT /responsible_gaming`
 
-## M07-P11 Status Declaration(列表)`/status-declaration/list`
+## M06-P11 Status Declaration(列表)`/status-declaration/list`
+
+> 頁面說明:卡片顯示 Status、Content、Updated At / By,按 Edit 進入編輯
+
+**唯讀顯示欄位(實機畫面)**:Updated By、Updated At
 
 **API**:`GET /show_status_declaration`
 
-## M07-P12 status-declaration(編輯)`/status-declaration/update/:id`
+## M06-P12 status-declaration(編輯)`/status-declaration/update/:id`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -168,20 +226,32 @@
 
 **API**:`GET /show_status_declaration`、`PUT /update_status_declaration/:id`
 
-## M07-P13 Terms and Conditions(列表)`/terms-and-conditions/list`
+## M06-P13 Terms and Conditions(列表)`/terms-and-conditions/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Language | VAutocomplete | `modelValue` | 否 |  | API 動態載入 | item-title="general_name" item-value=i | 頁面 |
 
+> 頁面說明:每個語系一張卡片,顯示 Title、Content、Updated At / By,按 Edit 進入該語系編輯
+
+**唯讀顯示欄位(實機畫面)**:Updated At、Updated By
+
 **API**:`GET /get_language`
 
-## M07-P14 Title(編輯)`/terms-and-conditions/update/:id`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/get_language` | en、zh、ko、ja |
+
+## M06-P14 Title(編輯)`/terms-and-conditions/update/:id`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
 | 1 | Title | AppTextField | `title` | 是 | 必填 |  |  | 頁面 |
 | 2 | Contentⁱ | TiptapEditor | —(只顯示,不送出;資料來自 `content`) | 否 |  |  |  | 頁面 |
+
+> 頁面說明:依語系編輯,Language 只顯示
 
 **API**:`PUT /term_and_condition`
 

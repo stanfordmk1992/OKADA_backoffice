@@ -1,6 +1,6 @@
-# M05 獎金(免費旋轉)(Bonus / Free Spin)— 模塊內容與操作流程(產品)
+# M15 獎金(免費旋轉)(Bonus / Free Spin)— 模塊內容與操作流程(產品)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 ## 模塊說明
 
@@ -10,70 +10,70 @@
 
 | 頁面 | 名稱 | 類型 | 路由 | 主要操作 |
 |---|---|---|---|---|
-| M05-P01 | bonus / omniplay / freespin | 新增 | `/bonus/omniplay/freespin/create` | Cancel、Save |
-| M05-P02 | bonus / omniplay / freespin | 列表 | `/bonus/omniplay/freespin/list` | Clear、Download CSV、Search、Cancel |
-| M05-P03 | bonus / omniplay / freespin | 報表 | `/bonus/omniplay/freespin/reports` | Clear、Download CSV、Search |
-| M05-P04 | bonus / playtech / freespin | 新增 | `/bonus/playtech/freespin/create` | Cancel、Save |
-| M05-P05 | bonus / playtech / freespin | 列表 | `/bonus/playtech/freespin/list` | Clear、Download CSV、Search、View |
-| M05-P06 | bonus / playtech / freespin | 報表 | `/bonus/playtech/freespin/reports` | Clear、Download CSV、Search |
-| M05-P07 | bonus / playtech / freespin | 詳情 | `/bonus/playtech/freespin/view/:id` |  |
-| M05-P08 | bonus / pragmatic-play / freespin | 新增 | `/bonus/pragmatic-play/freespin/create` | Cancel、Save |
-| M05-P09 | bonus / pragmatic-play / freespin | 列表 | `/bonus/pragmatic-play/freespin/list` | Clear、Download CSV、Search、View |
-| M05-P10 | bonus / pragmatic-play / freespin | 報表 | `/bonus/pragmatic-play/freespin/reports` | Clear、Download CSV、Search |
-| M05-P11 | bonus / pragmatic-play / freespin | 詳情 | `/bonus/pragmatic-play/freespin/view/:id` |  |
+| M15-P01 | bonus / omniplay / freespin | 新增 | `/bonus/omniplay/freespin/create` | Cancel、Save |
+| M15-P02 | bonus / omniplay / freespin | 列表 | `/bonus/omniplay/freespin/list` | Clear、Download CSV、Search、Cancel |
+| M15-P03 | bonus / omniplay / freespin | 報表 | `/bonus/omniplay/freespin/reports` | Clear、Download CSV、Search |
+| M15-P04 | bonus / playtech / freespin | 新增 | `/bonus/playtech/freespin/create` | Cancel、Save |
+| M15-P05 | bonus / playtech / freespin | 列表 | `/bonus/playtech/freespin/list` | Clear、Download CSV、Search、View |
+| M15-P06 | bonus / playtech / freespin | 報表 | `/bonus/playtech/freespin/reports` | Clear、Download CSV、Search |
+| M15-P07 | bonus / playtech / freespin | 詳情 | `/bonus/playtech/freespin/view/:id` |  |
+| M15-P08 | bonus / pragmatic-play / freespin | 新增 | `/bonus/pragmatic-play/freespin/create` | Cancel、Save |
+| M15-P09 | bonus / pragmatic-play / freespin | 列表 | `/bonus/pragmatic-play/freespin/list` | Clear、Download CSV、Search、View |
+| M15-P10 | bonus / pragmatic-play / freespin | 報表 | `/bonus/pragmatic-play/freespin/reports` | Clear、Download CSV、Search |
+| M15-P11 | bonus / pragmatic-play / freespin | 詳情 | `/bonus/pragmatic-play/freespin/view/:id` |  |
 
 ## 頁面流程圖
 
 ```mermaid
 flowchart LR
   subgraph G1["bonus / omniplay / freespin"]
-    M05_P01["M05-P01 新增"]
-    M05_P02["M05-P02 列表"]
-    M05_P03["M05-P03 報表"]
+    M15_P01["M15-P01 新增"]
+    M15_P02["M15-P02 列表"]
+    M15_P03["M15-P03 報表"]
   end
-  M05_P02 -->|新增| M05_P01
-  M05_P01 -->|儲存成功| M05_P02
-  M05_P02 -.-> M05_P03
-  M05_P01 -.-> M05_P01_7342(["發放免費旋轉"])
-  M05_P01 -.-> M05_P01_8367(["發放免費旋轉"])
-  M05_P02 -.-> M05_P02_1369(["移除免費旋轉"])
+  M15_P02 -->|新增| M15_P01
+  M15_P01 -->|儲存成功| M15_P02
+  M15_P02 -.-> M15_P03
+  M15_P01 -.-> M15_P01_7342(["發放免費旋轉"])
+  M15_P01 -.-> M15_P01_8367(["發放免費旋轉"])
+  M15_P02 -.-> M15_P02_1369(["移除免費旋轉"])
   subgraph G2["bonus / playtech / freespin"]
-    M05_P04["M05-P04 新增"]
-    M05_P05["M05-P05 列表"]
-    M05_P06["M05-P06 報表"]
-    M05_P07["M05-P07 詳情"]
+    M15_P04["M15-P04 新增"]
+    M15_P05["M15-P05 列表"]
+    M15_P06["M15-P06 報表"]
+    M15_P07["M15-P07 詳情"]
   end
-  M05_P05 -->|新增| M05_P04
-  M05_P04 -->|儲存成功| M05_P05
-  M05_P05 -->|檢視| M05_P07
-  M05_P05 -.-> M05_P06
-  M05_P04 -.-> M05_P04_8402(["發放免費旋轉"])
-  M05_P07 -.-> M05_P07_8097(["移除免費旋轉"])
-  M05_P07 -.-> M05_P07_8838(["移除玩家全部未使用免費旋轉"])
+  M15_P05 -->|新增| M15_P04
+  M15_P04 -->|儲存成功| M15_P05
+  M15_P05 -->|檢視| M15_P07
+  M15_P05 -.-> M15_P06
+  M15_P04 -.-> M15_P04_8402(["發放免費旋轉"])
+  M15_P07 -.-> M15_P07_8097(["移除免費旋轉"])
+  M15_P07 -.-> M15_P07_8838(["移除玩家全部未使用免費旋轉"])
   subgraph G3["bonus / pragmatic-play / freespin"]
-    M05_P08["M05-P08 新增"]
-    M05_P09["M05-P09 列表"]
-    M05_P10["M05-P10 報表"]
-    M05_P11["M05-P11 詳情"]
+    M15_P08["M15-P08 新增"]
+    M15_P09["M15-P09 列表"]
+    M15_P10["M15-P10 報表"]
+    M15_P11["M15-P11 詳情"]
   end
-  M05_P09 -->|新增| M05_P08
-  M05_P08 -->|儲存成功| M05_P09
-  M05_P09 -->|檢視| M05_P11
-  M05_P09 -.-> M05_P10
-  M05_P08 -.-> M05_P08_4239(["發放免費旋轉"])
-  M05_P11 -.-> M05_P11_3510(["移除免費旋轉"])
-  M05_P11 -.-> M05_P11_6164(["移除玩家全部未使用免費旋轉"])
+  M15_P09 -->|新增| M15_P08
+  M15_P08 -->|儲存成功| M15_P09
+  M15_P09 -->|檢視| M15_P11
+  M15_P09 -.-> M15_P10
+  M15_P08 -.-> M15_P08_4239(["發放免費旋轉"])
+  M15_P11 -.-> M15_P11_3510(["移除免費旋轉"])
+  M15_P11 -.-> M15_P11_6164(["移除玩家全部未使用免費旋轉"])
 ```
 
 ## 頁面內容與操作說明
 
-### M05-P01 bonus / omniplay / freespin(新增)
+### M15-P01 bonus / omniplay / freespin(新增)
 
 - 路由:`/bonus/omniplay/freespin/create`  權限:`create:bonus-omniplay-freespin`
-- 功能點:M05-F01 新增、M05-F02 發放免費旋轉
+- 功能點:M15-F01 新增、M15-F02 發放免費旋轉
 - 表單欄位:Member ID(s)、Player Tier、Game ID(s)、Denom、Max Win Amount、Free Spin Count、Expiration Time(欄位規則見 03 開發欄位控制)
 - 系統提示:「Free spin card given successfully.」、「Free spin queued for {total_players} player(s) across {total_batches} batch(es)」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_omniplay_freespin_create.png`
 
 **操作步驟**
 
@@ -96,14 +96,14 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M05-P02 bonus / omniplay / freespin(列表)
+### M15-P02 bonus / omniplay / freespin(列表)
 
 - 路由:`/bonus/omniplay/freespin/list`  權限:`view:bonus-omniplay-freespin`
-- 功能點:M05-F03 查詢列表、M05-F04 分頁、M05-F05 匯出、M05-F06 移除免費旋轉
+- 功能點:M15-F03 查詢列表、M15-F04 分頁、M15-F05 匯出、M15-F06 移除免費旋轉
 - 表格欄位:Batch ID、Member ID、Free Card ID、Game Code、Game Name、Denom、Max Win Amount、Free Spin Count、Amount、Usage Status、Expiration Time、Status、Created By、Created Date、Actions
 - 篩選條件:Member ID、Batch ID、Free Card ID、Status、Usage Status、Created Start Date ~ Created End Date、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Download started」、「Download failed, please try again」、「Free spin cancelled successfully」、「Only issued free spins can be cancelled」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_omniplay_freespin_list.png`
 
 **操作步驟**
 
@@ -112,13 +112,15 @@ flowchart TD
 3. 按「Download CSV / Download」匯出目前查詢結果
 4. 移除免費旋轉(POST /{vendor}/freespin/remove)
 
-### M05-P03 bonus / omniplay / freespin(報表)
+### M15-P03 bonus / omniplay / freespin(報表)
 
 - 路由:`/bonus/omniplay/freespin/reports`  權限:`view:bonus-omniplay-freespin-reports`
-- 功能點:M05-F07 查詢列表、M05-F08 分頁、M05-F09 匯出
-- 篩選條件:Free Spin Report - Omniplay、Member ID、Items per page(欄位規則見 03 開發欄位控制)
+- 功能點:M15-F07 查詢列表、M15-F08 分頁、M15-F09 匯出
+- 表格欄位(實機):No、Member ID、Active Cards、Cards Cancelled、Cards Given、Total Game Count Given
+- 條件顯示的欄位:Member ID(切換到 Game Records / Bonus Transaction 頁籤後顯示)
+- 篩選條件:Start Date ~ End Date、Member ID、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Download started」、「Download failed, please try again」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_omniplay_freespin_reports.png`
 
 **操作步驟**
 
@@ -126,13 +128,13 @@ flowchart TD
 2. 輸入篩選條件後按「Search」查詢;按「Clear」清除條件
 3. 按「Download CSV / Download」匯出目前查詢結果
 
-### M05-P04 bonus / playtech / freespin(新增)
+### M15-P04 bonus / playtech / freespin(新增)
 
 - 路由:`/bonus/playtech/freespin/create`  權限:`create:playtech-freespin`
-- 功能點:M05-F10 新增、M05-F11 發放免費旋轉
+- 功能點:M15-F10 新增、M15-F11 發放免費旋轉
 - 表單欄位:Member ID(s)、Player Tier、Bonus ID、Free Spin Count、Game(欄位規則見 03 開發欄位控制)
 - 系統提示:「Free spin queued for {total_players} player(s) across {total_batches} batch(es)」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_playtech_freespin_create.png`
 
 **操作步驟**
 
@@ -155,14 +157,14 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M05-P05 bonus / playtech / freespin(列表)
+### M15-P05 bonus / playtech / freespin(列表)
 
 - 路由:`/bonus/playtech/freespin/list`  權限:`view:playtech-freespin`
-- 功能點:M05-F12 查詢列表、M05-F13 分頁、M05-F14 匯出
+- 功能點:M15-F12 查詢列表、M15-F13 分頁、M15-F14 匯出
 - 表格欄位:Ref ID、Member ID、Bonus ID、Free Spin Count、Free Spin Used、Status、Created By、Created Date、Actions
 - 篩選條件:Member ID、Ref ID、Status、Created Start Date ~ Created End Date、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Download started」、「Download failed, please try again」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_playtech_freespin_list.png`
 
 **操作步驟**
 
@@ -170,13 +172,15 @@ flowchart TD
 2. 輸入篩選條件後按「Search」查詢;按「Clear」清除條件
 3. 按「Download CSV / Download」匯出目前查詢結果
 
-### M05-P06 bonus / playtech / freespin(報表)
+### M15-P06 bonus / playtech / freespin(報表)
 
 - 路由:`/bonus/playtech/freespin/reports`  權限:`view:playtech-freespin`
-- 功能點:M05-F15 查詢列表、M05-F16 分頁、M05-F17 匯出
-- 篩選條件:Free Spin Report - Playtech、Member ID、Items per page(欄位規則見 03 開發欄位控制)
+- 功能點:M15-F15 查詢列表、M15-F16 分頁、M15-F17 匯出
+- 表格欄位(實機):No、Member ID、Total Spins Given、Total Spins Revoked、Total Spins Used、Total Spins Remaining
+- 條件顯示的欄位:Member ID(切換到 Game Records / Bonus Transaction 頁籤後顯示)
+- 篩選條件:Start Date ~ End Date、Member ID、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Download started」、「Download failed, please try again」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_playtech_freespin_reports.png`
 
 **操作步驟**
 
@@ -184,12 +188,13 @@ flowchart TD
 2. 輸入篩選條件後按「Search」查詢;按「Clear」清除條件
 3. 按「Download CSV / Download」匯出目前查詢結果
 
-### M05-P07 bonus / playtech / freespin(詳情)
+### M15-P07 bonus / playtech / freespin(詳情)
 
 - 路由:`/bonus/playtech/freespin/view/:id`  權限:`view:playtech-freespin`
-- 功能點:M05-F18 檢視詳情、M05-F19 移除免費旋轉、M05-F20 移除玩家全部未使用免費旋轉
+- 功能點:M15-F18 檢視詳情、M15-F19 移除免費旋轉、M15-F20 移除玩家全部未使用免費旋轉
+- 表格欄位(實機):Ref ID、Bonus ID、Free Spin Count、Free Spin Used、Status、Created Date、Created By、Revoked Date、Revoked By、Actions
 - 系統提示:「This free spin cannot be revoked because one or more spins have already been used.」、「Free spin revoked successfully」、「All free spins revoked successfully」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_playtech_freespin_view_id.png`
 
 **操作步驟**
 
@@ -197,13 +202,13 @@ flowchart TD
 2. 移除免費旋轉(POST /freespin/remove)
 3. 移除玩家全部未使用免費旋轉(POST /freespin/remove-all)
 
-### M05-P08 bonus / pragmatic-play / freespin(新增)
+### M15-P08 bonus / pragmatic-play / freespin(新增)
 
 - 路由:`/bonus/pragmatic-play/freespin/create`  權限:`create:bonus-pragmatic-freespin`
-- 功能點:M05-F21 新增、M05-F22 發放免費旋轉
+- 功能點:M15-F21 新增、M15-F22 發放免費旋轉
 - 表單欄位:Member ID(s)、Player Tier、Bonus ID、Free Spin Count(欄位規則見 03 開發欄位控制)
 - 系統提示:「Free spin queued for {total_players} player(s) across {total_batches} batch(es)」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_pragmatic-play_freespin_create.png`
 
 **操作步驟**
 
@@ -226,14 +231,14 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M05-P09 bonus / pragmatic-play / freespin(列表)
+### M15-P09 bonus / pragmatic-play / freespin(列表)
 
 - 路由:`/bonus/pragmatic-play/freespin/list`  權限:`view:bonus-pragmatic-freespin`
-- 功能點:M05-F23 查詢列表、M05-F24 分頁、M05-F25 匯出
+- 功能點:M15-F23 查詢列表、M15-F24 分頁、M15-F25 匯出
 - 表格欄位:Ref ID、Member ID、Bonus ID、Free Spin Count、Free Spin Used、Status、Created By、Created Date、Actions
 - 篩選條件:Member ID、Ref ID、Status、Created Start Date ~ Created End Date、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Download started」、「Download failed, please try again」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_pragmatic-play_freespin_list.png`
 
 **操作步驟**
 
@@ -241,13 +246,15 @@ flowchart TD
 2. 輸入篩選條件後按「Search」查詢;按「Clear」清除條件
 3. 按「Download CSV / Download」匯出目前查詢結果
 
-### M05-P10 bonus / pragmatic-play / freespin(報表)
+### M15-P10 bonus / pragmatic-play / freespin(報表)
 
 - 路由:`/bonus/pragmatic-play/freespin/reports`  權限:`view:pragmatic-freespin-reports`
-- 功能點:M05-F26 查詢列表、M05-F27 分頁、M05-F28 匯出
-- 篩選條件:Free Spin Report - Pragmatic Play、Member ID、Items per page(欄位規則見 03 開發欄位控制)
+- 功能點:M15-F26 查詢列表、M15-F27 分頁、M15-F28 匯出
+- 表格欄位(實機):No、Member ID、Total Spins Given、Total Spins Revoked、Total Spins Used、Total Spins Remaining
+- 條件顯示的欄位:Member ID(切換到 Game Records / Bonus Transaction 頁籤後顯示)
+- 篩選條件:Start Date ~ End Date、Member ID、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「Download started」、「Download failed, please try again」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_pragmatic-play_freespin_reports.png`
 
 **操作步驟**
 
@@ -255,12 +262,13 @@ flowchart TD
 2. 輸入篩選條件後按「Search」查詢;按「Clear」清除條件
 3. 按「Download CSV / Download」匯出目前查詢結果
 
-### M05-P11 bonus / pragmatic-play / freespin(詳情)
+### M15-P11 bonus / pragmatic-play / freespin(詳情)
 
 - 路由:`/bonus/pragmatic-play/freespin/view/:id`  權限:`view:bonus-pragmatic-freespin`
-- 功能點:M05-F29 檢視詳情、M05-F30 移除免費旋轉、M05-F31 移除玩家全部未使用免費旋轉
+- 功能點:M15-F29 檢視詳情、M15-F30 移除免費旋轉、M15-F31 移除玩家全部未使用免費旋轉
+- 表格欄位(實機):Ref ID、Bonus ID、Free Spin Count、Free Spin Used、Status、Created Date、Created By、Revoked Date、Revoked By、Actions
 - 系統提示:「This free spin cannot be revoked because one or more spins have already been used.」、「Free spin revoked successfully」、「All free spins revoked successfully」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/bonus_pragmatic-play_freespin_view_id.png`
 
 **操作步驟**
 

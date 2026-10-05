@@ -1,12 +1,12 @@
-# M05 獎金(免費旋轉) — 欄位控制規格(開發)
+# M15 獎金(免費旋轉) — 欄位控制規格(開發)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 - **送出參數**:前端送到 API 的欄位名稱(FormData / JSON key),空白表示靜態分析無法確定或屬於篩選條件。
 - 欄位名稱後的 ⁱ 表示標籤取自元件旁的文字,不是元件本身的 label,需實機確認。
 - **驗證規則**:前端表單驗證;後端驗證需登入後以實際送出結果補充(只讀查驗不送出,故標為未驗證)。
 
-## M05-P01 bonus / omniplay / freespin(新增)`/bonus/omniplay/freespin/create`
+## M15-P01 bonus / omniplay / freespin(新增)`/bonus/omniplay/freespin/create`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -20,7 +20,13 @@
 
 **API**:`GET /lookup/players`、`GET /setting/player_rank`、`GET /{vendor}/freespin/config`、`POST /{vendor}/freespin/give`、`POST /{vendor}/freespin/massGive`
 
-## M05-P02 bonus / omniplay / freespin(列表)`/bonus/omniplay/freespin/list`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/setting/player_rank` | Prime、Elite、Premium、Supreme、Maharlika、Okada Club、Okada VIP - Prime、Okada VIP - Premium、Okada VIP - Supreme、Okada VIP - Maharlika、Slot VVIP、All Member、Okada VIP - Elite、Bronze、Silver、Gold、Platinum、Ruby、Diamond、Chairman、Okada Club Emerald、Okada Club Diamond |
+
+## M15-P02 bonus / omniplay / freespin(列表)`/bonus/omniplay/freespin/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -54,17 +60,19 @@
 
 **API**:`GET /{vendor}/freespin/list`、`POST /{vendor}/freespin/remove`
 
-## M05-P03 bonus / omniplay / freespin(報表)`/bonus/omniplay/freespin/reports`
+## M15-P03 bonus / omniplay / freespin(報表)`/bonus/omniplay/freespin/reports`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Free Spin Report - Omniplayⁱ | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 頁面 |
-| 2 | Member ID | AppTextField | `member_id` | 否 |  |  | clearable="" | 頁面 |
+| 1 | Start Date ~ End Date | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 人工補全 |
+| 2 | Member ID | AppTextField | `member_id` | 否 |  |  | 顯示條件:切換到 Game Records / Bonus Transaction 頁籤後顯示 clearable="" | 人工補全 |
 | 3 | Items per page | AppSelect | `per_page` | 否 |  | [10,20,25,50] |  | 頁面 |
+
+**表格欄位(實機畫面)**:No、Member ID、Active Cards、Cards Cancelled、Cards Given、Total Game Count Given
 
 **API**:`GET /{vendor}/freespin/report/overview`、`GET /{vendor}/freespin/report/game-records`、`GET /{vendor}/freespin/report/bonus-transaction`
 
-## M05-P04 bonus / playtech / freespin(新增)`/bonus/playtech/freespin/create`
+## M15-P04 bonus / playtech / freespin(新增)`/bonus/playtech/freespin/create`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -76,7 +84,13 @@
 
 **API**:`GET /freespin/config`、`POST /freespin/massGive`、`GET /freespin/games`、`GET /lookup/players`、`GET /setting/player_rank`
 
-## M05-P05 bonus / playtech / freespin(列表)`/bonus/playtech/freespin/list`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/setting/player_rank` | Prime、Elite、Premium、Supreme、Maharlika、Okada Club、Okada VIP - Prime、Okada VIP - Premium、Okada VIP - Supreme、Okada VIP - Maharlika、Slot VVIP、All Member、Okada VIP - Elite、Bronze、Silver、Gold、Platinum、Ruby、Diamond、Chairman、Okada Club Emerald、Okada Club Diamond |
+
+## M15-P05 bonus / playtech / freespin(列表)`/bonus/playtech/freespin/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -102,21 +116,25 @@
 
 **API**:`GET /freespin/list`
 
-## M05-P06 bonus / playtech / freespin(報表)`/bonus/playtech/freespin/reports`
+## M15-P06 bonus / playtech / freespin(報表)`/bonus/playtech/freespin/reports`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Free Spin Report - Playtechⁱ | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 頁面 |
-| 2 | Member ID | AppTextField | `member_id` | 否 |  |  | clearable="" | 頁面 |
+| 1 | Start Date ~ End Date | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 人工補全 |
+| 2 | Member ID | AppTextField | `member_id` | 否 |  |  | 顯示條件:切換到 Game Records / Bonus Transaction 頁籤後顯示 clearable="" | 人工補全 |
 | 3 | Items per page | AppSelect | `per_page` | 否 |  | [10,20,25,50] |  | 頁面 |
+
+**表格欄位(實機畫面)**:No、Member ID、Total Spins Given、Total Spins Revoked、Total Spins Used、Total Spins Remaining
 
 **API**:`GET /freespin/report/overview`、`GET /freespin/report/game-records`、`GET /freespin/report/bonus-transaction`
 
-## M05-P07 bonus / playtech / freespin(詳情)`/bonus/playtech/freespin/view/:id`
+## M15-P07 bonus / playtech / freespin(詳情)`/bonus/playtech/freespin/view/:id`
+
+**表格欄位(實機畫面)**:Ref ID、Bonus ID、Free Spin Count、Free Spin Used、Status、Created Date、Created By、Revoked Date、Revoked By、Actions
 
 **API**:`GET /freespin/player-detail/:id`、`POST /freespin/remove`、`POST /freespin/remove-all`
 
-## M05-P08 bonus / pragmatic-play / freespin(新增)`/bonus/pragmatic-play/freespin/create`
+## M15-P08 bonus / pragmatic-play / freespin(新增)`/bonus/pragmatic-play/freespin/create`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -127,7 +145,13 @@
 
 **API**:`GET /lookup/players`、`GET /setting/player_rank`、`GET /pragmatic-play/freespin/config`、`POST /pragmatic-play/freespin/massGive`、`GET /pragmatic-play/freespin/games`
 
-## M05-P09 bonus / pragmatic-play / freespin(列表)`/bonus/pragmatic-play/freespin/list`
+**實機下拉選項**(2026-10-05 查驗時 API 回傳)
+
+| API | 選項 |
+|---|---|
+| `/setting/player_rank` | Prime、Elite、Premium、Supreme、Maharlika、Okada Club、Okada VIP - Prime、Okada VIP - Premium、Okada VIP - Supreme、Okada VIP - Maharlika、Slot VVIP、All Member、Okada VIP - Elite、Bronze、Silver、Gold、Platinum、Ruby、Diamond、Chairman、Okada Club Emerald、Okada Club Diamond |
+
+## M15-P09 bonus / pragmatic-play / freespin(列表)`/bonus/pragmatic-play/freespin/list`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
@@ -153,17 +177,21 @@
 
 **API**:`GET /pragmatic-play/freespin/list`
 
-## M05-P10 bonus / pragmatic-play / freespin(報表)`/bonus/pragmatic-play/freespin/reports`
+## M15-P10 bonus / pragmatic-play / freespin(報表)`/bonus/pragmatic-play/freespin/reports`
 
 | # | 欄位 | 元件 | 送出參數 | 必填 | 驗證規則 | 選項來源 | 其他控制 | 來源 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Free Spin Report - Pragmatic Playⁱ | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 頁面 |
-| 2 | Member ID | AppTextField | `member_id` | 否 |  |  | clearable="" | 頁面 |
+| 1 | Start Date ~ End Date | DateRangePicker | `start_date ~ end_date` | 否 |  |  |  | 人工補全 |
+| 2 | Member ID | AppTextField | `member_id` | 否 |  |  | 顯示條件:切換到 Game Records / Bonus Transaction 頁籤後顯示 clearable="" | 人工補全 |
 | 3 | Items per page | AppSelect | `per_page` | 否 |  | [10,20,25,50] |  | 頁面 |
+
+**表格欄位(實機畫面)**:No、Member ID、Total Spins Given、Total Spins Revoked、Total Spins Used、Total Spins Remaining
 
 **API**:`GET /pragmatic-play/freespin/report/overview`、`GET /pragmatic-play/freespin/report/game-records`、`GET /pragmatic-play/freespin/report/bonus-transaction`
 
-## M05-P11 bonus / pragmatic-play / freespin(詳情)`/bonus/pragmatic-play/freespin/view/:id`
+## M15-P11 bonus / pragmatic-play / freespin(詳情)`/bonus/pragmatic-play/freespin/view/:id`
+
+**表格欄位(實機畫面)**:Ref ID、Bonus ID、Free Spin Count、Free Spin Used、Status、Created Date、Created By、Revoked Date、Revoked By、Actions
 
 **API**:`GET /pragmatic-play/freespin/player-detail/:id`、`POST /pragmatic-play/freespin/remove`、`POST /pragmatic-play/freespin/remove-all`
 

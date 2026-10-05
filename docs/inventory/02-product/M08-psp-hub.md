@@ -1,6 +1,6 @@
-# M10 支付通道(PSP Hub)— 模塊內容與操作流程(產品)
+# M08 支付通道(PSP Hub)— 模塊內容與操作流程(產品)
 
-> 資料來源:後台前端程式(版本 2.8.2)靜態分析,2026-10-05。尚未經登入後實際畫面查驗的內容,狀態標為「待實機查驗」。
+> 資料來源:後台前端程式(版本 2.8.2)靜態分析,並於 2026-10-05 以人工登入帳號實機只讀查驗(選單依該帳號角色)。各頁查驗結果見 04 測試報告。
 
 ## 模塊說明
 
@@ -10,38 +10,38 @@
 
 | 頁面 | 名稱 | 類型 | 路由 | 主要操作 |
 |---|---|---|---|---|
-| M10-P01 | psp | 新增 | `/psp/add` | Cancel、Save |
-| M10-P02 | PSP Listing | 列表 | `/psp/list` | Clear、Search、View、Edit |
-| M10-P03 | psp | 編輯 | `/psp/update/:id` | Cancel、Update |
-| M10-P04 | psp | 詳情 | `/psp/view/:id` | Edit |
+| M08-P01 | psp | 新增 | `/psp/add` | Cancel、Save |
+| M08-P02 | PSP Listing | 列表 | `/psp/list` | Clear、Search、View、Edit |
+| M08-P03 | psp | 編輯 | `/psp/update/:id` | Cancel、Update |
+| M08-P04 | psp | 詳情 | `/psp/view/:id` | Edit |
 
 ## 頁面流程圖
 
 ```mermaid
 flowchart LR
   subgraph G1["PSP Listing"]
-    M10_P01["M10-P01 新增"]
-    M10_P02["M10-P02 列表"]
-    M10_P03["M10-P03 編輯"]
-    M10_P04["M10-P04 詳情"]
+    M08_P01["M08-P01 新增"]
+    M08_P02["M08-P02 列表"]
+    M08_P03["M08-P03 編輯"]
+    M08_P04["M08-P04 詳情"]
   end
-  M10_P02 -->|新增| M10_P01
-  M10_P01 -->|儲存成功| M10_P02
-  M10_P02 -->|檢視| M10_P04
-  M10_P02 -->|編輯| M10_P03
-  M10_P04 -->|編輯| M10_P03
-  M10_P03 -->|更新成功| M10_P02
+  M08_P02 -->|新增| M08_P01
+  M08_P01 -->|儲存成功| M08_P02
+  M08_P02 -->|檢視| M08_P04
+  M08_P02 -->|編輯| M08_P03
+  M08_P04 -->|編輯| M08_P03
+  M08_P03 -->|更新成功| M08_P02
 ```
 
 ## 頁面內容與操作說明
 
-### M10-P01 psp(新增)
+### M08-P01 psp(新增)
 
 - 路由:`/psp/add`  權限:`create:psp`
-- 功能點:M10-F01 新增
+- 功能點:M08-F01 新增
 - 表單欄位:Supported formats: PNG, JPG, SVG, WebP. Maximum size: 5MB、Name、Code、External Code、Type、Category、Status、Deposit Capability、Withdrawal Capability、Service Fee、Maximum Limit、Minimum Limit、Service Fee、Maximum Limit、Minimum Limit(欄位規則見 03 開發欄位控制)
 - 系統提示:「PSP created successfully」、「Error creating PSP: {error}」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:無權限(目前登入帳號沒有此頁權限)
 
 **操作步驟**
 
@@ -64,14 +64,14 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M10-P02 PSP Listing(列表)
+### M08-P02 PSP Listing(列表)
 
 - 路由:`/psp/list`  權限:`view:psp`
-- 功能點:M10-F02 查詢列表、M10-F03 欄位排序、M10-F04 分頁
+- 功能點:M08-F02 查詢列表、M08-F03 欄位排序、M08-F04 分頁
 - 表格欄位:Icon、Name、Code、Type、Category、Deposit Capability、Withdrawal Capability、Status、Created At、Updated At、Actions
 - 篩選條件:Name、Code、External Code、Type、Category、Status、Deposit Capability、Withdrawal Capability、Items per page(欄位規則見 03 開發欄位控制)
 - 系統提示:「PSP status changed successfully」
-- 實機狀態:待實機查驗
+- 選單位置:✅ 選單;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/psp_list.png`
 
 **操作步驟**
 
@@ -79,13 +79,15 @@ flowchart TD
 2. 輸入篩選條件後按「Search」查詢;按「Clear」清除條件
 3. 點欄位標題排序
 
-### M10-P03 psp(編輯)
+### M08-P03 psp(編輯)
 
 - 路由:`/psp/update/:id`  權限:`edit:psp`
-- 功能點:M10-F05 編輯
-- 表單欄位:Supported formats: PNG, JPG, SVG, WebP. Maximum size: 5MB、Name、Status、Deposit Capability、Withdrawal Capability、Service Fee、Maximum Limit、Minimum Limit、Service Fee、Maximum Limit、Minimum Limit(欄位規則見 03 開發欄位控制)
+- 功能點:M08-F05 編輯
+- 頁面說明:編輯頁 Code、External Code、Type、Category 只顯示不可改
+- 條件顯示的欄位:Icon(圖示上傳區(標籤在圖片預覽旁))
+- 表單欄位:Icon、Name、Status、Deposit Capability、Withdrawal Capability、Service Fee、Maximum Limit、Minimum Limit、Service Fee、Maximum Limit、Minimum Limit(欄位規則見 03 開發欄位控制)
 - 系統提示:「PSP not found」、「Error fetching PSP details: {error}」、「PSP updated successfully」、「Error updating PSP: {error}」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/psp_update_id.png`
 
 **操作步驟**
 
@@ -108,12 +110,13 @@ flowchart TD
   G -->|失敗| I["顯示錯誤訊息,留在本頁"] --> C
 ```
 
-### M10-P04 psp(詳情)
+### M08-P04 psp(詳情)
 
 - 路由:`/psp/view/:id`  權限:`view:psp`
-- 功能點:M10-F06 檢視詳情
+- 功能點:M08-F06 檢視詳情
+- 顯示內容(實機):Icon、Name、Code、External Code、Type、Category、Status、Deposit Capability、Withdrawal Capability、Created At、Updated At、Service Fee、Maximum Limit、Minimum Limit
 - 系統提示:「PSP not found」
-- 實機狀態:待實機查驗
+- 選單位置:由列表進入;實機狀態:✅ 一致;截圖(本機,不進 git):`.playwright-output/live/psp_view_id.png`
 
 **操作步驟**
 

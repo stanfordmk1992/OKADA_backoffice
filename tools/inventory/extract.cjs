@@ -111,7 +111,7 @@ function analyze(src, label) {
     }
     const pick = name => {
       const lit = new RegExp('(?:^|[,{])"?' + name + '"?:"([^"]*)"').exec(obj);
-      if (lit) return lit[1];
+      if (lit) return /^(features|common|navigation|validation)\./.test(lit[1]) ? (t(lit[1]) ?? lit[1]) : lit[1];
       const i18 = new RegExp('(?:^|[,{])"?' + name + '"?:[\\w$.]+(?:\\([\\w$]*\\))?\\("([\\w.]+)"').exec(obj);
       if (i18) return t(i18[1]) ?? i18[1];
       return null;
@@ -146,12 +146,12 @@ function analyze(src, label) {
     }
     let label = pick("label") || (sd ? [pick("start-date-label"), pick("end-date-label")].filter(Boolean).join(" ~ ") : null);
     let labelFrom = label ? "label" : null;
-    if (!label) { // 標籤寫在元件外:取前方最近的文字節點
+    if (!label && !pick("placeholder")) { // 標籤寫在元件外:取前方最近的文字節點(有 placeholder 的欄位不猜)
       const back = src.slice(Math.max(0, idx - 900), idx);
-      const ks = [...back.matchAll(/\("((?:features|common)\.[\w.]+)"\)/g)].map(m => m[1]).filter(k => !/placeholders|messages|actions|options/.test(k));
+      const ks = [...back.matchAll(/\("((?:features|common)\.[\w.]+)"[,)]/g)].map(m => m[1]).filter(k => !/placeholders|messages|actions|options/.test(k));
       const k = ks[ks.length - 1];
       if (k && t(k)) { label = t(k); labelFrom = "相鄰文字"; }
-      else { const lt = [...back.matchAll(/[\w$]\("\s*([A-Za-z][^"\\]{1,60}?)\s*"(?:,1)?\)/g)].map(m => m[1]).filter(x => !/^[\w-]+$/.test(x) || /^[A-Z]/.test(x)); if (lt.length) { label = lt[lt.length - 1]; labelFrom = "相鄰文字"; } }
+      else { const lt = [...back.matchAll(/[\w$]\("\s*([A-Za-z][^"\\]{1,60}?)\s*"(?:,1)?\)/g)].map(m => m[1]).filter(x => !/^[a-z]+\.[\w.]+$/.test(x) && (!/^[\w-]+$/.test(x) || /^[A-Z]/.test(x))); if (lt.length) { label = lt[lt.length - 1]; labelFrom = "相鄰文字"; } }
     }
     if (/^\{|modelValue/.test(model)) continue; // 子元件內部 props 定義,不是欄位
     if (/^(VCounter|VForm|VTab|VTabs|VAlert|VComponentIcon|VSnackbar|VDialog|VNavigationDrawer|VMenu|VTooltip|VOverlay|VWindow|VTabs|VExpansionPanels|VBottomSheet)$/.test(comp || "")) continue;
