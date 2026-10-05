@@ -1,0 +1,594 @@
+<title>OKADA 需求看板</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 頂部工具列 + 七欄看板(窄螢幕在自身容器內橫向捲動),卡片點開為右側詳情面板 */
+:root {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --sunken: #e8eaee;
+  --fg: #1c2230;
+  --muted: #5f6878;
+  --line: #d6d9e0;
+  --accent: #2f5bd3;
+  --accent-fg: #ffffff;
+  --s-new: #8a93a6;
+  --s-final: #c28a12;
+  --s-dev: #2f5bd3;
+  --s-qa: #7a4fc9;
+  --s-uat: #d0571f;
+  --s-done: #2e8a57;
+  --s-cancel: #6b7280;
+  --p0: #c62f2f;
+  --p1: #d0571f;
+  --p2: #2f5bd3;
+  --p3: #8a93a6;
+  --warn-bg: #fff4dc;
+  --warn-fg: #7a5306;
+  --block-bg: #fde8e8;
+  --block-fg: #a32222;
+  --wait-bg: #e6eefc;
+  --wait-fg: #24448f;
+  --shadow: 0 1px 2px rgba(20,30,50,.08);
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12151c; --surface: #1b1f29; --sunken: #232836; --fg: #e6e9ef; --muted: #9aa3b4; --line: #2f3545;
+  --accent: #6f93ff; --accent-fg: #0d1220;
+  --s-new: #8f98ab; --s-final: #e0a733; --s-dev: #6f93ff; --s-qa: #a983f0; --s-uat: #f08050; --s-done: #4fc282; --s-cancel: #7c8494;
+  --p0: #f06464; --p1: #f08050; --p2: #6f93ff; --p3: #8f98ab;
+  --warn-bg: #3a2e12; --warn-fg: #f2cf7a; --block-bg: #3d1a1d; --block-fg: #ff9a9a; --wait-bg: #1c2a48; --wait-fg: #a9c1ff;
+  --shadow: 0 1px 2px rgba(0,0,0,.4); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12151c; --surface: #1b1f29; --sunken: #232836; --fg: #e6e9ef; --muted: #9aa3b4; --line: #2f3545;
+  --accent: #6f93ff; --accent-fg: #0d1220;
+  --s-new: #8f98ab; --s-final: #e0a733; --s-dev: #6f93ff; --s-qa: #a983f0; --s-uat: #f08050; --s-done: #4fc282; --s-cancel: #7c8494;
+  --p0: #f06464; --p1: #f08050; --p2: #6f93ff; --p3: #8f98ab;
+  --warn-bg: #3a2e12; --warn-fg: #f2cf7a; --block-bg: #3d1a1d; --block-fg: #ff9a9a; --wait-bg: #1c2a48; --wait-fg: #a9c1ff;
+  --shadow: 0 1px 2px rgba(0,0,0,.4); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+.wrap { display: flex; flex-direction: column; height: 100%; padding-inline: 16px; padding-block: 14px; gap: 12px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+header h1 { font-size: 18px; margin: 0; font-weight: 700; text-wrap: balance; }
+header .sub { color: var(--muted); font-size: 12px; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; align-items: center; }
+input, select, textarea, button { font: inherit; color: inherit; }
+input[type=search], select, .field input, .field textarea, .field select, .actions textarea, .actions input {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+input[type=search] { width: 200px; max-width: 100%; }
+button { cursor: pointer; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; }
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 500; }
+button.danger { color: var(--p0); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:disabled { opacity: .5; cursor: default; }
+
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.flow b { font-weight: 500; color: var(--fg); }
+.flow .branch { background: var(--warn-bg); color: var(--warn-fg); padding: 1px 8px; border-radius: 10px; }
+
+.board-scroll { flex: 1; min-height: 0; overflow-x: auto; }
+.board { display: grid; grid-template-columns: repeat(6, minmax(210px, 1fr)) minmax(180px, .8fr); gap: 10px; height: 100%; min-width: 1460px; }
+.col { background: var(--sunken); border-radius: 8px; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.col.cancel { opacity: .85; }
+.col-h { display: flex; align-items: center; gap: 8px; padding: 10px 12px 8px; font-weight: 700; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.col-h .n { margin-left: auto; font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.col-hint { font-size: 11.5px; color: var(--muted); padding: 0 12px 8px; }
+.cards { display: flex; flex-direction: column; gap: 8px; padding: 0 8px 10px; overflow-y: auto; flex: 1; }
+.empty-col { font-size: 12px; color: var(--muted); text-align: center; padding: 18px 8px; border: 1px dashed var(--line); border-radius: 6px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; box-shadow: var(--shadow); cursor: pointer; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.card:hover { border-color: var(--muted); }
+.card.is-blocked { border-color: var(--block-fg); }
+.card .top { display: flex; align-items: center; gap: 6px; }
+.rid { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); letter-spacing: .02em; }
+.card .t { font-weight: 500; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font-size: 11px; padding: 0 7px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); line-height: 18px; white-space: nowrap; }
+.chip.p { color: #fff; border: 0; font-family: var(--f-mono); }
+.chip.warn { background: var(--warn-bg); color: var(--warn-fg); border-color: transparent; }
+.chip.block { background: var(--block-bg); color: var(--block-fg); border-color: transparent; font-weight: 500; }
+.chip.wait { background: var(--wait-bg); color: var(--wait-fg); border-color: transparent; }
+.block-why { font-size: 12px; color: var(--block-fg); background: var(--block-bg); border-radius: 4px; padding: 3px 7px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card .meta { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.banner { background: var(--warn-bg); color: var(--warn-fg); padding: 8px 12px; border-radius: 6px; font-size: 13px; overflow-wrap: anywhere; }
+.banner.block { background: var(--block-bg); color: var(--block-fg); }
+.banner.wait { background: var(--wait-bg); color: var(--wait-fg); }
+
+.overlay { position: fixed; inset: 0; background: rgba(10,14,22,.45); display: flex; justify-content: flex-end; z-index: 10; }
+.panel { background: var(--surface); width: min(560px, 100%); height: 100%; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 20px calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 14px; }
+.panel-h { display: flex; align-items: flex-start; gap: 10px; }
+.panel-h h2 { font-size: 17px; margin: 0; flex: 1; text-wrap: balance; overflow-wrap: anywhere; }
+.x { border: 0; background: transparent; font-size: 20px; line-height: 1; padding: 2px 6px; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label, .lbl { font-size: 12px; color: var(--muted); letter-spacing: .03em; }
+.field textarea { min-height: 80px; resize: vertical; }
+.ro { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--sunken); border-radius: 6px; padding: 7px 10px; min-height: 34px; }
+.ro.empty { color: var(--muted); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.state-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-weight: 500; }
+.actions { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; }
+.actions .btns, .btnrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions .q { font-size: 13px; }
+.gate { font-size: 12.5px; color: var(--warn-fg); background: var(--warn-bg); border-radius: 6px; padding: 6px 10px; margin: 0; padding-left: 26px; }
+.err { color: var(--p0); font-size: 12.5px; }
+.sec-h { font-size: 13px; font-weight: 700; margin: 4px 0 0; }
+.hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.hist li { font-size: 12.5px; border-left: 2px solid var(--line); padding-left: 10px; }
+.hist li.pass { border-left-color: var(--s-done); }
+.hist li.fail { border-left-color: var(--p0); }
+.hist .when { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 11.5px; }
+.hist .note { color: var(--muted); overflow-wrap: anywhere; white-space: pre-wrap; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 7px 14px; border-radius: 6px; font-size: 13px; z-index: 20; }
+@media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } input[type=search] { width: 100%; } .tools { margin-left: 0; width: 100%; } }
+@media (prefers-reduced-motion: no-preference) { .card { transition: border-color .12s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>OKADA 需求看板</h1>
+      <div class="sub">後台(dev):okada-dev-bo-2.scms2u.lol</div>
+    </div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="搜尋編號、標題、模組" aria-label="搜尋">
+      <select id="pf" aria-label="優先級篩選">
+        <option value="">全部優先級</option><option>P0</option><option>P1</option><option>P2</option><option>P3</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" id="onlyBlocked"> 只看卡住</label>
+      <button class="primary" id="addBtn">＋ 新需求</button>
+    </div>
+  </header>
+  <div class="flow" aria-label="流程">
+    <b>新需求</b>→<b>已定稿</b>→<span class="branch">判斷範圍:不需開發 → 直接已完成</span>→<b>開發完成</b>→<b>測試完成</b>→<b>待驗收</b>→<b>已完成</b>
+    <span>· 定稿後內容鎖定,修改請發起新需求 · 任一進行中節點可取消</span>
+  </div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="board-scroll"><div class="board" id="board"></div></div>
+</div>
+
+<div class="overlay" id="ov" hidden>
+  <div class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="pTitle"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const STATES = [
+  { k: "new",       label: "新需求",   color: "--s-new",    hint: "撰寫說明與測試用例,清空待確認事項" },
+  { k: "final",     label: "已定稿",   color: "--s-final",  hint: "內容鎖定;判斷是否需要開發" },
+  { k: "dev",       label: "開發完成", color: "--s-dev",    hint: "已實作,待測試" },
+  { k: "qa",        label: "測試完成", color: "--s-qa",     hint: "測試通過,待送驗收" },
+  { k: "uat",       label: "待驗收",   color: "--s-uat",    hint: "等待人工驗收" },
+  { k: "done",      label: "已完成",   color: "--s-done",   hint: "驗收通過或不需開發" },
+  { k: "cancelled", label: "已取消",   color: "--s-cancel", hint: "不再執行" },
+];
+const SL = Object.fromEntries(STATES.map(s => [s.k, s]));
+const PRI = ["P0", "P1", "P2", "P3"];
+const TERMINAL = new Set(["done", "cancelled"]);
+const isActive = r => !TERMINAL.has(r.status);
+
+let db = null, user = null, myId = null, canWrite = null;
+let reqs = new Map();
+let openId = null;
+let busy = false;
+
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (k === "style") e.setAttribute("style", v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  return e;
+};
+const fmt = iso => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 2400);
+}
+function banner(msg) { const b = $("#banner"); b.textContent = msg || ""; b.hidden = !msg; }
+const failCount = r => (r.testRuns || []).filter(t => t.result === "fail").length;
+
+/* 等待中的依賴:回傳 {id, ready} 或 null */
+function waitInfo(r) {
+  if (!r.waitFor) return null;
+  const dep = reqs.get(r.waitFor);
+  return { id: r.waitFor, ready: !dep || TERMINAL.has(dep.status), dep };
+}
+
+/* ---------- board ---------- */
+function renderBoard() {
+  const q = $("#q").value.trim().toLowerCase();
+  const pf = $("#pf").value;
+  const ob = $("#onlyBlocked").checked;
+  const list = [...reqs.values()].filter(r => {
+    if (pf && r.priority !== pf) return false;
+    if (ob && !r.blocked) return false;
+    if (!q) return true;
+    return [r.id, r.title, r.module].some(v => (v || "").toLowerCase().includes(q));
+  });
+  const board = $("#board");
+  board.replaceChildren();
+  for (const s of STATES) {
+    const items = list.filter(r => r.status === s.k).sort((a, b) =>
+      TERMINAL.has(s.k) ? (b.updatedAt || "").localeCompare(a.updatedAt || "")
+        : (Number(!!b.blocked) - Number(!!a.blocked)) || (PRI.indexOf(a.priority) - PRI.indexOf(b.priority)) || (a.createdAt || "").localeCompare(b.createdAt || ""));
+    const cards = el("div", { class: "cards" });
+    if (!items.length) cards.append(el("div", { class: "empty-col" },
+      s.k === "new" && reqs.size === 0 ? "還沒有需求。按右上「＋ 新需求」新增第一筆。" : "目前沒有項目"));
+    for (const r of items) cards.append(card(r));
+    board.append(el("section", { class: "col" + (s.k === "cancelled" ? " cancel" : ""), "aria-label": s.label },
+      el("div", { class: "col-h" }, el("span", { class: "dot", style: `background:var(${s.color})` }), s.label, el("span", { class: "n" }, items.length)),
+      el("div", { class: "col-hint" }, s.hint),
+      cards));
+  }
+}
+function scopeChip(r) {
+  if (r.status === "cancelled") return null;
+  if (r.needsDev === false) return el("span", { class: "chip" }, "不需開發");
+  if (r.needsDev === true) return el("span", { class: "chip" }, "需開發");
+  if (r.status === "final") return el("span", { class: "chip warn" }, "範圍待判斷");
+  return null;
+}
+function waitChip(r) {
+  const w = waitInfo(r);
+  if (!w || r.status !== "new") return null;
+  return el("span", { class: w.ready ? "chip warn" : "chip wait" }, w.ready ? `${w.id} 已結束,可再次確認` : `等待 ${w.id} 完成`);
+}
+function card(r) {
+  const fc = failCount(r);
+  return el("button", { class: "card" + (r.blocked ? " is-blocked" : ""), onclick: () => openPanel(r.id) },
+    el("div", { class: "top" },
+      el("span", { class: "rid" }, r.id),
+      el("span", { class: "chip p", style: `background:var(--${(r.priority || "P2").toLowerCase()})` }, r.priority || "P2"),
+      r.blocked ? el("span", { class: "chip block" }, "卡住") : null),
+    el("div", { class: "t" }, r.title || "(未命名)"),
+    r.blocked && r.blockedReason ? el("div", { class: "block-why" }, r.blockedReason) : null,
+    el("div", { class: "chips" },
+      r.module ? el("span", { class: "chip" }, r.module) : null,
+      scopeChip(r), waitChip(r),
+      fc && isActive(r) ? el("span", { class: "chip warn" }, `測試未過 ×${fc}`) : null,
+      r.openQuestions && r.status === "new" ? el("span", { class: "chip warn" }, "有待確認事項") : null),
+    el("div", { class: "meta" }, "更新 " + fmt(r.updatedAt)));
+}
+
+/* ---------- panel ---------- */
+function closePanel() { openId = null; $("#ov").hidden = true; }
+$("#ov").addEventListener("click", e => { if (e.target.id === "ov") closePanel(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#ov").hidden) closePanel(); });
+
+const FIELDS = [
+  { k: "title", label: "需求標題", type: "input", ph: "例:促銷活動列表新增依狀態篩選" },
+  { k: "module", label: "功能模組", type: "input", ph: "例:促銷活動設定" },
+  { k: "description", label: "需求說明", type: "textarea", ph: "背景、要做什麼、影響頁面網址、不做的範圍" },
+  { k: "testCases", label: "測試用例(產品撰寫,定稿前必填)", type: "textarea", ph: "TC-01 在 /promotions/settings/list 選擇狀態「進行中」→ 列表只顯示進行中的活動\nTC-02 …" },
+  { k: "openQuestions", label: "待確認事項(清空後才能定稿)", type: "textarea", ph: "需要人工回答的問題;沒有就留空" },
+];
+
+function waitSelect(r, id) {
+  const s = el("select", { id });
+  s.append(el("option", { value: "" }, "不等待其他需求"));
+  for (const o of [...reqs.values()].filter(x => x.id !== r.id && (isActive(x) || x.id === r.waitFor)).sort((a, b) => a.id.localeCompare(b.id)))
+    s.append(el("option", { value: o.id, selected: r.waitFor === o.id }, `${o.id} ${o.title || ""}(${SL[o.status]?.label || o.status})`));
+  return s;
+}
+function editBlock(r, prefix) {
+  const out = [];
+  for (const f of FIELDS) {
+    const id = prefix + f.k;
+    const input = f.type === "input"
+      ? el("input", { id, value: r[f.k] || "", maxlength: f.k === "title" ? 120 : 40, placeholder: f.ph })
+      : el("textarea", { id, placeholder: f.ph, style: f.k === "testCases" ? "min-height:110px" : "" }, r[f.k] || "");
+    out.push(el("div", { class: "field" }, el("label", { for: id }, f.label), input));
+  }
+  const pri = el("select", { id: prefix + "priority" });
+  for (const p of PRI) pri.append(el("option", { value: p, selected: (r.priority || "P2") === p }, p));
+  out.splice(2, 0, el("div", { class: "row2" },
+    el("div", { class: "field" }, el("label", { for: prefix + "priority" }, "優先級"), pri),
+    el("div", { class: "field" }, el("label", { for: prefix + "waitFor" }, "等待需求完成後再確認"), waitSelect(r, prefix + "waitFor"))));
+  return out;
+}
+function readEdit(prefix) {
+  const o = {};
+  for (const f of FIELDS) o[f.k] = $("#" + prefix + f.k).value.trim();
+  o.priority = $("#" + prefix + "priority").value;
+  o.waitFor = $("#" + prefix + "waitFor").value;
+  return o;
+}
+function roBlock(r) {
+  return FIELDS.filter(f => f.k !== "title").map(f => el("div", { class: "field" },
+    el("div", { class: "lbl" }, f.label.replace(/(.*)/, "")),
+    el("div", { class: "ro" + (r[f.k] ? "" : " empty") }, r[f.k] || "(無)")));
+}
+
+function openNew(prefill = {}) {
+  openId = "__new";
+  const p = $("#panel");
+  const err = el("div", { class: "err", hidden: true });
+  const base = { priority: "P2", ...prefill };
+  p.replaceChildren(
+    el("div", { class: "panel-h" }, el("h2", { id: "pTitle" }, "新增需求"), el("button", { class: "x", "aria-label": "關閉", onclick: closePanel }, "×")),
+    prefill.waitFor ? el("div", { class: "banner wait" }, `這筆修改會動到進行中的 ${prefill.waitFor},將停在「新需求」,等 ${prefill.waitFor} 完成後再確認。`) : null,
+    ...editBlock(base, "n_"),
+    err,
+    el("div", { class: "btnrow" },
+      el("button", { class: "primary", id: "createBtn", onclick: async () => {
+        const f = readEdit("n_");
+        if (!f.title) { err.textContent = "請填寫需求標題。"; err.hidden = false; return; }
+        await createReq(f, err);
+      } }, "建立(進入「新需求」)"),
+      el("button", { onclick: closePanel }, "取消")));
+  $("#ov").hidden = false;
+  $("#n_title").focus();
+}
+
+function nextId() {
+  let max = 0;
+  for (const id of reqs.keys()) { const m = /^REQ-(\d+)$/.exec(id); if (m) max = Math.max(max, +m[1]); }
+  return "REQ-" + String(max + 1).padStart(4, "0");
+}
+async function createReq(f, err) {
+  if (busy) return; busy = true; $("#createBtn").disabled = true;
+  try {
+    let id = nextId();
+    for (let i = 0; i < 20; i++) {
+      const snap = await db.collection("reqs").doc(id).get();
+      if (!snap.exists) break;
+      id = "REQ-" + String(+id.slice(4) + 1).padStart(4, "0");
+    }
+    const now = new Date().toISOString();
+    await db.collection("reqs").doc(id).set({
+      id, ...f, status: "new", needsDev: null, blocked: false, blockedReason: "", testRuns: [],
+      createdAt: now, updatedAt: now, createdBy: myId,
+      history: [{ to: "new", at: now, by: myId, note: f.waitFor ? `建立需求(等待 ${f.waitFor} 完成後再確認)` : "建立需求" }],
+    });
+    toast(`已建立 ${id}`);
+    closePanel();
+  } catch (e) { err.textContent = writeErr(e); err.hidden = false; }
+  finally { busy = false; const b = $("#createBtn"); if (b) b.disabled = false; }
+}
+function writeErr(e) {
+  if (e && e.code === "invalid_argument") { canWrite = false; return "你目前只有檢視權限,無法修改。請向看板擁有者要求「Contributor」以上權限。"; }
+  if (e && e.code === "quota_exceeded") return "資料庫容量已滿,請先刪除舊需求。";
+  return "儲存失敗,請稍後再試。" + (e && e.message ? `(${e.message})` : "");
+}
+
+/* 定稿前的檢查 */
+function finalizeGate(r) {
+  const g = [];
+  if (!r.title) g.push("需求標題未填");
+  if (!r.testCases) g.push("測試用例未填(由產品撰寫)");
+  if (r.openQuestions) g.push("待確認事項尚未清空");
+  const w = waitInfo(r);
+  if (w && !w.ready) g.push(`正在等待 ${w.id} 完成`);
+  if (r.blocked) g.push("需求標記為卡住,請先解除");
+  return g;
+}
+
+/* 每個狀態可做的流轉。to=目標狀態;needNote=必填提示;set=額外欄位;testRun=寫入測試結果 */
+function actionsFor(r) {
+  switch (r.status) {
+    case "new": {
+      const g = finalizeGate(r);
+      return { q: "內容確認、測試用例齊全、待確認事項清空後定稿。定稿後內容鎖定。", gate: g,
+        list: [{ label: "確認定稿 → 已定稿", to: "final", primary: true, disabled: g.length > 0 }] };
+    }
+    case "final":
+      if (r.needsDev == null) return { q: "這個需求的範圍需要開發執行嗎?", list: [
+        { label: "需要開發", to: "final", set: { needsDev: true }, primary: true, note: "判斷範圍:需開發" },
+        { label: "不需開發 → 直接已完成", to: "done", set: { needsDev: false }, needNote: "請說明為何不需開發(例:後台設定即可完成)" }] };
+      return { q: failCount(r) ? `測試未過 ${failCount(r)} 次,修復中(由新的開發代理執行修復)。完成後標記。` : "範圍:需開發。實作完成後標記(備註寫 commit hash)。", list: [
+        { label: "開發完成 → 開發完成", to: "dev", primary: true, needNote: "請填寫 commit hash 與改動摘要" },
+        { label: "改判為不需開發 → 已完成", to: "done", set: { needsDev: false }, needNote: "請說明為何不需開發" }] };
+    case "dev": return { q: "測試依「測試用例」逐條執行,結果寫在下方(由測試撰寫)。", noteLabel: "測試結果(必填,逐條列出)", list: [
+      { label: "測試通過 → 測試完成", to: "qa", primary: true, testRun: "pass", needNote: "請逐條填寫測試結果" },
+      { label: "測試未過 → 退回開發修復", to: "final", testRun: "fail", needNote: "請逐條填寫測試結果與失敗重現步驟" }] };
+    case "qa": return { q: "測試已通過,可送交人工驗收。", list: [{ label: "送交驗收 → 待驗收", to: "uat", primary: true }] };
+    case "uat": return { q: "請在後台實機驗收。通過後合併到 master。", list: [
+      { label: "驗收通過 → 已完成", to: "done", primary: true, note: "驗收通過" },
+      { label: "驗收退回 → 退回開發修復", to: "final", needNote: "請說明退回原因(規格要改請另開新需求)" }] };
+    case "done": return { q: r.needsDev === false ? "此需求判定為不需開發,直接完成。" : "已驗收完成。需要修改請發起新需求。", list: [] };
+    case "cancelled": return { q: "此需求已取消。需要再做請發起新需求。", list: [] };
+  }
+  return { q: "", list: [] };
+}
+
+function openPanel(id) {
+  openId = id;
+  const r = reqs.get(id);
+  if (!r) { closePanel(); return; }
+  const p = $("#panel");
+  const ro = canWrite === false;
+  const s = SL[r.status] || STATES[0];
+  const err = el("div", { class: "err", hidden: true });
+  const act = actionsFor(r);
+  const editable = r.status === "new" && !ro;
+
+  const noteBox = el("textarea", { id: "noteBox", placeholder: act.noteLabel || "備註(退回、取消、卡住、不需開發時必填)", style: act.noteLabel ? "min-height:110px" : "min-height:60px" });
+  const commitBox = r.status === "dev" ? el("input", { id: "commitBox", placeholder: "測試的 commit hash(選填)" }) : null;
+
+  const actBox = el("div", { class: "actions" },
+    el("div", { class: "q" }, act.q),
+    act.gate && act.gate.length ? el("ul", { class: "gate" }, act.gate.map(g => el("li", {}, g))) : null,
+    !TERMINAL.has(r.status) ? el("div", { class: "field" }, act.noteLabel ? el("label", { for: "noteBox" }, act.noteLabel) : null, noteBox, commitBox) : null,
+    act.list.length ? el("div", { class: "btns" }, act.list.map(a => el("button", {
+      class: a.primary ? "primary" : (a.needNote ? "danger" : ""), disabled: ro || a.disabled,
+      onclick: () => move(r, a, noteBox.value.trim(), err) }, a.label))) : null,
+    isActive(r) ? el("div", { class: "btns" },
+      r.blocked
+        ? el("button", { disabled: ro, onclick: () => setBlocked(r, false, noteBox.value.trim(), err) }, "解除卡住")
+        : el("button", { disabled: ro, onclick: () => setBlocked(r, true, noteBox.value.trim(), err) }, "標記卡住"),
+      el("button", { class: "danger", disabled: ro, onclick: () => move(r, { to: "cancelled", needNote: "請說明取消原因" }, noteBox.value.trim(), err) }, "取消需求")) : null,
+    err);
+
+  const hist = el("ul", { class: "hist" });
+  for (const h of [...(r.history || [])].reverse()) {
+    hist.append(el("li", { class: h.testResult || "" },
+      el("div", {}, h.from ? `${SL[h.from]?.label || h.from} → ${SL[h.to]?.label || h.to}` : (SL[h.to]?.label || h.to)),
+      h.note ? el("div", { class: "note" }, h.note) : null,
+      el("div", { class: "when" }, fmt(h.at), " · ", el("span", { "data-uid": h.by || "" }, h.by ? "…" : "未知"))));
+  }
+  const runs = el("ul", { class: "hist" });
+  (r.testRuns || []).forEach((t, i) => runs.prepend(el("li", { class: t.result },
+    el("div", {}, `第 ${i + 1} 次測試:${t.result === "pass" ? "通過" : "未過"}`, t.commit ? ` · ${t.commit}` : ""),
+    el("div", { class: "note" }, t.report || ""),
+    el("div", { class: "when" }, fmt(t.at), " · ", el("span", { "data-uid": t.by || "" }, t.by ? "…" : "未知")))));
+  const root = el("div", { style: "display:contents" });
+
+  const w = waitInfo(r);
+  const content = editable
+    ? [...editBlock(r, "e_"),
+       el("div", { class: "btnrow" },
+         el("button", { id: "saveBtn", onclick: () => saveFields(r, err) }, "儲存內容"),
+         el("button", { class: "danger", onclick: () => askDelete(r) }, "刪除(僅限新需求)")),
+       el("div", { id: "delConfirm" })]
+    : [el("div", { class: "lbl" }, r.status === "new" ? "內容" : "內容(已定稿,鎖定不可修改)"),
+       ...roBlock(r),
+       isActive(r) && r.status !== "new" && !ro ? el("div", { class: "row2" },
+         el("div", { class: "field" }, el("label", { for: "e_pri" }, "優先級(人工調整)"),
+           (() => { const sel = el("select", { id: "e_pri", onchange: e => setPriority(r, e.target.value, err) });
+             for (const x of PRI) sel.append(el("option", { value: x, selected: (r.priority || "P2") === x }, x)); return sel; })())) : null,
+       !ro && r.status !== "new" ? el("div", { class: "btnrow" },
+         el("button", { onclick: () => openNew({ waitFor: isActive(r) ? r.id : "", module: r.module || "", title: `[修改 ${r.id}] ` }) }, "提出修改(發起新需求)")) : null];
+
+  root.append(
+    el("div", { class: "panel-h" },
+      el("div", { style: "flex:1;min-width:0" }, el("div", { class: "rid" }, r.id), el("h2", { id: "pTitle" }, r.title || "(未命名)")),
+      el("button", { class: "x", "aria-label": "關閉", onclick: closePanel }, "×")),
+    el("div", { class: "state-line" }, el("span", { class: "dot", style: `background:var(${s.color})` }), "目前節點:", s.label,
+      el("span", { class: "chip p", style: `background:var(--${(r.priority || "P2").toLowerCase()})` }, r.priority || "P2"),
+      scopeChip(r), r.blocked ? el("span", { class: "chip block" }, "卡住") : null),
+    r.blocked ? el("div", { class: "banner block" }, "卡住原因:" + (r.blockedReason || "(未填)")) : null,
+    w && r.status === "new" ? el("div", { class: w.ready ? "banner" : "banner wait" },
+      w.ready ? `${w.id} 已結束,請再次確認本需求內容後定稿。` : `等待 ${w.id}(${SL[w.dep?.status]?.label || "?"})完成後再確認。`) : null,
+    ro ? el("div", { class: "banner" }, "你目前只有檢視權限。") : actBox,
+    ...content,
+    (r.testRuns || []).length ? el("div", { class: "sec-h" }, "測試結果") : null,
+    (r.testRuns || []).length ? runs : null,
+    el("div", { class: "lbl" }, `建立於 ${fmt(r.createdAt)} · 最後更新 ${fmt(r.updatedAt)}`),
+    el("div", { class: "sec-h" }, "流轉紀錄"),
+    hist);
+  p.replaceChildren(root);
+  resolveNames(p);
+  $("#ov").hidden = false;
+}
+
+async function resolveNames(root) {
+  const nodes = [...root.querySelectorAll("[data-uid]")];
+  if (!user) { nodes.forEach(n => { if (n.dataset.uid) n.textContent = "成員"; }); return; }
+  const ids = [...new Set(nodes.map(n => n.dataset.uid).filter(Boolean))];
+  if (!ids.length) return;
+  const ps = await user.profiles(ids);
+  nodes.forEach(n => {
+    const id = n.dataset.uid; if (!id) return;
+    n.textContent = (ps[id] && ps[id].name) || (id === myId ? "你" : "成員");
+  });
+}
+
+async function write(r, patch, entry, err, okMsg) {
+  if (busy) return false;
+  busy = true;
+  try {
+    const now = new Date().toISOString();
+    await db.collection("reqs").doc(r.id).update({ ...patch, updatedAt: now,
+      history: [...(r.history || []), { at: now, by: myId, ...entry }] });
+    toast(okMsg);
+    return true;
+  } catch (e) { err.textContent = writeErr(e); err.hidden = false; return false; }
+  finally { busy = false; }
+}
+
+async function move(r, a, note, err) {
+  if (a.needNote && !note) { err.textContent = a.needNote + "。"; err.hidden = false; $("#noteBox").focus(); return; }
+  const patch = { status: a.to, ...(a.set || {}) };
+  const entry = { from: r.status, to: a.to, note: note || a.note || "" };
+  if (a.to === r.status) delete entry.from;
+  if (a.testRun) {
+    const commit = ($("#commitBox")?.value || "").trim();
+    patch.testRuns = [...(r.testRuns || []), { at: new Date().toISOString(), by: myId, result: a.testRun, report: note, commit }];
+    entry.testResult = a.testRun;
+    entry.note = (a.testRun === "pass" ? "測試通過" : "測試未過") + (commit ? `(${commit})` : "");
+  }
+  if (TERMINAL.has(a.to)) { patch.blocked = false; patch.blockedReason = ""; }
+  if (a.to === "cancelled") entry.note = "取消:" + note;
+  await write(r, patch, entry, err, a.to === r.status ? "已更新範圍判斷" : `${r.id} 已移到「${SL[a.to].label}」`);
+}
+
+async function setBlocked(r, on, note, err) {
+  if (on && !note) { err.textContent = "請在備註欄說明卡住的原因。"; err.hidden = false; $("#noteBox").focus(); return; }
+  await write(r, { blocked: on, blockedReason: on ? note : "" },
+    { to: r.status, note: on ? "標記卡住:" + note : "解除卡住" + (note ? ":" + note : "") }, err, on ? "已標記卡住" : "已解除卡住");
+}
+
+async function setPriority(r, v, err) {
+  if (v === r.priority) return;
+  await write(r, { priority: v }, { to: r.status, note: `優先級 ${r.priority || "P2"} → ${v}` }, err, "已調整優先級");
+}
+
+async function saveFields(r, err) {
+  if (r.status !== "new") { err.textContent = "已定稿的需求不能修改內容。"; err.hidden = false; return; }
+  const f = readEdit("e_");
+  if (!f.title) { err.textContent = "需求標題不能空白。"; err.hidden = false; return; }
+  const changed = Object.keys(f).filter(k => (r[k] || "") !== f[k]);
+  if (!changed.length) { toast("內容沒有變更"); return; }
+  const names = { title: "標題", module: "模組", priority: "優先級", description: "說明", testCases: "測試用例", openQuestions: "待確認事項", waitFor: "等待需求" };
+  $("#saveBtn").disabled = true;
+  await write(r, f, { to: r.status, note: "修改內容:" + changed.map(k => names[k]).join("、") }, err, "已儲存");
+  const b = $("#saveBtn"); if (b) b.disabled = false;
+}
+
+function askDelete(r) {
+  const box = $("#delConfirm");
+  box.replaceChildren(el("div", { class: "actions" },
+    el("div", { class: "q" }, `確定要刪除 ${r.id}?刪除後連同紀錄無法復原;不做的需求建議改用「取消需求」保留紀錄。`),
+    el("div", { class: "btns" },
+      el("button", { class: "danger", onclick: async () => {
+        try { await db.collection("reqs").doc(r.id).delete(); toast(`已刪除 ${r.id}`); closePanel(); }
+        catch (e) { box.replaceChildren(el("div", { class: "err" }, writeErr(e))); }
+      } }, "確定刪除"),
+      el("button", { onclick: () => box.replaceChildren() }, "取消"))));
+}
+
+/* ---------- boot ---------- */
+$("#q").addEventListener("input", renderBoard);
+$("#pf").addEventListener("change", renderBoard);
+$("#onlyBlocked").addEventListener("change", renderBoard);
+$("#addBtn").addEventListener("click", () => {
+  if (!db) { toast("看板尚未連上資料,請稍候"); return; }
+  openNew();
+});
+renderBoard();
+
+(async () => {
+  const [d, u] = await Promise.all([window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null]);
+  db = d; user = u;
+  if (!db) { banner("目前無法連上看板資料(請登入 claude.ai 後開啟此頁)。"); $("#addBtn").disabled = true; return; }
+  if (user) {
+    myId = await user.id();
+    canWrite = await user.can("data.write");
+  }
+  if (canWrite === false) { $("#addBtn").hidden = true; banner("你目前只有檢視權限。"); }
+  db.collection("reqs").onSnapshot(snap => {
+    reqs = new Map(snap.docs.map(d => [d.id, d.data()]));
+    renderBoard();
+    if (openId && openId !== "__new") {
+      const a = document.activeElement;
+      const typing = a && $("#panel").contains(a) && /INPUT|TEXTAREA/.test(a.tagName);
+      if (!typing) openPanel(openId);
+    }
+  }, () => banner("看板資料連線中斷,請重新整理頁面。"));
+})();
+</script>
