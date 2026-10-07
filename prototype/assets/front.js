@@ -1,6 +1,9 @@
 /* 前台外框(REQ-0014 比照現有前台):頂部導航(錢包區 + 4 個錢包下拉 + 刷新餘額)、跑馬燈、左側欄、頁尾、手機底部列、模擬登入
- * 頂部錢包金額 = 「讀取當下」的快照,在以下時機重新讀取:頁面載入、登入切換、展開下拉框、按刷新、前台自己的 Claim / 報名之後。
- * 模擬控制台(存款、下注、後台取消等外部事件)改變餘額時,頂部 ₱ 不會自己跳動 → 按刷新(或再次展開下拉框)才更新(TC-16)。 */
+ * REQ-0017:頂部 ₱ 與下拉框 4 個錢包金額 = 「讀取當下」的快照,只在以下時機讀取:
+ *   1. 進入頁面(每次載入或切換到另一個前台頁面;登入切換視同進入)時讀取一次
+ *   2. 停留在頁面時,玩家按頂部刷新按鈕(轉圈)
+ *   3. 玩家在本頁 Claim 成功後自動更新一次(其他分頁的 Claim 不算)
+ * 展開 / 收起下拉框不重新讀取;存款、下注、其他分頁或模擬控制台造成的變動不會自動反映到頂部。頁面主體(卡片、列表、/en/points)維持即時。 */
 (function () {
   'use strict';
   var S = window.Store, esc = S.esc, money = S.money;
@@ -104,7 +107,7 @@
   function openDD() {
     var dd = hdr.querySelector('#wallet-dd'); if (!dd) return;
     clearTimeout(closeTimer);
-    if (!ddOpen) syncBalances(); // 每次展開都讀最新金額(餘額即時)
+    // REQ-0017:展開下拉框不重新讀取,顯示的是進入頁面 / 按刷新 / 本頁 Claim 成功時讀到的金額
     ddOpen = true; dd.hidden = false;
     hdr.querySelector('#fr-wal').classList.add('open'); hdr.querySelector('#nav-wallet').setAttribute('aria-expanded', 'true');
   }
@@ -185,5 +188,7 @@
     S.onChange(draw); draw();
     if (window.Sim) window.Sim.mountFloating();
   }
-  window.FR = { init: init, loginDialog: loginDialog, syncBalances: syncBalances, refresh: refresh, isTouchLayout: isTouchLayout };
+  /** REQ-0017:本頁 Claim 成功後自動更新一次頂部金額 */
+  function onClaimSuccess() { syncBalances(); }
+  window.FR = { init: init, loginDialog: loginDialog, syncBalances: syncBalances, onClaimSuccess: onClaimSuccess, refresh: refresh, isTouchLayout: isTouchLayout };
 })();

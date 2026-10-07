@@ -39,7 +39,7 @@
     '<div class="row"><button class="btn" data-act="boundary">產生 10-07 23:59:59 / 10-08 00:00:00 派彩</button></div>' +
     '</fieldset>' +
     '<fieldset><legend>REQ-0014 前台頂部錢包</legend>' +
-    '<div class="small muted">前台頂部錢包的金額是「讀取當下」的值:頁面載入、展開下拉框、按刷新、前台自己 Claim 後才重新讀取。用這裡或上面的存款 / 下注改變餘額後,頂部 ₱ 不會自己變,按頂部錢包旁的刷新(轉圈)後更新(TC-16)。</div>' +
+    '<div class="small muted">REQ-0017:前台頂部 ₱ 與下拉框金額只在進入頁面、按刷新、本頁 Claim 成功後讀取;展開下拉框不重新讀取。用這裡或上面的存款 / 下注改變餘額後,頂部與下拉框不會自己變,按頂部錢包旁的刷新(轉圈)或切換頁面後才更新;頁面主體維持即時。</div>' +
     '<div class="row"><button class="btn" data-act="bonusTable">Table Bonus Credit +100(模擬外部換算)</button><button class="btn" data-act="bonusSlot">Slot Bonus Credit +100</button></div>' +
     '<div class="small muted">以上兩項作用於「玩家行為」選的玩家。</div>' +
     '<div class="row"><button class="btn" data-act="tc12">建立 TC-12 測試玩家 player_demo18 並登入前台</button></div>' +

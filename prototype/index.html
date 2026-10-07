@@ -11,14 +11,14 @@
 <div id="page">
   <div class="card">
     <h1>OKADA 後台原型</h1>
-    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance + REQ-0016 派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet)· 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance + REQ-0016 派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet)+ REQ-0017 前台頂部餘額只在進入頁面、按刷新、本頁 Claim 成功後讀取 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
     <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
       <div>
         <h2>頁面清單</h2>
         <div id="pages"></div>
         <h2 style="margin-top:20px">預設假資料(測試情境)</h2>
         <div id="scenarios"></div>
-        <h2 style="margin-top:20px">REQ-0011~0016 測試指引</h2>
+        <h2 style="margin-top:20px">REQ-0011~0017 測試指引</h2>
         <div id="guide"></div>
       </div>
       <div id="sim-inline" style="background:#fffdf9;border:1px solid #f1d9bd;border-radius:8px;padding:12px 14px"></div>
@@ -80,12 +80,16 @@
     ['REQ-0013 TC-02', PAY + ' 日期區間 + Distribution = Via Promo Wallet → 頁尾「經由優惠錢包的派彩合計」;<a href="reports/promo-wallet/list.html">Promo Wallet Report</a> 同一期間(Group By Date 或 Promotion)的 Claimed 金額'],
     ['REQ-0013 TC-03 / 04', PAY + ' 日期 + Search Player ID + Search Promotion Name 併用;Download CSV 筆數 / 金額 = 頁尾「篩選結果合計(全部頁)」'],
     ['REQ-0013 TC-05 / 06', '起日晚於迄日 → Search 不查詢並提示;Clear 清空日期與其他條件'],
-    ['REQ-0014 說明', '前台頁面改用現有前台樣式(Montserrat、頂部主列 #33092B / 跑馬燈與側欄 #580A3F、金色 #F2E4B1、圓角 8px)。頂部錢包金額為「讀取當下」的值:載入、展開下拉框、按刷新、前台 Claim 後重新讀取;模擬控制台改餘額後要按刷新才更新頂部 ₱(TC-16)。預設前台登入 player_demo01(OKash 20,000、Table 1,250、Slot 860.50)'],
+    ['REQ-0014 說明', '前台頁面改用現有前台樣式(Montserrat、頂部主列 #33092B / 跑馬燈與側欄 #580A3F、金色 #F2E4B1、圓角 8px)。頂部錢包金額規則見 REQ-0017。預設前台登入 player_demo01(OKash 20,000、Table 1,250、Slot 860.50)'],
     ['REQ-0014 TC-03~06', '<a href="front/en/index.html">前台</a> 滑鼠移到左上錢包區 → 下拉 OKash Balance / Table Bonus Credit / Slot Bonus Credit / Promo Wallet(鎖定 / 可領取、不可下注);點各項 → /en/wallet、/en/points、/en/wallet?tab=promo'],
-    ['REQ-0014 TC-07 / 13', '模擬控制台 player_demo01 存款 1,000 → 推進流水 3,000 → 前台 /en/wallet?tab=promo Claim → 再 hover 錢包:OKash +1,000、可領取 −1,000;TC-13:存款後先 hover(鎖定 1,000),推進流水後再 hover(鎖定 0、可領取 1,000)'],
+    ['REQ-0014 TC-07 / 13', '(REQ-0017 後「不重新整理再 hover 即更新」改為:本頁 Claim 成功自動更新;外部變動按刷新或切換頁面才更新)模擬控制台 player_demo01 存款 1,000 → 推進流水 3,000 → 前台 /en/wallet?tab=promo 按刷新 → Claim → hover 錢包:OKash +1,000、可領取 −1,000;TC-13:存款後按刷新(鎖定 1,000),推進流水後按刷新(鎖定 0、可領取 1,000)'],
     ['REQ-0014 TC-12 / 15', '模擬控制台「REQ-0014 前台頂部錢包」→ 建立 player_demo18(鎖定 500 + 300、可領取 1,000)→ 下拉與 /en/wallet 卡片:鎖定 800、可領取 1,000;TC-15:player_demo09(105 可領取 2,000)→ 時鐘活動選 105 →「推進到領取期截止後」→ 可領取 0'],
     ['REQ-0014 TC-14', '瀏覽器寬 390(手機):點頂部錢包區展開,再點一次或點下拉框外收起;底部 Browse / Games / Promo 列'],
     ['REQ-0014 TC-16', '前台頁面開著不重新整理 → 模擬控制台存款 1,000(或 Table / Slot Bonus Credit +100)→ 頂部 ₱ 不變 → 按錢包旁刷新(轉圈約 0.8 秒)→ 頂部 ₱ 與下拉 4 個錢包都是最新值'],
+    ['REQ-0017 說明', '頂部 ₱ 與下拉框 4 個錢包金額只在:進入頁面(載入 / 切換前台頁面)、按頂部刷新、本頁 Claim 成功後讀取;展開下拉框、存款、下注、其他分頁、模擬控制台都不會自動更新頂部。頁面主體(/en/wallet 卡片與 Promo Wallet 列表、/en/points)維持即時'],
+    ['REQ-0017 TC-01~04', '進入 <a href="front/en/wallet.html">/en/wallet</a> → 頁面右下模擬控制台存款 1,000 → 展開下拉框:頂部 ₱ 與下拉都不變 → 按刷新:更新;或改為切換到 <a href="front/en/promotions.html">/en/promotions</a>:頂部為最新值'],
+    ['REQ-0017 TC-05', '開兩個分頁 /en/wallet?tab=promo(player_demo01 先存款 1,000、流水 3,000 使 101 可領取)→ 分頁 B Claim → 回分頁 A 展開下拉:不變(頁面主體已即時更新)→ 按刷新後更新'],
+    ['REQ-0017 TC-06 / 07', 'TC-06:在 /en/wallet?tab=promo 本頁 Claim → 不按刷新,頂部 ₱ 與下拉 OKash、可領取立即更新。TC-07:停在 /en/wallet?tab=promo(player_demo01 已存款 1,000)→ 模擬控制台推進流水 3,000 → 頁面卡片與列表即時出現 Claim;頂部與下拉不變,按刷新後才更新'],
     ['REQ-0015 TC-01~04', '已被 REQ-0016 取代(表單不再有獨立的派發方式欄位),改以 REQ-0016 TC-01~05 驗證'],
     ['REQ-0015 TC-05', '模擬控制台「REQ-0015 後端檢查」→「新增 Via Promo Wallet + HALO」或「把 101 改成 HALO」→ 被拒絕;<a href="promotions/settings/list.html">列表</a>沒有新增活動、101 仍為 Promo Wallet'],
     ['REQ-0015 TC-06 / 10', 'REQ-0016 後:<a href="promotions/settings/list.html">Promotion Settings 列表</a> / 詳情中經由優惠錢包的活動(101、102、103、105、107)派發錢包顯示 Promo Wallet,並標示 Claim 後入帳 OKash Balance(不會派發到 HALO);' + PWL + ' 總覽與獎勵詳情、前台 <a href="front/en/wallet.html?tab=promo">/en/wallet Promo Wallet</a> 每筆獎勵的派發錢包(實際入帳錢包)都是 OKash Balance'],

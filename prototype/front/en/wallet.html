@@ -105,11 +105,13 @@
     if (busy[id]) return; // 前端防連點
     busy[id] = true; e.target.disabled = true; e.target.textContent = 'Claiming…';
     var s = S.load();
+    var claimed = false;
     Sim.claimSafe(id, s.frontPlayer).then(function (r) {
+      claimed = true;
       UI.toast('Claimed ₱ ' + money(r.amount) + ' to ' + S.PAYOUT[r.payout].name + ' successfully!(領取成功)', 'ok');
     }, function (err) { UI.toast(err.message, 'err'); }).then(function () {
       delete busy[id]; var st = S.load(); if (st.frontPlayer) render(st, S.player(st, st.frontPlayer));
-      FR.syncBalances(); // 前台自己的 Claim 完成後重新讀取頂部餘額
+      if (claimed) FR.onClaimSuccess(); // REQ-0017:本頁 Claim 成功後頂部 ₱ 與下拉框自動更新一次(失敗不更新)
     });
   });
   FR.init({ active: 'wallet', needLogin: true, render: render });
