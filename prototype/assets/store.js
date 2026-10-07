@@ -2,7 +2,7 @@
  * 全部為假資料。時間一律以 UTC+8 顯示;模擬時鐘存在 state.now。 */
 (function () {
   'use strict';
-  var KEY = 'okada_proto_req0008_v4'; // v4:REQ-0013 日界測試派彩假資料 // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
+  var KEY = 'okada_proto_req0008_v5'; // v5:REQ-0014 前台 Table / Slot Bonus Credit 假資料、TC-12 測試玩家 // v4:REQ-0013 日界測試派彩假資料 // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
   var TZ = 8 * 3600e3;
   var DAY = 86400e3;
   var ROOT = document.documentElement.getAttribute('data-root') || '';
@@ -418,6 +418,55 @@
     var out = []; for (var t = dayStart(fromStr); t <= dayStart(toStr); t += DAY) out.push(fmtDate(t)); return out;
   }
 
+  /* ---------- REQ-0014 前台錢包 ---------- */
+  /** 優惠錢包合計:鎖定 = 鎖定中;可領取 = 可領取(已領取 / 已作廢 / 已取消不計入) */
+  function promoSums(s, pid) {
+    var o = { locked: 0, claimable: 0, lockedN: 0, claimableN: 0 };
+    s.rewards.forEach(function (r) {
+      if (r.playerId !== pid) return;
+      if (r.status === 'locked') { o.locked = round2(o.locked + r.amount); o.lockedN++; }
+      if (r.status === 'claimable') { o.claimable = round2(o.claimable + r.amount); o.claimableN++; }
+    });
+    return o;
+  }
+  /** 前台頂部錢包下拉的 4 個錢包(讀取當下的值) */
+  function frontWallets(s, pid) {
+    var pl = player(s, pid), pw = promoSums(s, pl.id);
+    return { okash: pl.okash, table: pl.liveTableBonus, slot: pl.liveSlotBonus, locked: pw.locked, claimable: pw.claimable };
+  }
+  /** 前台會員編號(假資料) */
+  function memberNo(pl) { return 'OM' + String(pl.id).padStart(9, '0'); }
+  /** REQ-0014 TC-12 測試玩家 player_demo18:鎖定 500 + 300、可領取 1,000,另有已領取 / 已作廢 / 已取消各一筆。
+   *  REQ-0012 之後同一玩家不會同時有多筆進行中的存款活動獎勵,故此資料直接寫入(繞過報名檢查),只用來驗證金額加總。 */
+  function addTc12Player(s) {
+    if (player(s, 'player_demo18')) throw new Error('player_demo18 已存在(要重建請先「重設所有資料」)');
+    var pid = 1018, n = 'player_demo18';
+    s.players.push({ id: pid, name: n, email: 'demo18@example.test', status: 'Active', referral: 'RFDEMO18', upline: '—', okash: 3000, okashInit: 3000, freePlay: 0, circlePoint: 900,
+      igBonus: 0, liveSlotBonus: 420, liveTableBonus: 680, createdAt: s.now - 30 * DAY });
+    var created = s.now - 3600e3;
+    function mk(promoId, dep, amt, turnover, claimable, createdAt) {
+      var p = promo(s, promoId);
+      var o = { id: nextId(s, 'optin'), playerId: pid, promoId: p.id, joinedAt: createdAt - 600e3, depositHandled: true, qualified: true, depositAmount: dep, firstDepositAmount: dep, turnover: turnover, tierPoints: 0, directPaid: false, updatedAt: createdAt, test: 'REQ-0014 TC-12' };
+      s.optins.push(o);
+      var r = { id: 'PW-' + String(nextId(s, 'reward')).padStart(6, '0'), playerId: pid, promoId: p.id, optinId: o.id, depositAmount: dep, depositRef: null, amount: amt, payout: p.payout,
+        createdAt: createdAt, unlockedAt: null, claimedAt: null, expiredAt: null, cancelledAt: null, cancelledBy: null, cancelReason: null, status: 'locked',
+        claimDeadline: promoEnd(p) + p.claimDays * DAY, audit: [{ at: createdAt, by: 'System', action: 'Issued', note: 'REQ-0014 TC-12 測試資料(直接寫入)' }] };
+      s.rewards.push(r);
+      pwFtx(s, r, TX.PW_ISSUE, createdAt, 'Promotion', 'Promo Wallet', 'Promo ' + p.name + ';REQ-0014 TC-12 測試資料');
+      if (claimable) unlock(s, r, createdAt + 60e3, 'System(任務完成)');
+      return r;
+    }
+    mk(105, 500, 500, 0, false, created);          // 鎖定 500(流水 0 / 1,000)
+    mk(103, 1500, 300, 0, false, created);         // 鎖定 300(流水 0 / 5,000)
+    mk(101, 1000, 1000, 3000, true, created);      // 可領取 1,000(派發 OKash Balance)
+    var c = mk(102, 400, 200, 2000, true, created); claim(s, c.id, pid);                                            // 已領取 200
+    var x = mk(103, 500, 100, 0, false, created); cancelReward(s, x.id, 'REQ-0014 TC-12 測試資料:取消', 'admin_demo'); // 已取消 100
+    var e = mk(107, 750, 150, 0, false, Math.min(created, parseDT('2026-10-03 10:00'))); e.claimDeadline = Math.min(e.claimDeadline, s.now - 1000); // 已作廢 150
+    tick(s);
+    s.frontPlayer = n; s.simPlayer = n;
+    log(s, '已建立 REQ-0014 TC-12 測試玩家 player_demo18(鎖定 500 + 300、可領取 1,000;已領取 200 / 已作廢 150 / 已取消 100 不計入)');
+  }
+
   /* ---------- 假資料 ---------- */
   function seed() {
     var t0 = dayStart('2026-10-01');
@@ -426,15 +475,16 @@
       role: 'super_admin', frontPlayer: 'player_demo01', simPlayer: 'player_demo01', seedStart: '2026-10-01',
       players: [], promos: [], optins: [], rewards: [], payouts: [], ftx: [], audits: [], log: []
     };
-    // [編號, OKash Balance, Free Play, iGaming Bonus, Live Table Bonus]
-    [[1, 20000, 0, 0, 0], [2, 5000, 0, 0, 3], [3, 30000, 0, 50, 0], [4, 8000, 150, 0, 0], [5, 3000, 0, 0, 0], [6, 6000, 300, 0, 0], [7, 10000, 0, 0, 0], [8, 12000, 0, 25, 0],
+    // [編號, OKash Balance, Free Play, iGaming Bonus, Live Table Bonus, Live Slot Bonus]
+    // REQ-0014:player_demo01 有 Table / Slot Bonus Credit 假資料(前台頂部錢包下拉、/en/points 讀同一份)
+    [[1, 20000, 0, 0, 1250, 860.5], [2, 5000, 0, 0, 3], [3, 30000, 0, 50, 0], [4, 8000, 150, 0, 0], [5, 3000, 0, 0, 0], [6, 6000, 300, 0, 0], [7, 10000, 0, 0, 0], [8, 12000, 0, 25, 0],
       [9, 7000, 0, 0, 0], [10, 15000, 0, 0, 0], [11, 4000, 0, 0, 0], [12, 9000, 0, 0, 0], [13, 2000, 0, 0, 0],
       [14, 5000, 0, 0, 0], [15, 5000, 0, 0, 0], [16, 5000, 0, 0, 0], [17, 5000, 0, 0, 0]].forEach(function (d, i) {
       var n = 'player_demo' + pad(d[0]);
       s.players.push({
         id: 1000 + d[0], name: n, email: n.replace('player_', '') + '@example.test', status: 'Active', referral: 'RF' + n.slice(-6).toUpperCase(), upline: '—',
         okash: d[1], okashInit: d[1], freePlay: d[2], circlePoint: 1200 + i * 100,
-        igBonus: d[3], liveSlotBonus: 0, liveTableBonus: d[4], createdAt: t0 - 30 * DAY
+        igBonus: d[3], liveSlotBonus: d[5] || 0, liveTableBonus: d[4], createdAt: t0 - 30 * DAY
       });
     });
     function P(o) {
@@ -513,6 +563,6 @@
     pendingAt: pendingAt, okashAt: okashAt, trace: trace, isDepositTask: isDepositTask, depositTaskInProgress: depositTaskInProgress,
     depositTaskBlock: depositTaskBlock, depositTaskBlockMsg: depositTaskBlockMsg, tasks: tasks, isPending: isPending,
     optIn: optIn, deposit: deposit, addTurnover: addTurnover, bet: bet, addTierPoints: addTierPoints, claim: claim, cancelReward: cancelReward,
-    savePromo: savePromo, setNow: setNow, summarize: summarize, dateList: dateList, can: can, url: url, qs: qs
+    savePromo: savePromo, setNow: setNow, promoSums: promoSums, frontWallets: frontWallets, memberNo: memberNo, addTc12Player: addTc12Player, summarize: summarize, dateList: dateList, can: can, url: url, qs: qs
   };
 })();

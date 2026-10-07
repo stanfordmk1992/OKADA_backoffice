@@ -38,6 +38,13 @@
     '<div class="small muted">預設已有 2026-10-06 23:59:59(player_demo14)與 2026-10-07 00:00:00(player_demo15)的派彩。按下後時鐘推進到 2026-10-07 23:59:59 由 player_demo16 領取,再推進到 2026-10-08 00:00:00 由 player_demo17 領取(時鐘只能往後,做完其他測試再按,或之後重設)。</div>' +
     '<div class="row"><button class="btn" data-act="boundary">產生 10-07 23:59:59 / 10-08 00:00:00 派彩</button></div>' +
     '</fieldset>' +
+    '<fieldset><legend>REQ-0014 前台頂部錢包</legend>' +
+    '<div class="small muted">前台頂部錢包的金額是「讀取當下」的值:頁面載入、展開下拉框、按刷新、前台自己 Claim 後才重新讀取。用這裡或上面的存款 / 下注改變餘額後,頂部 ₱ 不會自己變,按頂部錢包旁的刷新(轉圈)後更新(TC-16)。</div>' +
+    '<div class="row"><button class="btn" data-act="bonusTable">Table Bonus Credit +100(模擬外部換算)</button><button class="btn" data-act="bonusSlot">Slot Bonus Credit +100</button></div>' +
+    '<div class="small muted">以上兩項作用於「玩家行為」選的玩家。</div>' +
+    '<div class="row"><button class="btn" data-act="tc12">建立 TC-12 測試玩家 player_demo18 並登入前台</button></div>' +
+    '<div class="small muted">player_demo18:鎖定 500(105)+ 300(103)、可領取 1,000(101,派發 OKash);另有已領取 200、已作廢 150、已取消 100(不計入)。REQ-0012 後這種「同時多筆進行中」的資料不會自然產生,此處直接寫入,只用來驗證加總;請在預設時鐘(10-07)使用。</div>' +
+    '</fieldset>' +
     '<fieldset><legend>5. 資料</legend><div class="row"><button class="btn err" data-act="reset">重設所有資料(回到預設假資料)</button></div></fieldset>' +
     '<div class="sim-msg" role="status"></div>' +
     '<h3>事件紀錄</h3><div class="sim-log"></div>' +
@@ -67,7 +74,7 @@
       var pl = S.player(s, pid);
       var pend = s.rewards.filter(function (r) { return r.playerId === pl.id && S.isPending(r); });
       var joined = s.optins.filter(function (o) { return o.playerId === pl.id; }).map(function (o) { return o.promoId; });
-      $('.sim-player-info').innerHTML = 'OKash Balance <b>' + money(pl.okash) + '</b> · Free Play ' + money(pl.freePlay) + ' · 優惠錢包待領取 <b>' + money(pend.reduce(function (a, r) { return a + r.amount; }, 0)) + '</b>(' + pend.length + ' 筆)<br>已報名活動:' + (joined.join(', ') || '無');
+      $('.sim-player-info').innerHTML = 'OKash Balance <b>' + money(pl.okash) + '</b> · Free Play ' + money(pl.freePlay) + ' · Table ' + money(pl.liveTableBonus) + ' · Slot ' + money(pl.liveSlotBonus) + ' · 優惠錢包待領取 <b>' + money(pend.reduce(function (a, r) { return a + r.amount; }, 0)) + '</b>(' + pend.length + ' 筆)<br>已報名活動:' + (joined.join(', ') || '無');
       var act = s.optins.find(function (x) { return x.playerId === pl.id && S.depositTaskInProgress(s, x); });
       $('.sim-player-info').innerHTML += '<br>進行中的存款活動 <span class="tag-new">REQ-0012</span>:' + (act ? '<b class="sim-active-dep">' + esc(act.promoId + ' ' + S.promo(s, act.promoId).name) + '</b>(不能再報名其他存款活動)' : '<span class="sim-active-dep">無</span>');
       var p = S.promo(s, $('.sim-promo-time').value);
@@ -106,6 +113,8 @@
         S.setNow(s, t1); S.tick(s); S.claim(s, r16.id, 1016);
         S.setNow(s, t2); S.tick(s); S.claim(s, r17.id, 1017);
       }, '已產生派彩:2026-10-07 23:59:59(player_demo16)、2026-10-08 00:00:00(player_demo17);時鐘 = 2026-10-08 00:00:00');
+      if (a === 'bonusTable' || a === 'bonusSlot') run(function (s) { var p = S.player(s, s.simPlayer), k = a === 'bonusTable' ? 'liveTableBonus' : 'liveSlotBonus'; p[k] = S.round2(p[k] + 100); s.log.unshift({ at: s.now, text: p.name + ' ' + (a === 'bonusTable' ? 'Table' : 'Slot') + ' Bonus Credit +100(模擬外部換算)→ ' + money(p[k]) }); }, (a === 'bonusTable' ? 'Table' : 'Slot') + ' Bonus Credit +100');
+      if (a === 'tc12') run(function (s) { S.addTc12Player(s); }, '已建立 player_demo18 並登入前台(鎖定 800、可領取 1,000)');
       if (a === 'reset') { if (confirm('確定重設所有原型資料?')) { S.reset(); msg('已重設'); } }
       if (a === 'dblclaim') {
         var id = $('.sim-claimable').value; if (!id) { msg('沒有可領取的獎勵', true); return; }

@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
 <title>OKADA | Points</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="../../assets/app.css">
 </head>
 <body>
@@ -16,12 +19,16 @@
 <script>
 FR.init({ active: 'points', needLogin: true, render: function (s, pl) {
   var m = Store.money;
-  document.getElementById('page').innerHTML = '<div class="fr-card"><h2>Points</h2>' +
-    '<div class="notice">原型參照頁(唯讀):Points 換算頁與外部系統 HALO 不在 REQ-0008 範圍、不修改。這裡只用來確認 Free Play (HALO) 派發後 Free Play 增加。</div>' +
-    '<div class="fr-bal"><div><span>Free Play (HALO)</span><b id="fr-freeplay">' + m(pl.freePlay) + '</b></div>' +
-    '<div><span>Circle Point</span><b>' + pl.circlePoint + '</b></div>' +
-    '<div><span>Live Slots Bonus Credit</span><b>' + m(pl.liveSlotBonus) + '</b></div>' +
-    '<div><span>Live Table Bonus Credit</span><b>' + m(pl.liveTableBonus) + '</b></div></div></div>';
+  // REQ-0014:名稱用前台現有叫法 Table / Slot Bonus Credit;金額與頂部錢包下拉讀同一份資料(後台 Live Table / Live Slot Bonus Wallet 為其鏡像)
+  document.getElementById('page').innerHTML =
+    '<div class="fr-sec-h"><h2>Points</h2><span class="ln"></span></div>' +
+    '<div class="fr-bal" id="points-summary">' +
+      '<div><div class="h">Free Play (HALO)</div><b id="fr-freeplay">' + m(pl.freePlay) + '</b></div>' +
+      '<div><div class="h">Circle Point</div><b id="fr-circle">' + pl.circlePoint + '</b></div>' +
+      '<div><div class="h">Table Bonus Credit</div><b id="fr-table">₱ ' + m(pl.liveTableBonus) + '</b></div>' +
+      '<div><div class="h">Slot Bonus Credit</div><b id="fr-slot">₱ ' + m(pl.liveSlotBonus) + '</b></div>' +
+    '</div>' +
+    '<div class="notice">原型參照頁(唯讀):Points 換算頁與外部系統 HALO 不在範圍、不修改。這裡用來確認 Free Play (HALO) 派發後 Free Play 增加,以及頂部錢包下拉的 Table / Slot Bonus Credit 金額。</div>';
 } });
 </script>
 </body>

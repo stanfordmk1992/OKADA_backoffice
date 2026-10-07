@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
 <title>OKADA | Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="../../assets/app.css">
 </head>
 <body>
@@ -15,9 +18,19 @@
 <script src="../../assets/front.js"></script>
 <script>
 FR.init({ active: 'home', render: function (s, pl) {
-  document.getElementById('page').innerHTML = '<div class="fr-card"><h2>Welcome to OKADA (prototype front site)</h2>' +
-    '<p>' + (pl ? 'Logged in as <b>' + Store.esc(pl.name) + '</b>. Click <b>Wallet</b> in the top navigation to open your wallet and Promo Wallet.' : 'Please <b>Login</b> (top right) to see your wallet.') + '</p>' +
-    '<p class="meta" style="color:#9e9bb0">原型前台:只示範頂部導航錢包(/en/wallet)的優惠錢包與 Claim;其他前台功能不在範圍。</p></div>';
+  var esc = Store.esc;
+  var games = ['Demo Slot 1', 'Demo Slot 2', 'Demo Slot 3', 'Demo Slot 4', 'Demo Slot 5'];
+  var tiles = function (prefix) { return '<div class="fr-games">' + games.map(function (g, i) { return '<div class="fr-game">' + esc(prefix + ' ' + (i + 1)) + '<i>GRAND ₱ 0.00</i></div>'; }).join('') + '</div>'; };
+  document.getElementById('page').innerHTML =
+    '<div class="fr-payout"><span class="lb">TOP PAYOUT</span><span class="tx">Player Name: d***o01 · Game Name: Demo Slot 1 · Amount: ₱0.00(假資料)</span></div>' +
+    '<div class="fr-banner"><b>OKADA ONLINE CASINO</b><span>Prototype banner(原型橫幅,假資料)</span></div>' +
+    '<div class="fr-chips">' + ['Provider A', 'Provider B', 'Provider C', 'Provider D', 'Arcade', 'Sport'].map(function (c) { return '<a href="javascript:void(0)">' + c + '</a>'; }).join('') + '</div>' +
+    '<div class="fr-card" style="margin-top:16px"><h2>Prototype front site 原型前台</h2><p>' +
+      (pl ? 'Logged in as <b>' + esc(pl.name) + '</b>. Hover the wallet at the top left to see your 4 wallets(手機版點擊錢包區);click it to open My Wallet.'
+          : 'Please <b>LOGIN</b> (top left) to see your wallet.') + '</p>' +
+      '<p class="meta">原型前台:示範頂部導航錢包下拉、/en/wallet 的優惠錢包與 Claim、/en/promotions 報名;其他前台功能為版面示意。</p></div>' +
+    '<div class="fr-sec-h"><h2>Live Slots</h2><span class="ln"></span><span class="va">View All</span></div>' + tiles('Live Slot') +
+    '<div class="fr-sec-h"><h2>Live Tables</h2><span class="ln"></span><span class="va">View All</span></div>' + tiles('Live Table');
 } });
 </script>
 </body>

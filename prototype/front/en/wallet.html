@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
 <title>Wallet | OKADA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="../../assets/app.css">
 </head>
 <body>
@@ -16,8 +19,18 @@
 <script>
 (function () {
   var S = Store, esc = S.esc, money = S.money;
+  // REQ-0014:頁籤 Deposit / Withdrawal / Game History / Wallet History / Promo Wallet;?tab=promo 直接開到 Promo Wallet
+  var TABS = [['deposit', 'Deposit'], ['withdrawal', 'Withdrawal'], ['game-history', 'Game History'], ['wallet-history', 'Wallet History'], ['promo', 'Promo Wallet']];
+  var tab = (function () { var q = S.qs('tab'); return TABS.some(function (t) { return t[0] === q; }) ? q : 'deposit'; })();
   var view = 'active';
   var busy = {};
+  var payMethod = '';
+  function setTab(t) {
+    tab = t;
+    var u = new URL(location.href); if (t === 'deposit') u.searchParams.delete('tab'); else u.searchParams.set('tab', t);
+    history.replaceState(null, '', u.pathname + u.search + u.hash);
+    var s = S.load(); render(s, S.player(s, s.frontPlayer));
+  }
   function bar(label, t, pts) {
     if (!t) return '';
     var pct = t.target > 0 ? Math.min(100, t.cur / t.target * 100) : 100;
@@ -40,25 +53,53 @@
       '<div>' + bar('Deposit 存款', t.deposit) + bar('Turnover 流水', t.turnover) + bar('Tier Points 等級點數', t.tier, true) + lines.map(function (l) { return '<div class="meta">' + l + '</div>'; }).join('') + '</div>' +
       '<div style="align-self:end;text-align:right">' + action + '</div></div>';
   }
-  function render(s, pl) {
-    var mine = s.rewards.filter(function (r) { return r.playerId === pl.id; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
-    var locked = mine.filter(function (r) { return r.status === 'locked'; }), claimable = mine.filter(function (r) { return r.status === 'claimable'; });
-    var sum = function (l) { return money(l.reduce(function (a, r) { return a + r.amount; }, 0)); };
+  function promoPanel(s, mine, pw) {
     var list = mine.filter(function (r) { return view === 'active' ? S.isPending(r) : !S.isPending(r); });
-    var page = document.getElementById('page');
-    page.innerHTML =
-      '<div class="fr-card"><h2>My Wallet</h2><div class="fr-bal">' +
-        '<div><span>OKash Balance(可下注 Available to bet)</span><b id="fr-okash">₱ ' + money(pl.okash) + '</b></div>' +
-        '<div><span>Promo Wallet · Locked 鎖定中</span><b id="fr-locked">₱ ' + sum(locked) + '</b><span>' + locked.length + ' reward(s)</span></div>' +
-        '<div><span>Promo Wallet · Claimable 可領取</span><b id="fr-claimable">₱ ' + sum(claimable) + '</b><span>' + claimable.length + ' reward(s)</span></div>' +
-      '</div></div>' +
-      '<div class="fr-card" id="promo-wallet"><h2>Promo Wallet 優惠錢包</h2>' +
-        '<div class="notice">Rewards in the Promo Wallet are pending and <b>cannot be used for betting</b>. Complete all tasks to unlock, then press Claim before the claim deadline. Unclaimed rewards expire after the claim deadline.<br>優惠錢包內的獎勵為待領取,不能用來下注;完成任務後在領取截止前按 Claim,獎勵才會派發到活動的派發錢包。</div>' +
-        '<div class="fr-tabs"><button data-view="active" class="' + (view === 'active' ? 'on' : '') + '">Active 進行中 (' + (locked.length + claimable.length) + ')</button><button data-view="history" class="' + (view === 'history' ? 'on' : '') + '">History 紀錄 (' + (mine.length - locked.length - claimable.length) + ')</button></div>' +
-        '<div id="reward-list">' + (list.length ? list.map(function (r) { return card(s, r); }).join('') : '<div class="meta" id="no-rewards">No rewards yet.(目前沒有獎勵)</div>') + '</div>' +
+    return '<div class="fr-card" id="promo-wallet"><h2>Promo Wallet 優惠錢包</h2>' +
+      '<div class="notice">Rewards in the Promo Wallet are pending and <b>cannot be used for betting</b>. Complete all tasks to unlock, then press Claim before the claim deadline. Unclaimed rewards expire after the claim deadline.<br>優惠錢包內的獎勵為待領取,不能用來下注;完成任務後在領取截止前按 Claim,獎勵才會派發到活動的派發錢包。</div>' +
+      '<div class="fr-tabs"><button data-view="active" class="' + (view === 'active' ? 'on' : '') + '">Active 進行中 (' + (pw.lockedN + pw.claimableN) + ')</button><button data-view="history" class="' + (view === 'history' ? 'on' : '') + '">History 紀錄 (' + (mine.length - pw.lockedN - pw.claimableN) + ')</button></div>' +
+      '<div id="reward-list">' + (list.length ? list.map(function (r) { return card(s, r); }).join('') : '<div class="meta" id="no-rewards">No rewards yet.(目前沒有獎勵)</div>') + '</div>' +
       '</div>';
   }
+  function otherPanel(s, pl) {
+    if (tab === 'deposit' || tab === 'withdrawal') {
+      var methods = ['E-Wallet A', 'E-Wallet B', 'Bank Transfer', 'Cashier'];
+      return '<div class="fr-card" id="panel-' + tab + '"><h2>' + (tab === 'deposit' ? 'Deposit' : 'Withdrawal') + '</h2><p>Please Select Payment Method</p>' +
+        '<div class="fr-pay">' + methods.map(function (m) { return '<button type="button" data-pay="' + m + '" class="' + (payMethod === m ? 'on' : '') + '">' + m + '</button>'; }).join('') + '</div>' +
+        '<button class="btn" disabled title="原型示意:存提款流程不在本需求範圍">Next</button>' +
+        '<p class="meta" style="margin-top:10px">原型簡化示意:存提款流程不在範圍;要模擬存款請用模擬控制台「模擬存款」。</p></div>';
+    }
+    if (tab === 'game-history') {
+      return '<div class="fr-card" id="panel-game-history"><h2>Game History</h2>' + UI.table([
+        { t: 'Date', k: function (x) { return x[0]; } }, { t: 'Game', k: function (x) { return x[1]; } }, { t: 'Bet', k: function (x) { return x[2]; }, cls: 'right' }],
+        [], { count: false }) + '<p class="meta">原型簡化示意:遊戲紀錄不在範圍。</p></div>';
+    }
+    // wallet-history:OKash Balance 帳(原型假資料)
+    var rows = s.ftx.filter(function (x) { return x.playerId === pl.id && x.okash; }).sort(function (a, b) { return b.at - a.at || b.id - a.id; }).slice(0, 20);
+    return '<div class="fr-card" id="panel-wallet-history"><h2>Wallet History</h2>' + UI.table([
+      { t: 'Date', k: function (x) { return S.fmt(x.at); }, cls: 'nowrap' }, { t: 'Type', k: function (x) { return esc(x.type); } }, { t: 'Ref', k: function (x) { return esc(x.ref); }, cls: 'nowrap' },
+      { t: 'Amount', k: function (x) { return (x.after >= x.before ? '+' : '−') + money(x.amount); }, cls: 'right nowrap' }, { t: 'Balance', k: function (x) { return money(x.after); }, cls: 'right nowrap' }], rows) + '</div>';
+  }
+  function render(s, pl) {
+    var mine = s.rewards.filter(function (r) { return r.playerId === pl.id; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var pw = S.promoSums(s, pl.id);
+    var page = document.getElementById('page');
+    page.innerHTML =
+      '<div class="fr-bal" id="wallet-summary">' +
+        '<div id="okash-card"><div class="h">OKash Balance<span>Available to bet 可下注</span></div><b id="fr-okash">₱ ' + money(pl.okash) + '</b></div>' +
+        '<div id="promo-card"><div class="h">Promo Wallet 優惠錢包<span class="fr-tag">Not for betting 不可下注</span></div>' +
+          '<div class="pw2"><div><span>Locked 鎖定</span><b id="fr-locked">₱ ' + money(pw.locked) + '</b><span>' + pw.lockedN + ' reward(s)</span></div>' +
+          '<div><span>Claimable 可領取</span><b id="fr-claimable">₱ ' + money(pw.claimable) + '</b><span>' + pw.claimableN + ' reward(s)</span></div></div>' +
+          '<div style="margin-top:8px"><button type="button" class="go" data-tab="promo" id="go-promo">View rewards 查看獎勵 →</button></div></div>' +
+      '</div>' +
+      '<div class="fr-tabbar" role="tablist" aria-label="Options" id="wallet-tabs">' + TABS.map(function (t) {
+        return '<button type="button" role="tab" data-tab="' + t[0] + '" id="tab-' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>';
+      }).join('') + '</div>' +
+      '<div role="tabpanel" aria-labelledby="tab-' + tab + '">' + (tab === 'promo' ? promoPanel(s, mine, pw) : otherPanel(s, pl)) + '</div>';
+  }
   document.getElementById('page').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-tab]'); if (t) { setTab(t.getAttribute('data-tab')); return; }
+    var pm = e.target.closest('[data-pay]'); if (pm) { payMethod = pm.getAttribute('data-pay'); var s0 = S.load(); render(s0, S.player(s0, s0.frontPlayer)); return; }
     var v = e.target.getAttribute('data-view'); if (v) { view = v; render(S.load(), S.player(S.load(), S.load().frontPlayer)); return; }
     var id = e.target.getAttribute('data-claim'); if (!id) return;
     if (busy[id]) return; // 前端防連點
@@ -66,7 +107,10 @@
     var s = S.load();
     Sim.claimSafe(id, s.frontPlayer).then(function (r) {
       UI.toast('Claimed ₱ ' + money(r.amount) + ' to ' + S.PAYOUT[r.payout].name + ' successfully!(領取成功)', 'ok');
-    }, function (err) { UI.toast(err.message, 'err'); }).then(function () { delete busy[id]; var st = S.load(); if (st.frontPlayer) render(st, S.player(st, st.frontPlayer)); });
+    }, function (err) { UI.toast(err.message, 'err'); }).then(function () {
+      delete busy[id]; var st = S.load(); if (st.frontPlayer) render(st, S.player(st, st.frontPlayer));
+      FR.syncBalances(); // 前台自己的 Claim 完成後重新讀取頂部餘額
+    });
   });
   FR.init({ active: 'wallet', needLogin: true, render: render });
 })();
