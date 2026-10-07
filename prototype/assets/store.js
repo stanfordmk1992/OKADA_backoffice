@@ -2,7 +2,7 @@
  * 全部為假資料。時間一律以 UTC+8 顯示;模擬時鐘存在 state.now。 */
 (function () {
   'use strict';
-  var KEY = 'okada_proto_req0008_v6'; // v6:REQ-0015 經由優惠錢包的活動一律派發 OKash Balance(102、105 改 OKash)、新增 108 直接派發 + Free Play (HALO) // v5:REQ-0014 前台 Table / Slot Bonus Credit 假資料、TC-12 測試玩家 // v4:REQ-0013 日界測試派彩假資料 // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
+  var KEY = 'okada_proto_req0008_v7'; // v7:REQ-0016 派發錢包三選一,經由優惠錢包的活動派發錢包改為 Promo Wallet // v6:REQ-0015 經由優惠錢包的活動一律派發 OKash Balance(102、105 改 OKash)、新增 108 直接派發 + Free Play (HALO) // v5:REQ-0014 前台 Table / Slot Bonus Credit 假資料、TC-12 測試玩家 // v4:REQ-0013 日界測試派彩假資料 // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
   var TZ = 8 * 3600e3;
   var DAY = 86400e3;
   var ROOT = document.documentElement.getAttribute('data-root') || '';
@@ -30,8 +30,14 @@
   /* ---------- 常數 ---------- */
   var PAYOUT = {
     igaming_credit: { name: 'OKash Balance', payoutListName: 'OKash Balance' },
-    free_play_halo: { name: 'Free Play (HALO)', payoutListName: 'Free Play (HaLo)' }
+    free_play_halo: { name: 'Free Play (HALO)', payoutListName: 'Free Play (HaLo)' },
+    // REQ-0016:促銷設定的派發錢包第三個選項(經由優惠錢包);玩家 Claim 後入帳 PW_CREDIT(OKash Balance),派彩紀錄的派彩方式為實際入帳錢包
+    promo_wallet: { name: 'Promo Wallet', payoutListName: 'Promo Wallet' }
   };
+  var PAYOUT_OPTIONS = ['igaming_credit', 'free_play_halo', 'promo_wallet'];
+  var PW_CREDIT = 'igaming_credit';
+  /** REQ-0016:派發方式不再是獨立欄位,由派發錢包推得(Promo Wallet = 經由優惠錢包;其他 = 直接派發)。p.distribution 只是推得的值 */
+  function distOf(p) { return p && p.payout === 'promo_wallet' ? 'promo_wallet' : 'direct'; }
   var FREQ = { instant: 'Instant', end_of_promotion: 'End of Promotion' };
   var DIST = { direct: 'Direct Payout', promo_wallet: 'Via Promo Wallet' };
   var STATUS = {
@@ -93,6 +99,8 @@
   function promoStart(p) { return dayStart(p.from); }
   function promoEnd(p) { return dayEnd(p.to); }
   function promoRunning(s, p) { return p.active && s.now >= promoStart(p) && s.now <= promoEnd(p); }
+  /** REQ-0016:活動是否還有鎖定中或可領取的獎勵(有則不可修改派發錢包) */
+  function hasOpenRewards(s, promoId) { return s.rewards.some(function (r) { return r.promoId === Number(promoId) && isPending(r); }); }
   function rewardResolvedAt(r) { return r.claimedAt || r.expiredAt || r.cancelledAt || null; }
   function isPending(r) { return r.status === 'locked' || r.status === 'claimable'; }
   /** 某時間點的待領取金額(鎖定中 + 可領取) */
@@ -156,7 +164,7 @@
         var at = end + 1000;
         s.optins.filter(function (o) { return o.promoId === p.id; }).forEach(function (o) {
           var t = tasks(s, o);
-          if (p.distribution === 'direct') {
+          if (distOf(p) === 'direct') {
             if (p.freq === 'end_of_promotion' && t.all && !o.directPaid) directPayout(s, o, p, at);
           } else if (p.freq === 'end_of_promotion') {
             var r = s.rewards.find(function (x) { return x.optinId === o.id && x.status === 'locked'; });
@@ -199,7 +207,7 @@
       if (!promoRunning(s, p) || p.freq !== 'instant') return;
       var t = tasks(s, o);
       if (!t.all) return;
-      if (p.distribution === 'direct') { if (!o.directPaid) directPayout(s, o, p, s.now); }
+      if (distOf(p) === 'direct') { if (!o.directPaid) directPayout(s, o, p, s.now); }
       else {
         var r = s.rewards.find(function (x) { return x.optinId === o.id && x.status === 'locked'; });
         if (r) unlock(s, r, s.now, 'System(任務完成)');
@@ -216,7 +224,7 @@
     var p = promo(s, o.promoId);
     if (!isDepositTask(p)) return false;
     if (!o.qualified) return s.now <= promoEnd(p);
-    if (p.distribution === 'promo_wallet') {
+    if (distOf(p) === 'promo_wallet') {
       var r = s.rewards.find(function (x) { return x.optinId === o.id; });
       return !!r && isPending(r);
     }
@@ -260,11 +268,11 @@
         return;
       }
       o.qualified = true; o.depositAmount = amount; o.depositRef = depTx.ref;
-      if (p.distribution === 'promo_wallet') {
+      if (distOf(p) === 'promo_wallet') {
         var amt = round2(Math.min(amount * p.pct / 100, p.maxCampaign));
         var r = {
           id: 'PW-' + String(nextId(s, 'reward')).padStart(6, '0'), playerId: pl.id, promoId: p.id, optinId: o.id,
-          depositAmount: amount, depositRef: depTx.ref, amount: amt, payout: p.payout, createdAt: s.now, unlockedAt: null, claimedAt: null,
+          depositAmount: amount, depositRef: depTx.ref, amount: amt, payout: PW_CREDIT, createdAt: s.now, unlockedAt: null, claimedAt: null,
           expiredAt: null, cancelledAt: null, cancelledBy: null, cancelReason: null, status: 'locked',
           claimDeadline: promoEnd(p) + p.claimDays * DAY, audit: []
         };
@@ -348,11 +356,34 @@
   }
   /** REQ-0015 後端檢查:經由優惠錢包只能派發到 OKash Balance(不靠前端,模擬控制台 / 直接呼叫也擋) */
   var PW_HALO_MSG = 'Via Promo Wallet can only pay out to OKash Balance.(經由優惠錢包的獎勵只能派發到 OKash Balance,不能派發到 Free Play (HALO))';
+  /** REQ-0016 後端檢查訊息 */
+  var PAYOUT_INVALID_MSG = 'Invalid Payout Method.(派發錢包只能是 OKash Balance、Free Play (HALO)、Promo Wallet)';
+  var CLAIM_ONLY_PW_MSG = 'Claim period is only allowed when Payout Method = Promo Wallet.(只有派發錢包 = Promo Wallet 才能設定領取期)';
+  var PAYOUT_LOCKED_MSG = '此活動仍有未結束的優惠錢包獎勵,不可修改派發錢包(This promotion still has locked or claimable Promo Wallet rewards; Payout Method cannot be changed)';
   function savePromo(s, data, user) {
     var p;
     if (data.id && !promo(s, data.id)) throw new Error('找不到活動');
-    var merged = Object.assign({}, data.id ? promo(s, data.id) : {}, data);
-    if (merged.distribution === 'promo_wallet' && merged.payout !== 'igaming_credit') throw new Error(PW_HALO_MSG);
+    var cur = data.id ? promo(s, data.id) : null;
+    data = Object.assign({}, data);
+    var merged = Object.assign({}, cur || {}, data);
+    // REQ-0016:派發錢包只接受三種值
+    if (PAYOUT_OPTIONS.indexOf(merged.payout) < 0) throw new Error(PAYOUT_INVALID_MSG);
+    // REQ-0015 / 0016:舊格式「經由優惠錢包 + 非 Promo Wallet」(例:+ HALO)或與派發錢包矛盾的派發方式一律拒絕
+    if (data.distribution != null && data.distribution !== distOf(merged)) throw new Error(data.distribution === 'promo_wallet' ? PW_HALO_MSG : 'Distribution is derived from Payout Method.(派發方式由派發錢包決定)');
+    // REQ-0016:有鎖定中或可領取的獎勵時不可修改派發錢包
+    if (cur && data.payout != null && data.payout !== cur.payout && hasOpenRewards(s, cur.id)) throw new Error(PAYOUT_LOCKED_MSG);
+    // REQ-0016:領取期只在 Promo Wallet 時有值;規則同 REQ-0008(End of Promotion ≥ 1;Instant 可 0)
+    var hasCd = function (v) { return v != null && v !== ''; };
+    if (merged.payout !== 'promo_wallet') {
+      if (hasCd(data.claimDays)) throw new Error(CLAIM_ONLY_PW_MSG);
+      data.claimDays = null;
+    } else {
+      var cd = merged.claimDays;
+      if (!hasCd(cd) || !/^\d+$/.test(String(cd))) throw new Error('Claim period is required (whole days ≥ 0).(Promo Wallet 必填領取期,整數天)');
+      if (merged.freq === 'end_of_promotion' && Number(cd) < 1) throw new Error('Claim period must be at least 1 day for End of Promotion(派彩頻率 End of Promotion 時,領取期至少 1 天)');
+      data.claimDays = Number(cd);
+    }
+    data.distribution = distOf(merged);
     if (data.id) {
       p = promo(s, data.id); Object.assign(p, data); p.updatedAt = s.now; p.updatedBy = user;
       s.audits.push({ id: nextId(s, 'audit'), at: s.now, user: user, module: 'Promotion Settings', action: 'Update Promotion', target: p.id + ' ' + p.name, reason: '' });
@@ -453,7 +484,7 @@
       var p = promo(s, promoId);
       var o = { id: nextId(s, 'optin'), playerId: pid, promoId: p.id, joinedAt: createdAt - 600e3, depositHandled: true, qualified: true, depositAmount: dep, firstDepositAmount: dep, turnover: turnover, tierPoints: 0, directPaid: false, updatedAt: createdAt, test: 'REQ-0014 TC-12' };
       s.optins.push(o);
-      var r = { id: 'PW-' + String(nextId(s, 'reward')).padStart(6, '0'), playerId: pid, promoId: p.id, optinId: o.id, depositAmount: dep, depositRef: null, amount: amt, payout: p.payout,
+      var r = { id: 'PW-' + String(nextId(s, 'reward')).padStart(6, '0'), playerId: pid, promoId: p.id, optinId: o.id, depositAmount: dep, depositRef: null, amount: amt, payout: PW_CREDIT,
         createdAt: createdAt, unlockedAt: null, claimedAt: null, expiredAt: null, cancelledAt: null, cancelledBy: null, cancelReason: null, status: 'locked',
         claimDeadline: promoEnd(p) + p.claimDays * DAY, audit: [{ at: createdAt, by: 'System', action: 'Issued', note: 'REQ-0014 TC-12 測試資料(直接寫入)' }] };
       s.rewards.push(r);
@@ -494,20 +525,21 @@
     });
     function P(o) {
       return Object.assign({ ranks: ['All Member'], depOption: 'first_promo_deposit', vendors: ['Pragmatic Play', 'Jili', 'Playtech'], tnc: '<p>Demo terms. Fake data for prototype only.</p>',
-        active: true, endProcessed: false, createdAt: t0 - 2 * DAY, createdBy: 'admin_demo', updatedAt: t0 - 2 * DAY, updatedBy: 'admin_demo', banner: '' }, o);
+        active: true, endProcessed: false, createdAt: t0 - 2 * DAY, createdBy: 'admin_demo', updatedAt: t0 - 2 * DAY, updatedBy: 'admin_demo', banner: '' }, o, { distribution: distOf(o) });
     }
-    s.promos.push(P({ id: 101, name: 'Promo Wallet Welcome 100%', from: '2026-10-01', to: '2026-10-20', min: 500, max: 50000, freq: 'instant', payout: 'igaming_credit', pct: 100, maxCampaign: 5000, turnover: 3000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 0 }));
-    // REQ-0015:經由優惠錢包的活動一律派發 OKash Balance(102、105 原為 Free Play (HALO))
-    s.promos.push(P({ id: 102, name: 'Weekend Reload 50% (End of Promotion)', from: '2026-10-05', to: '2026-10-12', min: 1000, max: 20000, freq: 'end_of_promotion', payout: 'igaming_credit', pct: 50, maxCampaign: 3000, turnover: 2000, tierPoints: 50, distribution: 'promo_wallet', claimDays: 3 }));
-    s.promos.push(P({ id: 103, name: 'Midweek Cashback 20%', from: '2026-10-01', to: '2026-10-10', min: 1000, max: 100000, freq: 'instant', payout: 'igaming_credit', pct: 20, maxCampaign: 1000, turnover: 5000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 }));
-    s.promos.push(P({ id: 104, name: 'Classic Reload 30% (Direct)', from: '2026-10-01', to: '2026-10-31', min: 500, max: 20000, freq: 'instant', payout: 'igaming_credit', pct: 30, maxCampaign: 3000, turnover: 2000, tierPoints: 0, distribution: 'direct', claimDays: null }));
-    s.promos.push(P({ id: 105, name: 'Bonus Boost 100%', from: '2026-10-01', to: '2026-10-10', min: 500, max: 10000, freq: 'instant', payout: 'igaming_credit', pct: 100, maxCampaign: 2000, turnover: 1000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 }));
+    // REQ-0016:經由優惠錢包的活動(101、102、103、105、107)派發錢包 = Promo Wallet(Claim 後入帳 OKash Balance);派發方式由派發錢包推得
+    s.promos.push(P({ id: 101, name: 'Promo Wallet Welcome 100%', from: '2026-10-01', to: '2026-10-20', min: 500, max: 50000, freq: 'instant', payout: 'promo_wallet', pct: 100, maxCampaign: 5000, turnover: 3000, tierPoints: 0, claimDays: 0 }));
+    // REQ-0015:經由優惠錢包的獎勵一律入帳 OKash Balance(102、105 原為 Free Play (HALO));REQ-0016 起派發錢包顯示為 Promo Wallet
+    s.promos.push(P({ id: 102, name: 'Weekend Reload 50% (End of Promotion)', from: '2026-10-05', to: '2026-10-12', min: 1000, max: 20000, freq: 'end_of_promotion', payout: 'promo_wallet', pct: 50, maxCampaign: 3000, turnover: 2000, tierPoints: 50, claimDays: 3 }));
+    s.promos.push(P({ id: 103, name: 'Midweek Cashback 20%', from: '2026-10-01', to: '2026-10-10', min: 1000, max: 100000, freq: 'instant', payout: 'promo_wallet', pct: 20, maxCampaign: 1000, turnover: 5000, tierPoints: 0, claimDays: 1 }));
+    s.promos.push(P({ id: 104, name: 'Classic Reload 30% (Direct)', from: '2026-10-01', to: '2026-10-31', min: 500, max: 20000, freq: 'instant', payout: 'igaming_credit', pct: 30, maxCampaign: 3000, turnover: 2000, tierPoints: 0, claimDays: null }));
+    s.promos.push(P({ id: 105, name: 'Bonus Boost 100%', from: '2026-10-01', to: '2026-10-10', min: 500, max: 10000, freq: 'instant', payout: 'promo_wallet', pct: 100, maxCampaign: 2000, turnover: 1000, tierPoints: 0, claimDays: 1 }));
     // REQ-0011:已結束的活動(10-05 結束、領取期 1 天 → 10-07 00:00:00 作廢),提供作廢的追溯資料
-    s.promos.push(P({ id: 107, name: 'Early October Reload 20% (Ended)', from: '2026-10-01', to: '2026-10-05', min: 500, max: 20000, freq: 'instant', payout: 'igaming_credit', pct: 20, maxCampaign: 1000, turnover: 4000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 }));
+    s.promos.push(P({ id: 107, name: 'Early October Reload 20% (Ended)', from: '2026-10-01', to: '2026-10-05', min: 500, max: 20000, freq: 'instant', payout: 'promo_wallet', pct: 20, maxCampaign: 1000, turnover: 4000, tierPoints: 0, claimDays: 1 }));
     // REQ-0012:沒有存款條件的活動(原型測試用;現行後台 Min/Max Deposit 為必填,無法由表單建立此類活動;本原型不模擬其派彩)
-    s.promos.push(P({ id: 106, name: 'Turnover Challenge (No Deposit Requirement)', from: '2026-10-01', to: '2026-10-31', min: null, max: null, depOption: '', freq: 'instant', payout: 'igaming_credit', pct: 10, maxCampaign: 500, turnover: 5000, tierPoints: 0, distribution: 'direct', claimDays: null }));
+    s.promos.push(P({ id: 106, name: 'Turnover Challenge (No Deposit Requirement)', from: '2026-10-01', to: '2026-10-31', min: null, max: null, depOption: '', freq: 'instant', payout: 'igaming_credit', pct: 10, maxCampaign: 500, turnover: 5000, tierPoints: 0, claimDays: null }));
     // REQ-0015 TC-09:直接派發 + Free Play (HALO) 的活動(達標後直接派彩到 HALO,不進優惠錢包)
-    s.promos.push(P({ id: 108, name: 'Free Play Direct 50% (HALO)', from: '2026-10-01', to: '2026-10-31', min: 500, max: 10000, freq: 'instant', payout: 'free_play_halo', pct: 50, maxCampaign: 1000, turnover: 1000, tierPoints: 0, distribution: 'direct', claimDays: null }));
+    s.promos.push(P({ id: 108, name: 'Free Play Direct 50% (HALO)', from: '2026-10-01', to: '2026-10-31', min: 500, max: 10000, freq: 'instant', payout: 'free_play_halo', pct: 50, maxCampaign: 1000, turnover: 1000, tierPoints: 0, claimDays: null }));
     s.promos.sort(function (a, b) { return a.id - b.id; });
     s.seq.promo = 8;
     function at(str) { s.now = parseDT(str); tick(s); }
@@ -563,7 +595,8 @@
   function qs(name) { return new URLSearchParams(location.search).get(name); }
 
   window.Store = {
-    KEY: KEY, DAY: DAY, ROOT: ROOT, PAYOUT: PAYOUT, FREQ: FREQ, DIST: DIST, STATUS: STATUS, WALLET_TYPES: WALLET_TYPES, PROVIDERS: PROVIDERS,
+    KEY: KEY, DAY: DAY, ROOT: ROOT, PAYOUT: PAYOUT, PAYOUT_OPTIONS: PAYOUT_OPTIONS, PW_CREDIT: PW_CREDIT, distOf: distOf, hasOpenRewards: hasOpenRewards,
+    PAYOUT_INVALID_MSG: PAYOUT_INVALID_MSG, CLAIM_ONLY_PW_MSG: CLAIM_ONLY_PW_MSG, PAYOUT_LOCKED_MSG: PAYOUT_LOCKED_MSG, FREQ: FREQ, DIST: DIST, STATUS: STATUS, WALLET_TYPES: WALLET_TYPES, PROVIDERS: PROVIDERS,
     RANKS: RANKS, DEP_OPTIONS: DEP_OPTIONS, TX: TX, ROLES: ROLES,
     fmt: fmt, fmtDate: fmtDate, dayStart: dayStart, dayEnd: dayEnd, parseDT: parseDT, money: money, esc: esc, round2: round2,
     load: load, save: save, mutate: mutate, reset: reset, onChange: onChange, tick: tick,

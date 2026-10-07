@@ -31,7 +31,7 @@
   var s0 = S.load();
   function defaults(s) { return { from: s.seedStart, to: S.fmtDate(s.now), group: 'promotion', promo: '' }; }
   var q = defaults(s0);
-  document.getElementById('f-promo').innerHTML = '<option value="">All</option>' + s0.promos.filter(function (p) { return p.distribution === 'promo_wallet'; }).map(function (p) { return '<option value="' + p.id + '">' + p.id + ' ' + esc(p.name) + '</option>'; }).join('');
+  document.getElementById('f-promo').innerHTML = '<option value="">All</option>' + s0.promos.filter(function (p) { return p.distribution === 'promo_wallet' || s0.rewards.some(function (r) { return r.promoId === p.id; }); } /* REQ-0016:改過派發錢包的活動仍列出歷史獎勵 */).map(function (p) { return '<option value="' + p.id + '">' + p.id + ' ' + esc(p.name) + '</option>'; }).join('');
   function fill() { document.getElementById('f-from').value = q.from; document.getElementById('f-to').value = q.to; document.getElementById('f-group').value = q.group; document.getElementById('f-promo').value = q.promo; }
   fill();
   function compute(s) {
@@ -39,7 +39,7 @@
     var rws = s.rewards.filter(function (r) { return !q.promo || r.promoId === Number(q.promo); });
     var groups = [];
     if (q.group === 'promotion') {
-      s.promos.filter(function (p) { return p.distribution === 'promo_wallet' && (!q.promo || p.id === Number(q.promo)); }).forEach(function (p) {
+      s.promos.filter(function (p) { return (p.distribution === 'promo_wallet' || s.rewards.some(function (r) { return r.promoId === p.id; })) && (!q.promo || p.id === Number(q.promo)); }).forEach(function (p) {
         groups.push({ label: p.id + ' ' + p.name, sum: S.summarize(s, rws.filter(function (r) { return r.promoId === p.id; }), a, b) });
       });
     } else {

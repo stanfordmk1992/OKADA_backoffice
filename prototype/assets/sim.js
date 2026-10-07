@@ -46,9 +46,16 @@
     '<div class="small muted">player_demo18:鎖定 500(105)+ 300(103)、可領取 1,000(101,派發 OKash);另有已領取 200、已作廢 150、已取消 100(不計入)。REQ-0012 後這種「同時多筆進行中」的資料不會自然產生,此處直接寫入,只用來驗證加總;請在預設時鐘(10-07)使用。</div>' +
     '</fieldset>' +
     '<fieldset><legend>REQ-0015 後端檢查(繞過表單)</legend>' +
-    '<div class="small muted">不經促銷設定表單,直接呼叫後端儲存「Via Promo Wallet + Free Play (HALO)」,應被拒絕,活動不會建立 / 修改(TC-05)。</div>' +
+    '<div class="small muted">不經促銷設定表單,直接呼叫後端儲存「Via Promo Wallet + Free Play (HALO)」(REQ-0016 後表單已無派發方式欄位,這裡以舊格式送出),應被拒絕,活動不會建立 / 修改(TC-05)。</div>' +
     '<div class="row"><button class="btn" data-act="pwHaloNew">直接呼叫儲存:新增 Via Promo Wallet + HALO</button></div>' +
     '<div class="row"><button class="btn" data-act="pwHaloEdit">直接呼叫儲存:把 101(Via Promo Wallet)的派發錢包改成 HALO</button></div>' +
+    '</fieldset>' +
+    '<fieldset><legend>REQ-0016 後端檢查(繞過表單)</legend>' +
+    '<div class="small muted">不經促銷設定表單,直接呼叫後端儲存,三項都應被拒絕,活動不會建立 / 修改(TC-06)。</div>' +
+    '<div class="row"><button class="btn" data-act="pwBadPayout">直接呼叫儲存:新增活動,派發錢包 = bonus_wallet(不存在的值)</button></div>' +
+    '<div class="row"><button class="btn" data-act="pwOkashClaim">直接呼叫儲存:新增活動,OKash Balance + 領取期 3 天</button></div>' +
+    '<div class="row"><button class="btn" data-act="pwLockedEdit">直接呼叫儲存:把 105(仍有可領取獎勵)的派發錢包改成 OKash Balance</button></div>' +
+    '<div class="small muted">105 預設有 player_demo09、player_demo17 的可領取獎勵;這些獎勵全部領取 / 作廢 / 取消後,第 3 項就會成功(符合 TC-05「獎勵全部結束後可修改」)。</div>' +
     '</fieldset>' +
     '<fieldset><legend>5. 資料</legend><div class="row"><button class="btn err" data-act="reset">重設所有資料(回到預設假資料)</button></div></fieldset>' +
     '<div class="sim-msg" role="status"></div>' +
@@ -126,6 +133,14 @@
             vendors: ['Jili'], tnc: '', payout: 'free_play_halo', pct: 10, maxCampaign: 500, turnover: 1000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 };
         S.savePromo(s, data, user);
       }, '儲存成功(不應發生)');
+      if (a === 'pwBadPayout' || a === 'pwOkashClaim' || a === 'pwLockedEdit') run(function (s) {
+        var user = S.ROLES[s.role].user;
+        var base = { from: '2026-10-07', to: '2026-10-20', ranks: ['All Member'], depOption: 'first_promo_deposit', min: 500, max: 10000, freq: 'instant', vendors: ['Jili'], tnc: '', pct: 10, maxCampaign: 500, turnover: 1000, tierPoints: 0 };
+        var data = a === 'pwBadPayout' ? Object.assign({ name: 'REQ-0016 Bypass Test (bonus_wallet)', payout: 'bonus_wallet', claimDays: null }, base)
+          : a === 'pwOkashClaim' ? Object.assign({ name: 'REQ-0016 Bypass Test (OKash + claim period)', payout: 'igaming_credit', claimDays: 3 }, base)
+          : { id: 105, payout: 'igaming_credit', claimDays: null };
+        S.savePromo(s, data, user);
+      }, a === 'pwLockedEdit' ? '儲存成功:105 已沒有未結束的獎勵,派發錢包改為 OKash Balance' : '儲存成功(不應發生)');
       if (a === 'tc12') run(function (s) { S.addTc12Player(s); }, '已建立 player_demo18 並登入前台(鎖定 800、可領取 1,000)');
       if (a === 'reset') { if (confirm('確定重設所有原型資料?')) { S.reset(); msg('已重設'); } }
       if (a === 'dblclaim') {

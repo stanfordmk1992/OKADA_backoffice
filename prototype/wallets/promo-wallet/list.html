@@ -31,7 +31,7 @@
   var q = { player: S.qs('player') || '', promo: S.qs('promo') || '', status: S.qs('status') || '', reward: S.qs('reward') || '' };
   var st0 = S.load();
   document.getElementById('f-player').value = q.player;
-  document.getElementById('f-promo').innerHTML = '<option value="">All</option>' + st0.promos.filter(function (p) { return p.distribution === 'promo_wallet'; }).map(function (p) { return '<option value="' + p.id + '">' + p.id + ' ' + esc(p.name) + '</option>'; }).join('');
+  document.getElementById('f-promo').innerHTML = '<option value="">All</option>' + st0.promos.filter(function (p) { return p.distribution === 'promo_wallet' || st0.rewards.some(function (r) { return r.promoId === p.id; }); }).map(function (p) { return '<option value="' + p.id + '">' + p.id + ' ' + esc(p.name) + '</option>'; }).join('');
   document.getElementById('f-promo').value = q.promo;
   document.getElementById('f-status').innerHTML += Object.keys(S.STATUS).map(function (k) { return '<option value="' + k + '">' + S.STATUS[k].en + ' ' + S.STATUS[k].zh + '</option>'; }).join('');
   document.getElementById('f-status').value = q.status;

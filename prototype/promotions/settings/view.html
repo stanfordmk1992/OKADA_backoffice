@@ -26,10 +26,10 @@
       row('Promotion Name', esc(p.name)) + row('Start Date', p.from) + row('End Date', p.to + '(結束時間 ' + S.fmt(S.promoEnd(p)) + ')') +
       row('Player Ranking', esc(p.ranks.join(', '))) + row('Deposit Option', esc(p.depOption)) + row('Minimum Amount', p.min == null ? '—(無存款條件)' : money(p.min)) + row('Maximum Amount', p.max == null ? '—' : money(p.max)) +
       row('Payout Frequency', S.FREQ[p.freq]) + row('Vendors', esc(p.vendors.join(', '))) + row('Terms and Conditions', esc(p.tnc.replace(/<[^>]+>/g, ''))) +
-      row('Payment Method', S.PAYOUT[p.payout].name) + row('Percentage', p.pct + '%') + row('Max Campaign Amount', money(p.maxCampaign)) +
+      row('Payment Method', S.PAYOUT[p.payout].name, true) + row('Percentage', p.pct + '%') + row('Max Campaign Amount', money(p.maxCampaign)) +
       row('Turnover Amount', money(p.turnover)) + row('Tier Points', p.tierPoints || '—') +
-      row('Distribution Method', S.DIST[p.distribution], true) +
-      row('Claim Period After Promotion Ends', p.distribution === 'promo_wallet' ? p.claimDays + ' day(s) → 領取截止 ' + S.fmt(S.promoEnd(p) + p.claimDays * S.DAY) : '—(Direct Payout)', true) +
+      row('Claim Credits To(Claim 後入帳)', p.payout === 'promo_wallet' ? S.PAYOUT[S.PW_CREDIT].name + '(Via Promo Wallet)' : '—(Direct Payout)', true) +
+      row('Claim Period After Promotion Ends', p.payout === 'promo_wallet' ? p.claimDays + ' day(s) → 領取截止 ' + S.fmt(S.promoEnd(p) + p.claimDays * S.DAY) : '—(Direct Payout)', true) +
       row('Status', p.active ? 'Active' : 'Inactive') +
       row('Created By', esc(p.createdBy)) + row('Created At', S.fmt(p.createdAt)) + row('Updated By', esc(p.updatedBy)) + row('Updated At', S.fmt(p.updatedAt)) + row('Banner', '—') +
       '</dl>';
