@@ -2,7 +2,7 @@
  * 全部為假資料。時間一律以 UTC+8 顯示;模擬時鐘存在 state.now。 */
 (function () {
   'use strict';
-  var KEY = 'okada_proto_req0008_v1';
+  var KEY = 'okada_proto_req0008_v2'; // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號
   var TZ = 8 * 3600e3;
   var DAY = 86400e3;
   var ROOT = document.documentElement.getAttribute('data-root') || '';
@@ -120,14 +120,25 @@
   function log(s, text) { s.log.unshift({ at: s.now, text: text }); s.log = s.log.slice(0, 40); }
 
   /* ---------- 資金交易紀錄 ---------- */
+  function pad6(n) { return String(n).padStart(6, '0'); }
+  /** Ref ID = 交易編號:refPrefix + 交易流水號(例 DP-000012);未給 refPrefix 時沿用 o.ref(例:直接派彩 PO-n,不變) */
   function addFtx(s, o) {
-    o.id = nextId(s, 'ftx'); o.status = o.status || 'Success'; s.ftx.push(o); return o;
+    o.id = nextId(s, 'ftx'); o.status = o.status || 'Success';
+    if (o.refPrefix) { o.ref = o.refPrefix + '-' + pad6(o.id); delete o.refPrefix; }
+    if (o.rewardId === undefined) o.rewardId = null;
+    s.ftx.push(o); return o;
+  }
+  /** 該玩家優惠錢包帳本最後一筆的 After(= 目前待領取金額) */
+  function pwLedgerBalance(s, pid) {
+    var last = null;
+    s.ftx.forEach(function (x) { if (x.playerId === pid && x.pw) last = x; });
+    return last ? last.after : 0;
   }
   function pwFtx(s, r, type, at, from, to, remarks) {
-    // 優惠錢包帳:after = 事件後該玩家待領取金額;產生為 +,其餘為 −
-    var after = pendingAt(s, at, function (x) { return x.playerId === r.playerId; });
-    var before = round2(type === TX.PW_ISSUE ? after - r.amount : after + r.amount);
-    addFtx(s, { playerId: r.playerId, type: type, from: from, to: to, ref: r.id, at: at, before: before, amount: r.amount, after: after, remarks: remarks, promoId: r.promoId });
+    // REQ-0011 優惠錢包帳本:Before = 上一筆的 After(前後餘額連續);產生為 +,領取 / 作廢 / 取消為 −
+    var before = pwLedgerBalance(s, r.playerId);
+    var after = round2(type === TX.PW_ISSUE ? before + r.amount : before - r.amount);
+    return addFtx(s, { playerId: r.playerId, type: type, from: from, to: to, refPrefix: 'PWT', rewardId: r.id, pw: true, at: at, before: before, amount: r.amount, after: after, remarks: remarks, promoId: r.promoId });
   }
   function okashMove(s, pid, delta, at, o) {
     var p = player(s, pid);
@@ -154,8 +165,10 @@
         });
       }
     });
-    s.rewards.forEach(function (r) {
-      if (isPending(r) && s.now > r.claimDeadline) {
+    // 依截止時間先後處理,確保優惠錢包帳本依時間連續
+    s.rewards.filter(function (r) { return isPending(r) && s.now > r.claimDeadline; })
+      .sort(function (a, b) { return a.claimDeadline - b.claimDeadline || a.createdAt - b.createdAt; }).forEach(function (r) {
+      {
         var at = r.claimDeadline + 1000;
         var prev = r.status;
         r.status = 'expired'; r.expiredAt = at;
@@ -209,7 +222,7 @@
     amount = round2(Number(amount));
     if (!(amount > 0)) throw new Error('存款金額需大於 0');
     var pl = player(s, pid);
-    okashMove(s, pl.id, amount, s.now, { type: TX.DEPOSIT, from: '—', to: 'OKash Balance', ref: 'DP-' + (s.seq.ftx + 1), remarks: 'Simulated deposit' });
+    var depTx = okashMove(s, pl.id, amount, s.now, { type: TX.DEPOSIT, from: '—', to: 'OKash Balance', refPrefix: 'DP', remarks: 'Simulated deposit' });
     var msgs = ['存款 ' + money(amount)];
     s.optins.filter(function (o) { return o.playerId === pl.id && !o.depositHandled; }).forEach(function (o) {
       var p = promo(s, o.promoId);
@@ -219,12 +232,12 @@
         msgs.push(p.name + ':報名後第一筆存款 ' + money(amount) + ' 不在 ' + money(p.min) + '~' + money(p.max) + ' 範圍,不算參加');
         return;
       }
-      o.qualified = true; o.depositAmount = amount;
+      o.qualified = true; o.depositAmount = amount; o.depositRef = depTx.ref;
       if (p.distribution === 'promo_wallet') {
         var amt = round2(Math.min(amount * p.pct / 100, p.maxCampaign));
         var r = {
           id: 'PW-' + String(nextId(s, 'reward')).padStart(6, '0'), playerId: pl.id, promoId: p.id, optinId: o.id,
-          depositAmount: amount, amount: amt, payout: p.payout, createdAt: s.now, unlockedAt: null, claimedAt: null,
+          depositAmount: amount, depositRef: depTx.ref, amount: amt, payout: p.payout, createdAt: s.now, unlockedAt: null, claimedAt: null,
           expiredAt: null, cancelledAt: null, cancelledBy: null, cancelReason: null, status: 'locked',
           claimDeadline: promoEnd(p) + p.claimDays * DAY, audit: []
         };
@@ -255,7 +268,7 @@
     var pl = player(s, pid);
     if (!(amount > 0)) throw new Error('下注金額需大於 0');
     if (amount > pl.okash) throw new Error('可下注餘額不足:OKash Balance ' + money(pl.okash) + '。優惠錢包的鎖定中 / 可領取獎勵不能用來下注。');
-    okashMove(s, pl.id, -amount, s.now, { type: TX.BET, from: 'OKash Balance', to: 'Provider Wallet', ref: 'BT-' + (s.seq.ftx + 1), remarks: 'Simulated bet' });
+    okashMove(s, pl.id, -amount, s.now, { type: TX.BET, from: 'OKash Balance', to: 'Provider Wallet', refPrefix: 'BT', remarks: 'Simulated bet' });
     addTurnover(s, pid, amount, '下注 ' + money(amount) + ',流水');
   }
   function addTierPoints(s, pid, pts) {
@@ -280,11 +293,14 @@
     r.audit.push({ at: s.now, by: player(s, r.playerId).name + '(Player)', action: 'Claimed', note: '派發到 ' + PAYOUT[r.payout].name });
     var pay = { id: nextId(s, 'payout'), playerId: r.playerId, promoId: r.promoId, optinId: r.optinId, amount: r.amount, method: r.payout, date: s.now, status: 'Paid', route: 'promo_wallet', rewardId: r.id };
     s.payouts.push(pay);
+    // REQ-0011:不論派發到哪個錢包,優惠錢包帳本一律寫一筆 Reward Claimed
+    pwFtx(s, r, TX.PW_CLAIM, s.now, 'Promo Wallet', PAYOUT[r.payout].name, 'Promo ' + p.name + ';Claim → ' + PAYOUT[r.payout].name + (r.payout === 'free_play_halo' ? '(送外部系統 HALO)' : '') + ';Payout ID ' + pay.id);
     if (r.payout === 'igaming_credit') {
-      okashMove(s, r.playerId, r.amount, s.now, { type: TX.BONUS_PAYOUT, from: 'Promo Wallet', to: 'OKash Balance', ref: r.id, remarks: 'Promo ' + p.name + ';Claim via Promo Wallet;Payout ID ' + pay.id, promoId: r.promoId });
+      // 派發到 OKash Balance:另寫一筆 Bonus Payout(OKash Balance 帳),以同一 Reward ID 關聯
+      var bp = okashMove(s, r.playerId, r.amount, s.now, { type: TX.BONUS_PAYOUT, from: 'Promo Wallet', to: 'OKash Balance', refPrefix: 'BP', rewardId: r.id, remarks: 'Promo ' + p.name + ';Claim via Promo Wallet;Payout ID ' + pay.id, promoId: r.promoId });
+      pay.bonusRef = bp.ref;
     } else {
       var pl = player(s, r.playerId); pl.freePlay = round2(pl.freePlay + r.amount);
-      pwFtx(s, r, TX.PW_CLAIM, s.now, 'Promo Wallet', 'Free Play (HALO)', 'Promo ' + p.name + ';送外部系統 HALO;Payout ID ' + pay.id);
     }
     log(s, player(s, r.playerId).name + ' 領取 ' + r.id + ' ' + money(r.amount) + ' → ' + PAYOUT[r.payout].name);
     return r;
@@ -323,6 +339,34 @@
     s.now = ms; log(s, '時鐘推進到 ' + fmt(ms));
   }
 
+  /* ---------- REQ-0011 追溯鏈 ---------- */
+  /** 獎勵的追溯節點(依時間):報名、來源存款、產生、解鎖、領取 / 作廢 / 取消、派彩紀錄、Bonus Payout。
+   *  link.page + link.q = 跳到對應紀錄的頁面;link.anchor = 同一詳情內的區塊 */
+  function trace(s, r) {
+    var o = optin(s, r.optinId), nodes = [], seq = 0;
+    var txOf = function (type) { return s.ftx.find(function (x) { return x.rewardId === r.id && x.type === type; }); };
+    var ftxLink = function (x) { return { page: 'reports/fund-transaction/list.html', q: 'ref=' + x.ref }; };
+    var add = function (n) { n.seq = seq++; nodes.push(n); };
+    if (o) add({ key: 'optin', at: o.joinedAt, label: 'Opt-In 報名', ref: 'Opt-In ID ' + o.id, link: { page: 'promotions/opt-in/list.html', q: 'id=' + o.id } });
+    var dep = r.depositRef ? s.ftx.find(function (x) { return x.ref === r.depositRef; }) : null;
+    if (dep) add({ key: 'deposit', at: dep.at, label: 'Source Deposit 來源存款(參加成功)', ref: dep.ref, amount: dep.amount, link: ftxLink(dep) });
+    var iss = txOf(TX.PW_ISSUE);
+    if (iss) add({ key: 'issued', at: iss.at, label: 'Issued 產生(鎖定中)', ref: iss.ref, amount: iss.amount, link: ftxLink(iss) });
+    if (r.unlockedAt) add({ key: 'unlocked', at: r.unlockedAt, label: 'Unlocked 解鎖(可領取)', ref: 'Audit Trail', link: { anchor: 'tbl-audit' } });
+    var cl = txOf(TX.PW_CLAIM);
+    if (cl) add({ key: 'claimed', at: cl.at, label: 'Claimed 領取(Reward Claimed)', ref: cl.ref, amount: cl.amount, note: '→ ' + PAYOUT[r.payout].name, link: ftxLink(cl) });
+    var pay = s.payouts.find(function (x) { return x.rewardId === r.id; });
+    if (pay) add({ key: 'payout', at: pay.date, label: 'Promotion Payout 派彩紀錄', ref: 'Payout ID ' + pay.id, amount: pay.amount, note: PAYOUT[pay.method].payoutListName + ' · ' + pay.status, link: { page: 'promotions/payout/list.html', q: 'id=' + pay.id } });
+    var bp = txOf(TX.BONUS_PAYOUT);
+    if (bp) add({ key: 'bonus', at: bp.at, label: 'Bonus Payout → OKash Balance', ref: bp.ref, amount: bp.amount, link: ftxLink(bp) });
+    var ex = txOf(TX.PW_EXPIRY);
+    if (ex) add({ key: 'expired', at: ex.at, label: 'Expired 作廢', ref: ex.ref, amount: ex.amount, note: 'By System(活動結束且領取期已過,未入帳)', link: ftxLink(ex) });
+    var ca = txOf(TX.PW_CANCEL);
+    if (ca) add({ key: 'cancelled', at: ca.at, label: 'Cancelled 取消', ref: ca.ref, amount: ca.amount, note: 'By ' + r.cancelledBy + ';Reason: ' + r.cancelReason + '(未入帳)', link: ftxLink(ca) });
+    nodes.sort(function (a, b) { return a.at - b.at || a.seq - b.seq; });
+    return nodes;
+  }
+
   /* ---------- 報表計算 ---------- */
   function inRange(t, a, b) { return t != null && t >= a && t <= b; }
   function summarize(s, rewards, from, to) { // from/to ms;to 已截到 now
@@ -355,11 +399,11 @@
       role: 'super_admin', frontPlayer: 'player_demo01', simPlayer: 'player_demo01', seedStart: '2026-10-01',
       players: [], promos: [], optins: [], rewards: [], payouts: [], ftx: [], audits: [], log: []
     };
-    var names = ['player_demo01', 'player_demo02', 'player_demo03', 'player_demo04', 'player_demo05', 'player_demo06', 'player_demo07', 'player_demo08'];
+    var names = ['player_demo01', 'player_demo02', 'player_demo03', 'player_demo04', 'player_demo05', 'player_demo06', 'player_demo07', 'player_demo08', 'player_demo10'];
     names.forEach(function (n, i) {
-      var bal = [20000, 5000, 30000, 8000, 3000, 6000, 10000, 12000][i];
+      var bal = [20000, 5000, 30000, 8000, 3000, 6000, 10000, 12000, 15000][i];
       s.players.push({
-        id: 1001 + i, name: n, email: n.replace('player_', '') + '@example.test', status: 'Active', referral: 'RF' + n.slice(-6).toUpperCase(), upline: '—',
+        id: 1000 + Number(n.slice(-2)), name: n, email: n.replace('player_', '') + '@example.test', status: 'Active', referral: 'RF' + n.slice(-6).toUpperCase(), upline: '—',
         okash: bal, okashInit: bal, freePlay: [0, 0, 0, 150, 0, 300, 0, 0][i], circlePoint: 1200 + i * 100,
         igBonus: [0, 0, 50, 0, 0, 0, 0, 25][i], liveSlotBonus: 0, liveTableBonus: [0, 3, 0, 0, 0, 0, 0, 0][i], createdAt: t0 - 30 * DAY
       });
@@ -373,12 +417,23 @@
     s.promos.push(P({ id: 103, name: 'Midweek Cashback 20%', from: '2026-10-01', to: '2026-10-10', min: 1000, max: 100000, freq: 'instant', payout: 'igaming_credit', pct: 20, maxCampaign: 1000, turnover: 5000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 }));
     s.promos.push(P({ id: 104, name: 'Classic Reload 30% (Direct)', from: '2026-10-01', to: '2026-10-31', min: 500, max: 20000, freq: 'instant', payout: 'igaming_credit', pct: 30, maxCampaign: 3000, turnover: 2000, tierPoints: 0, distribution: 'direct', claimDays: null }));
     s.promos.push(P({ id: 105, name: 'Free Play Boost 100%', from: '2026-10-01', to: '2026-10-10', min: 500, max: 10000, freq: 'instant', payout: 'free_play_halo', pct: 100, maxCampaign: 2000, turnover: 1000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 }));
+    // REQ-0011:已結束的活動(10-05 結束、領取期 1 天 → 10-07 00:00:00 作廢),提供作廢的追溯資料
+    s.promos.push(P({ id: 107, name: 'Early October Reload 20% (Ended)', from: '2026-10-01', to: '2026-10-05', min: 500, max: 20000, freq: 'instant', payout: 'igaming_credit', pct: 20, maxCampaign: 1000, turnover: 4000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 }));
+    s.seq.promo = 7;
     function at(str) { s.now = parseDT(str); tick(s); }
     // 歷史:player_demo08 已領取一筆、直接派彩一筆
     at('2026-10-02 09:00'); optIn(s, 1008, 103); optIn(s, 1008, 104);
     at('2026-10-02 09:10'); deposit(s, 1008, 5000);
     at('2026-10-02 11:00'); addTurnover(s, 1008, 5000);
     at('2026-10-02 12:00'); claim(s, reward(s, 'PW-000001').id, 1008);
+    // REQ-0011 TC-03 / 05 / 06:player_demo10 依序 A 領取(101,OKash)→ B 作廢(107)→ C 取消(103)
+    var rw = function (pid, promoId) { return s.rewards.find(function (r) { return r.playerId === pid && r.promoId === promoId; }).id; };
+    at('2026-10-02 12:10'); optIn(s, 1010, 101);
+    at('2026-10-02 12:20'); deposit(s, 1010, 1000);
+    at('2026-10-02 12:40'); addTurnover(s, 1010, 3000);
+    at('2026-10-02 12:50'); claim(s, rw(1010, 101), 1010);
+    at('2026-10-02 13:00'); optIn(s, 1010, 107);
+    at('2026-10-02 13:10'); deposit(s, 1010, 2000);
     // player_demo05:一筆鎖定中(103)+ 一筆可領取(105),兩個活動都 10-10 結束、領取期 1 天 → TC-14
     at('2026-10-03 10:00'); optIn(s, 1005, 103); optIn(s, 1005, 105);
     at('2026-10-03 10:05'); deposit(s, 1005, 2000);
@@ -386,6 +441,10 @@
     // 測試用新報名(尚未存款)
     at('2026-10-06 10:00');
     optIn(s, 1001, 101); optIn(s, 1002, 101); optIn(s, 1003, 101); optIn(s, 1004, 102); optIn(s, 1006, 105); optIn(s, 1007, 104);
+    // player_demo10 的 B(107)於 10-07 00:00:00 作廢;之後產生 C(103)並由後台取消
+    at('2026-10-07 08:00'); optIn(s, 1010, 103);
+    at('2026-10-07 08:10'); deposit(s, 1010, 1500);
+    at('2026-10-07 09:00'); cancelReward(s, rw(1010, 103), '測試資料:玩家重複申請,取消獎勵', 'admin_demo');
     at('2026-10-07 10:00');
     s.log = [{ at: s.now, text: '已載入預設假資料(模擬時鐘 2026-10-07 10:00:00)' }];
     return s;
@@ -401,7 +460,7 @@
     fmt: fmt, fmtDate: fmtDate, dayStart: dayStart, dayEnd: dayEnd, parseDT: parseDT, money: money, esc: esc, round2: round2,
     load: load, save: save, mutate: mutate, reset: reset, onChange: onChange, tick: tick,
     player: player, promo: promo, optin: optin, reward: reward, promoStart: promoStart, promoEnd: promoEnd, promoRunning: promoRunning,
-    pendingAt: pendingAt, okashAt: okashAt, tasks: tasks, isPending: isPending,
+    pendingAt: pendingAt, okashAt: okashAt, trace: trace, tasks: tasks, isPending: isPending,
     optIn: optIn, deposit: deposit, addTurnover: addTurnover, bet: bet, addTierPoints: addTierPoints, claim: claim, cancelReward: cancelReward,
     savePromo: savePromo, setNow: setNow, summarize: summarize, dateList: dateList, can: can, url: url, qs: qs
   };

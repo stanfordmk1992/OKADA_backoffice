@@ -66,15 +66,31 @@
       }, cls: 'nowrap' }
     ], all, { id: 'tbl-rewards' });
   }
+  /** REQ-0011 追溯鏈:往前追到活動、報名、來源存款;往後追到領取 / 作廢 / 取消、派彩紀錄、Bonus Payout */
+  function traceHtml(s, r, p) {
+    var nodes = S.trace(s, r);
+    var promoLink = '<a data-trace="promotion" href="' + S.url('promotions/settings/view.html') + '?id=' + p.id + '">' + p.id + ' ' + esc(p.name) + '</a>';
+    return '<h3 id="trace-title">Trace Chain(追溯鏈)<span class="tag-new">NEW</span></h3>' +
+      '<div class="small muted">Promotion 活動:' + promoLink + ' · ' + S.DIST[p.distribution] + ' · Payout to ' + S.PAYOUT[r.payout].name + '</div>' +
+      '<ol class="trace" id="trace-chain">' + nodes.map(function (n) {
+        var href = n.link.page ? S.url(n.link.page) + '?' + n.link.q : '#' + n.link.anchor;
+        return '<li data-node="' + n.key + '"><span class="trace-time">' + S.fmt(n.at) + '</span><b>' + esc(n.label) + '</b> ' +
+          '<a class="mono" data-trace="' + n.key + '" href="' + href + '"' + (n.link.anchor ? ' data-anchor="' + n.link.anchor + '"' : '') + '>' + esc(n.ref) + '</a>' +
+          (n.amount != null ? ' · ' + money(n.amount) : '') + (n.note ? '<div class="small muted">' + esc(n.note) + '</div>' : '') + '</li>';
+      }).join('') + '</ol>';
+  }
   function viewDialog(id) {
     var s = S.load(), r = S.reward(s, id), p = S.promo(s, r.promoId), pl = S.player(s, r.playerId);
     var kv = function (k, v) { return '<dt>' + k + '</dt><dd>' + v + '</dd>'; };
-    UI.dialog({ title: 'Reward ' + r.id, body: '<dl class="kv">' + kv('Player ID', esc(pl.name)) + kv('Promotion', esc(p.name)) + kv('Amount', money(r.amount)) + kv('Deposit', money(r.depositAmount) + ' × ' + p.pct + '%(上限 ' + money(p.maxCampaign) + ')') +
+    var d = UI.dialog({ title: 'Reward ' + r.id, body: '<dl class="kv">' + kv('Player ID', esc(pl.name)) + kv('Promotion', esc(p.name)) + kv('Amount', money(r.amount)) + kv('Deposit', money(r.depositAmount) + ' × ' + p.pct + '%(上限 ' + money(p.maxCampaign) + ')') +
       kv('Status', UI.statusChip(r.status)) + kv('Payout Wallet', S.PAYOUT[r.payout].name) + kv('Created At', S.fmt(r.createdAt)) + kv('Unlocked At', S.fmt(r.unlockedAt)) + kv('Claim Deadline', S.fmt(r.claimDeadline)) +
       kv('Claimed At', S.fmt(r.claimedAt)) + kv('Expired At', S.fmt(r.expiredAt)) + kv('Cancelled At', S.fmt(r.cancelledAt)) + kv('Cancelled By', esc(r.cancelledBy || '—')) + kv('Cancel Reason', esc(r.cancelReason || '—')) + kv('Task Progress', UI.progress(s, r)) + '</dl>' +
+      traceHtml(s, r, p) +
       '<h3>Audit Trail(稽核紀錄)</h3>' + UI.table([
         { t: 'Time', k: function (a) { return S.fmt(a.at); }, cls: 'nowrap' }, { t: 'Operator', k: function (a) { return esc(a.by); } },
         { t: 'Action', k: function (a) { return esc(a.action); } }, { t: 'Reason / Note', k: function (a) { return esc(a.note); } }], r.audit, { id: 'tbl-audit', count: false }) });
+    d.root.querySelectorAll('[data-anchor]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var t = d.root.querySelector('#' + a.getAttribute('data-anchor')); t.scrollIntoView({ block: 'center' }); t.classList.add('flash'); setTimeout(function () { t.classList.remove('flash'); }, 1500); }; });
+    return d;
   }
   function cancelDialog(id) {
     var s = S.load(), r = S.reward(s, id);
@@ -104,6 +120,8 @@
       rows(s).map(function (r) { var t = S.tasks(s, r); return [r.id, S.player(s, r.playerId).name, S.promo(s, r.promoId).name, r.amount.toFixed(2), S.fmt(r.createdAt), t.deposit.cur + '/' + t.deposit.target, t.turnover.cur + '/' + t.turnover.target, t.tier ? t.tier.cur + '/' + t.tier.target : '', S.STATUS[r.status].en, S.fmt(r.unlockedAt), S.fmt(r.claimDeadline), S.fmt(r.claimedAt), S.PAYOUT[r.payout].name]; }));
   };
   BO.init({ perm: 'view:promo-wallet', active: 'promo-wallet', crumb: 'Wallets Management / Promo Wallet', render: render });
+  // REQ-0011:?reward=PW-xxxxxx&detail=1 直接開啟該獎勵詳情(追溯鏈)
+  if (q.reward && S.qs('detail') === '1' && S.reward(S.load(), q.reward)) viewDialog(q.reward);
 })();
 </script>
 </body>

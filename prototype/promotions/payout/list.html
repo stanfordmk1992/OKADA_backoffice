@@ -27,9 +27,10 @@
 <script>
 (function () {
   var S = Store, esc = S.esc, money = S.money, q = {};
+  var onlyId = S.qs('id'); // REQ-0011 追溯鏈跳轉:只顯示該派彩紀錄
   function rows(s) {
     return s.payouts.slice().sort(function (a, b) { return b.id - a.id; }).filter(function (x) {
-      return (!q.player || S.player(s, x.playerId).name.indexOf(q.player) >= 0) && (!q.promo || S.promo(s, x.promoId).name.toLowerCase().indexOf(q.promo.toLowerCase()) >= 0) && (!q.route || x.route === q.route);
+      return (!onlyId || x.id === Number(onlyId)) && (!q.player || S.player(s, x.playerId).name.indexOf(q.player) >= 0) && (!q.promo || S.promo(s, x.promoId).name.toLowerCase().indexOf(q.promo.toLowerCase()) >= 0) && (!q.route || x.route === q.route);
     });
   }
   function render(s) {
@@ -43,11 +44,17 @@
       { t: 'Payout Method', k: function (x) { return S.PAYOUT[x.method].payoutListName; } },
       { t: 'Payout Date', k: function (x) { return S.fmt(x.date); }, cls: 'nowrap' },
       { t: 'Status', k: function (x) { return '<span class="chip st-paid">' + x.status + '</span>'; } },
-      { t: 'Distribution', newCol: true, k: function (x) { return x.route === 'promo_wallet' ? 'Via Promo Wallet<div class="small mono">' + x.rewardId + '</div>' : 'Direct Payout'; } }
-    ], rs, { id: 'tbl-payout' }) + '<div class="count">本頁經由優惠錢包的派彩合計:<b id="pw-payout-sum">' + money(pwSum) + '</b></div>';
+      { t: 'Distribution', newCol: true, k: function (x) { return x.route === 'promo_wallet' ? 'Via Promo Wallet' : 'Direct Payout'; } },
+      { t: 'Reward ID', newCol: true, k: function (x) { return rewardLink(s, x); }, cls: 'nowrap' }
+    ], rs, { id: 'tbl-payout' }) + (onlyId ? '<div class="count">只顯示 Payout ID ' + esc(onlyId) + ' · <a href="list.html">顯示全部</a></div>' : '') + '<div class="count">本頁經由優惠錢包的派彩合計:<b id="pw-payout-sum">' + money(pwSum) + '</b></div>';
+  }
+  /** REQ-0011:經由優惠錢包的派彩顯示獎勵編號,點擊回到獎勵詳情;直接派發不顯示 */
+  function rewardLink(s, x) {
+    if (!x.rewardId) return '';
+    return S.can(s, 'view:promo-wallet') ? '<a class="mono" data-reward-link href="' + S.url('wallets/promo-wallet/list.html') + '?reward=' + x.rewardId + '&detail=1">' + x.rewardId + '</a>' : '<span class="mono">' + x.rewardId + '</span>';
   }
   document.getElementById('btn-search').onclick = function () { q = { player: UI.val('f-player'), promo: UI.val('f-promo'), route: UI.val('f-route') }; render(S.load()); };
-  document.getElementById('btn-clear').onclick = function () { ['f-player', 'f-promo', 'f-route'].forEach(function (i) { document.getElementById(i).value = ''; }); q = {}; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { ['f-player', 'f-promo', 'f-route'].forEach(function (i) { document.getElementById(i).value = ''; }); q = {}; onlyId = null; render(S.load()); };
   document.getElementById('btn-csv').onclick = function () {
     var s = S.load();
     UI.csv('promotion-payout.csv', ['ID', 'Player ID', 'Promotion Name', 'Payout Amount', 'Payout Method', 'Payout Date', 'Status', 'Distribution', 'Reward ID'],

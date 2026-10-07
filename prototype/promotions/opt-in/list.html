@@ -26,10 +26,11 @@
 <script>
 (function () {
   var S = Store, esc = S.esc, money = S.money, q = {};
+  var onlyId = S.qs('id'); // REQ-0011 追溯鏈跳轉:只顯示該報名紀錄
   function rows(s) {
     return s.optins.slice().sort(function (a, b) { return b.id - a.id; }).filter(function (o) {
       var pl = S.player(s, o.playerId), p = S.promo(s, o.promoId);
-      return (!q.player || pl.name.indexOf(q.player) >= 0) && (!q.promo || p.name.toLowerCase().indexOf(q.promo.toLowerCase()) >= 0);
+      return (!onlyId || o.id === Number(onlyId)) && (!q.player || pl.name.indexOf(q.player) >= 0) && (!q.promo || p.name.toLowerCase().indexOf(q.promo.toLowerCase()) >= 0);
     });
   }
   function rewardOf(s, o) { return s.rewards.find(function (r) { return r.optinId === o.id; }); }
@@ -49,10 +50,10 @@
       { t: 'Promo Wallet Reward', newCol: true, k: function (o) { var r = rewardOf(s, o); return r ? (S.can(s, 'view:promo-wallet') ? '<a href="' + S.url('wallets/promo-wallet/list.html') + '?reward=' + r.id + '">' + r.id + '</a>' : r.id) + '<br>' + UI.statusChip(r.status) : '—'; } },
       { t: 'Created At', k: function (o) { return S.fmt(o.joinedAt); }, cls: 'nowrap' },
       { t: 'Updated At', k: function (o) { return S.fmt(o.updatedAt); }, cls: 'nowrap' }
-    ], rows(s), { id: 'tbl-optin' });
+    ], rows(s), { id: 'tbl-optin' }) + (onlyId ? '<div class="count">只顯示 Opt-In ID ' + esc(onlyId) + ' · <a href="list.html">顯示全部</a></div>' : '');
   }
   document.getElementById('btn-search').onclick = function () { q = { player: UI.val('f-player'), promo: UI.val('f-promo') }; render(S.load()); };
-  document.getElementById('btn-clear').onclick = function () { document.getElementById('f-player').value = ''; document.getElementById('f-promo').value = ''; q = {}; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { document.getElementById('f-player').value = ''; document.getElementById('f-promo').value = ''; q = {}; onlyId = null; render(S.load()); };
   document.getElementById('btn-csv').onclick = function () {
     var s = S.load();
     UI.csv('promotion-opt-in.csv', ['ID', 'Player ID', 'Promotion Name', 'Deposit', 'Turnover', 'Tier Points', 'Join Date', 'Distribution'],

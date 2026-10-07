@@ -22,7 +22,7 @@
   ];
 
   function sideHtml(s, active) {
-    var h = '<nav class="bo-side" aria-label="Backoffice menu"><div class="bo-brand">OKADA Backoffice<small>Prototype · REQ-0008 Promo Wallet</small></div>';
+    var h = '<nav class="bo-side" aria-label="Backoffice menu"><div class="bo-brand">OKADA Backoffice<small>Prototype · REQ-0008 Promo Wallet(+0011~0013)</small></div>';
     MENU.forEach(function (g) {
       var items = g.items.filter(function (i) { return i.sub || !i.perm || S.can(s, i.perm); });
       var links = items.filter(function (i) { return !i.sub; });

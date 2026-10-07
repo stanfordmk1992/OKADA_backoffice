@@ -10,13 +10,14 @@
 <body>
 <div id="page">
   <div class="card">
-    <div class="card-head"><div><h1>Fund Transactions Report</h1><div class="muted small">優惠錢包交易(類型 Promo Wallet - …)的 Before / After Balance 為該玩家優惠錢包待領取金額;Bonus Payout 與 Deposit / Bet 為 OKash Balance 餘額</div></div><button class="btn sec" id="btn-csv">Download CSV</button></div>
+    <div class="card-head"><div><h1>Fund Transactions Report</h1><div class="muted small">優惠錢包交易(類型 Promo Wallet - …)的 Before / After Balance 為該玩家優惠錢包待領取金額;Bonus Payout 與 Deposit / Bet 為 OKash Balance 餘額。Reward ID:同一獎勵的產生、領取、作廢 / 取消與 Bonus Payout 以同一獎勵編號關聯</div></div><button class="btn sec" id="btn-csv">Download CSV</button></div>
     <div class="filters">
       <div class="field"><label>Fund Transactions Report</label><div style="display:flex;gap:6px"><input type="date" id="f-from" aria-label="Date From"><input type="date" id="f-to" aria-label="Date To"></div></div>
       <div class="field"><label for="f-player">Player ID</label><input id="f-player"></div>
       <div class="field"><label for="f-type">Transaction Type</label><select id="f-type"></select></div>
       <div class="field"><label for="f-status">Status</label><select id="f-status"><option value="">All</option><option>Success</option><option>Failed</option></select></div>
       <div class="field"><label for="f-ref">Ref ID</label><input id="f-ref"></div>
+      <div class="field"><label for="f-reward">Reward ID <span class="tag-new">NEW</span></label><input id="f-reward" placeholder="e.g. PW-000001"></div>
       <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
     </div>
     <div class="kpis" id="sums"></div>
@@ -32,12 +33,18 @@
   var S = Store, esc = S.esc, money = S.money, q = {};
   var NEWTYPES = [S.TX.PW_ISSUE, S.TX.PW_CLAIM, S.TX.PW_EXPIRY, S.TX.PW_CANCEL];
   var TYPES = ['Bet Placement', 'Bonus Expiry', 'Bonus Payout', 'Bonus Referral', 'Deposit', 'Withdrawal', 'Wallet Adjustment'].concat(NEWTYPES);
-  document.getElementById('f-type').innerHTML = '<option value="">All</option>' + TYPES.map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + (NEWTYPES.indexOf(t) >= 0 ? '(NEW)' : '') + '</option>'; }).join('');
+  var PW_ALL = '__promo_wallet';
+  document.getElementById('f-type').innerHTML = '<option value="">All</option>' + TYPES.map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + (NEWTYPES.indexOf(t) >= 0 ? '(NEW)' : '') + '</option>'; }).join('') +
+    '<option value="' + PW_ALL + '">Promo Wallet - All(優惠錢包帳本全部類型)</option>';
   var initRef = S.qs('ref'); if (initRef) { q.ref = initRef; document.getElementById('f-ref').value = initRef; }
+  var initReward = S.qs('reward'); if (initReward) { q.reward = initReward; document.getElementById('f-reward').value = initReward; }
   function rows(s) {
     var a = q.from ? S.dayStart(q.from) : -Infinity, b = q.to ? S.dayEnd(q.to) : Infinity;
+    var rw = (q.reward || '').toUpperCase();
     return s.ftx.slice().sort(function (x, y) { return y.at - x.at || y.id - x.id; }).filter(function (x) {
-      return x.at >= a && x.at <= b && (!q.player || S.player(s, x.playerId).name.indexOf(q.player) >= 0) && (!q.type || x.type === q.type) && (!q.status || x.status === q.status) && (!q.ref || String(x.ref).indexOf(q.ref) >= 0);
+      return x.at >= a && x.at <= b && (!q.player || S.player(s, x.playerId).name.indexOf(q.player) >= 0) &&
+        (!q.type || (q.type === PW_ALL ? NEWTYPES.indexOf(x.type) >= 0 : x.type === q.type)) && (!q.status || x.status === q.status) &&
+        (!q.ref || String(x.ref).indexOf(q.ref) >= 0) && (!rw || x.rewardId === rw);
     });
   }
   function render(s) {
@@ -50,6 +57,7 @@
       { t: 'Wallet From', k: function (x) { return esc(x.from); } },
       { t: 'Wallet To', k: function (x) { return esc(x.to); } },
       { t: 'Ref ID', k: function (x) { return '<span class="mono">' + esc(x.ref) + '</span>'; }, cls: 'nowrap' },
+      { t: 'Reward ID', newCol: true, k: function (x) { return x.rewardId ? (S.can(s, 'view:promo-wallet') ? '<a class="mono" data-reward-link href="' + S.url('wallets/promo-wallet/list.html') + '?reward=' + x.rewardId + '&detail=1">' + x.rewardId + '</a>' : '<span class="mono">' + x.rewardId + '</span>') : '—'; }, cls: 'nowrap' },
       { t: 'Transaction Date', k: function (x) { return S.fmt(x.at); }, cls: 'nowrap' },
       { t: 'Status', k: function (x) { return x.status; } },
       { t: 'Before Balance', k: function (x) { return money(x.before); }, cls: 'right' },
@@ -58,12 +66,12 @@
       { t: 'Remarks', k: function (x) { return '<span class="small">' + esc(x.remarks) + '</span>'; } }
     ], rs, { id: 'tbl-ftx' });
   }
-  document.getElementById('btn-search').onclick = function () { q = { from: UI.val('f-from'), to: UI.val('f-to'), player: UI.val('f-player'), type: UI.val('f-type'), status: UI.val('f-status'), ref: UI.val('f-ref') }; render(S.load()); };
-  document.getElementById('btn-clear').onclick = function () { ['f-from', 'f-to', 'f-player', 'f-type', 'f-status', 'f-ref'].forEach(function (i) { document.getElementById(i).value = ''; }); q = {}; render(S.load()); };
+  document.getElementById('btn-search').onclick = function () { q = { from: UI.val('f-from'), to: UI.val('f-to'), player: UI.val('f-player'), type: UI.val('f-type'), status: UI.val('f-status'), ref: UI.val('f-ref'), reward: UI.val('f-reward') }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { ['f-from', 'f-to', 'f-player', 'f-type', 'f-status', 'f-ref', 'f-reward'].forEach(function (i) { document.getElementById(i).value = ''; }); q = {}; render(S.load()); };
   document.getElementById('btn-csv').onclick = function () {
     var s = S.load();
-    UI.csv('fund-transactions.csv', ['Player ID', 'Transaction Type', 'Wallet From', 'Wallet To', 'Ref ID', 'Transaction Date', 'Status', 'Before Balance', 'Transaction Amount', 'After Balance', 'Remarks'],
-      rows(s).map(function (x) { return [S.player(s, x.playerId).name, x.type, x.from, x.to, x.ref, S.fmt(x.at), x.status, x.before.toFixed(2), x.amount.toFixed(2), x.after.toFixed(2), x.remarks]; }));
+    UI.csv('fund-transactions.csv', ['Player ID', 'Transaction Type', 'Wallet From', 'Wallet To', 'Ref ID', 'Reward ID', 'Transaction Date', 'Status', 'Before Balance', 'Transaction Amount', 'After Balance', 'Remarks'],
+      rows(s).map(function (x) { return [S.player(s, x.playerId).name, x.type, x.from, x.to, x.ref, x.rewardId || '', S.fmt(x.at), x.status, x.before.toFixed(2), x.amount.toFixed(2), x.after.toFixed(2), x.remarks]; }));
   };
   BO.init({ perm: 'view:fund-transaction-report', active: 'fund-transaction', crumb: 'Reports / Fund Transaction Report', render: render });
 })();

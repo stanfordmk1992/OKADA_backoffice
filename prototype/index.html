@@ -11,13 +11,15 @@
 <div id="page">
   <div class="card">
     <h1>OKADA 後台原型</h1>
-    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)· 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
     <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
       <div>
         <h2>頁面清單</h2>
         <div id="pages"></div>
         <h2 style="margin-top:20px">預設假資料(測試情境)</h2>
         <div id="scenarios"></div>
+        <h2 style="margin-top:20px">REQ-0011~0013 測試指引</h2>
+        <div id="guide"></div>
       </div>
       <div id="sim-inline" style="background:#fffdf9;border:1px solid #f1d9bd;border-radius:8px;padding:12px 14px"></div>
     </div>
@@ -37,9 +39,9 @@
       ['promotions/settings/update.html?id=101', 'Promotion Settings 編輯', '/promotions/settings/update/:id', '同新增表單'],
       ['promotions/settings/view.html?id=102', 'Promotion Settings 詳情', '/promotions/settings/view/:id', ''],
       ['promotions/opt-in/list.html', 'Promotion Opt-In List', '/promotions/opt-in/list', '任務進度、對應獎勵'],
-      ['promotions/payout/list.html', 'Promotion Payout', '/promotions/payout/list', '新增 Distribution 欄']]],
+      ['promotions/payout/list.html', 'Promotion Payout', '/promotions/payout/list', '新增 Distribution 欄;REQ-0011 Reward ID']]],
     ['後台 · 錢包 / 玩家', [
-      ['wallets/promo-wallet/list.html', 'Promo Wallet 優惠錢包總覽', '/wallets/promo-wallet/list', 'NEW:查詢、取消(必填原因)、稽核紀錄'],
+      ['wallets/promo-wallet/list.html', 'Promo Wallet 優惠錢包總覽', '/wallets/promo-wallet/list', 'NEW:查詢、取消(必填原因)、稽核紀錄;REQ-0011 追溯鏈'],
       ['players/list.html', 'Player List', '/players/list', ''],
       ['players/view.html?id=1005&tab=wallets', 'Player 詳情 Wallet Details', '/players/view/:id', '新增 Promo Wallet 列'],
       ['wallets/adjustment/list.html', 'Wallet Adjustment(錢包類型清單)', '/wallets/adjustment/list', '錢包類型新增 Promo Wallet'],
@@ -47,7 +49,7 @@
     ['後台 · 報表 M12', [
       ['reports/promo-wallet/list.html', 'Promo Wallet Report 優惠錢包報表', '/reports/promo-wallet/list', 'NEW:彙總 + 匯出'],
       ['reports/cashless-liability/list.html', 'Cashless Liability Report', '/reports/cashless-liability/list', '新增 Promo Wallet 欄'],
-      ['reports/fund-transaction/list.html', 'Fund Transactions Report', '/reports/fund-transaction/list', '新交易類型']]],
+      ['reports/fund-transaction/list.html', 'Fund Transactions Report', '/reports/fund-transaction/list', '新交易類型;REQ-0011 Reward ID 查詢 / 欄位']]],
     ['前台', [
       ['front/en/index.html', 'Front Home', '/en', '頂部導航'],
       ['front/en/wallet.html', 'Wallet 錢包 / 優惠錢包', '/en/wallet', 'NEW:優惠錢包畫面、Claim'],
@@ -55,6 +57,16 @@
       ['front/en/points.html', 'Points(唯讀參照)', '/en/points', '確認 Free Play 增加']]],
     ['說明圖', [['diagrams/promo-wallet.html', 'Promo Wallet 鏈路圖 / 系統交互圖', '—(原型說明頁)', 'NEW:鏈路圖、獎勵狀態流轉、系統交互圖、各環節寫入紀錄']]],
     ['其他', [['not-authorized.html', 'Not Authorized', '/not-authorized', '無權限導向頁']]]
+  ];
+  var FT = '<a href="reports/fund-transaction/list.html">Fund Transactions Report</a>', PWL = '<a href="wallets/promo-wallet/list.html">Promo Wallet</a>', PAY = '<a href="promotions/payout/list.html">Promotion Payout</a>';
+  var GUIDE = [
+    ['REQ-0011 TC-01', '模擬控制台選 player_demo01 → 存款 1,000 → 推進流水 3,000(可領取)→ 前台 <a href="front/en/wallet.html">/en/wallet</a> Claim → ' + FT + ' 以 Reward ID 查詢:Reward Claimed(優惠錢包餘額)+ Bonus Payout(OKash Balance 餘額)'],
+    ['REQ-0011 TC-02', 'player_demo06(105,Free Play (HALO))存款 1,000 → 流水 1,000 → 前台登入 player_demo06 Claim → ' + FT + ' 只有 Reward Claimed,沒有 Bonus Payout'],
+    ['REQ-0011 TC-03', FT + ':Player ID = player_demo10、Transaction Type = Promo Wallet - All → 每筆 Before = 上一筆 After,最後 0(也可自行重做一次)'],
+    ['REQ-0011 TC-04', FT + ':Reward ID = player_demo10 的 101 獎勵(' + PWL + ' 查 player_demo10 可看編號)→ 只列 Issued、Claimed、Bonus Payout 三筆'],
+    ['REQ-0011 TC-05 / 06', PWL + ' → player_demo10 → 各獎勵 View → 「Trace Chain 追溯鏈」;點任一節點跳到對應紀錄'],
+    ['REQ-0011 TC-07', PAY + ' 的 Reward ID 欄(經由優惠錢包才有)→ 點擊開啟該獎勵詳情;直接派發(104)為空白'],
+    ['REQ-0011 TC-08', '<a href="reports/promo-wallet/list.html">Promo Wallet Report</a>、<a href="reports/cashless-liability/list.html">Cashless Liability</a>;player_demo07(104 直接派發)達標後只有 Bonus Payout(Ref PO-n),沒有 Reward Claimed']
   ];
   document.getElementById('pages').innerHTML = PAGES.map(function (g) {
     return '<h3>' + esc(g[0]) + '</h3>' + UI.table([
@@ -71,7 +83,10 @@
     ['player_demo05', '103 一筆鎖定中(400)、105 一筆可領取(2,000);兩活動 10-10 結束、領取期 1 天', 'TC-13/14'],
     ['player_demo06', '已報名 105(Instant、HALO、流水 1,000、領取期 1 天)', 'TC-09'],
     ['player_demo07', '已報名 104(直接派發、Instant、OKash、30%、流水 2,000)', 'TC-17'],
-    ['player_demo08', '歷史資料:103 已領取 1,000、104 直接派彩 1,500', '參考']], { count: false });
+    ['player_demo08', '歷史資料:103 已領取 1,000、104 直接派彩 1,500', '參考'],
+    ['player_demo10', 'REQ-0011:依序 A 101 已領取 1,000(OKash,10-02)→ B 107 已作廢 400(10-07 00:00:00)→ C 103 已取消 300(10-07 09:00,admin_demo)', 'REQ-0011 TC-03/04/05/06']], { count: false });
+  document.getElementById('guide').innerHTML = UI.table([
+    { t: '需求 / TC', k: function (r) { return '<b>' + r[0] + '</b>'; } }, { t: '頁面與操作', k: function (r) { return r[1]; } }], GUIDE, { count: false });
   Sim.mountInline(document.getElementById('sim-inline'));
   BO.init({ crumb: 'Prototype Home' });
 })();

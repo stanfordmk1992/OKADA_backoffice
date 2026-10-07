@@ -177,3 +177,12 @@ body.front { background: #10121a; color: #e8e6f0; }
   .form-grid { grid-template-columns: 1fr; }
   .kv { grid-template-columns: 1fr; }
 }
+
+/* ---- REQ-0011 追溯鏈 ---- */
+.trace { list-style: none; margin: 8px 0 0; padding: 0 0 0 14px; border-left: 2px solid var(--primary-soft); }
+.trace li { position: relative; padding: 4px 0 8px 10px; font-size: 13px; }
+.trace li::before { content: ''; position: absolute; left: -21px; top: 9px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+.trace li[data-node=expired]::before { background: var(--grey); }
+.trace li[data-node=cancelled]::before { background: var(--err); }
+.trace-time { color: var(--muted); font-size: 12px; margin-right: 8px; font-family: Consolas, monospace; }
+.flash, .flash td { background: #fff4c2 !important; transition: background .3s; }
