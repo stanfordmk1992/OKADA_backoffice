@@ -34,6 +34,10 @@
     '<div class="row"><button class="btn" data-act="dblclaim">同時送出 2 次 Claim</button></div>' +
     '<div class="small muted">也可直接在前台快速連點 Claim,或開兩個分頁同時點。</div>' +
     '</fieldset>' +
+    '<fieldset><legend>REQ-0013 日界測試派彩</legend>' +
+    '<div class="small muted">預設已有 2026-10-06 23:59:59(player_demo14)與 2026-10-07 00:00:00(player_demo15)的派彩。按下後時鐘推進到 2026-10-07 23:59:59 由 player_demo16 領取,再推進到 2026-10-08 00:00:00 由 player_demo17 領取(時鐘只能往後,做完其他測試再按,或之後重設)。</div>' +
+    '<div class="row"><button class="btn" data-act="boundary">產生 10-07 23:59:59 / 10-08 00:00:00 派彩</button></div>' +
+    '</fieldset>' +
     '<fieldset><legend>5. 資料</legend><div class="row"><button class="btn err" data-act="reset">重設所有資料(回到預設假資料)</button></div></fieldset>' +
     '<div class="sim-msg" role="status"></div>' +
     '<h3>事件紀錄</h3><div class="sim-log"></div>' +
@@ -93,6 +97,15 @@
       if (a === 'bet') run(function (s) { S.bet(s, pid(s), $('.sim-bet').value); }, '下注成功,已計入流水');
       if (a === 'turnover') run(function (s) { S.addTurnover(s, pid(s), $('.sim-to').value); }, '已推進流水');
       if (a === 'tier') run(function (s) { S.addTierPoints(s, pid(s), $('.sim-tp').value); }, '已推進等級點數');
+      if (a === 'boundary') run(function (s) {
+        var t1 = S.parseDT('2026-10-07 23:59:59'), t2 = S.parseDT('2026-10-08 00:00:00');
+        var r16 = s.rewards.find(function (r) { return r.playerId === 1016 && r.status === 'claimable'; });
+        var r17 = s.rewards.find(function (r) { return r.playerId === 1017 && r.status === 'claimable'; });
+        if (s.now > t1) throw new Error('目前時間已超過 2026-10-07 23:59:59,請先「重設所有資料」');
+        if (!r16 || !r17) throw new Error('player_demo16 / player_demo17 沒有可領取的獎勵,請先「重設所有資料」');
+        S.setNow(s, t1); S.tick(s); S.claim(s, r16.id, 1016);
+        S.setNow(s, t2); S.tick(s); S.claim(s, r17.id, 1017);
+      }, '已產生派彩:2026-10-07 23:59:59(player_demo16)、2026-10-08 00:00:00(player_demo17);時鐘 = 2026-10-08 00:00:00');
       if (a === 'reset') { if (confirm('確定重設所有原型資料?')) { S.reset(); msg('已重設'); } }
       if (a === 'dblclaim') {
         var id = $('.sim-claimable').value; if (!id) { msg('沒有可領取的獎勵', true); return; }

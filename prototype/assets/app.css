@@ -186,3 +186,11 @@ body.front { background: #10121a; color: #e8e6f0; }
 .trace li[data-node=cancelled]::before { background: var(--err); }
 .trace-time { color: var(--muted); font-size: 12px; margin-right: 8px; font-family: Consolas, monospace; }
 .flash, .flash td { background: #fff4c2 !important; transition: background .3s; }
+
+/* ---- 列表排序、分頁(促銷派彩紀錄) ---- */
+.tbl th.sortable { cursor: pointer; user-select: none; }
+.tbl th.sortable:hover { color: var(--primary); }
+.sort-ind { font-size: 10px; color: var(--grey); }
+.tbl th[aria-sort=ascending] .sort-ind, .tbl th[aria-sort=descending] .sort-ind { color: var(--primary); }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.pager .count { margin-top: 0; }

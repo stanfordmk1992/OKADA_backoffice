@@ -2,7 +2,7 @@
  * 全部為假資料。時間一律以 UTC+8 顯示;模擬時鐘存在 state.now。 */
 (function () {
   'use strict';
-  var KEY = 'okada_proto_req0008_v3'; // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
+  var KEY = 'okada_proto_req0008_v4'; // v4:REQ-0013 日界測試派彩假資料 // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
   var TZ = 8 * 3600e3;
   var DAY = 86400e3;
   var ROOT = document.documentElement.getAttribute('data-root') || '';
@@ -428,7 +428,8 @@
     };
     // [編號, OKash Balance, Free Play, iGaming Bonus, Live Table Bonus]
     [[1, 20000, 0, 0, 0], [2, 5000, 0, 0, 3], [3, 30000, 0, 50, 0], [4, 8000, 150, 0, 0], [5, 3000, 0, 0, 0], [6, 6000, 300, 0, 0], [7, 10000, 0, 0, 0], [8, 12000, 0, 25, 0],
-      [9, 7000, 0, 0, 0], [10, 15000, 0, 0, 0], [11, 4000, 0, 0, 0], [12, 9000, 0, 0, 0], [13, 2000, 0, 0, 0]].forEach(function (d, i) {
+      [9, 7000, 0, 0, 0], [10, 15000, 0, 0, 0], [11, 4000, 0, 0, 0], [12, 9000, 0, 0, 0], [13, 2000, 0, 0, 0],
+      [14, 5000, 0, 0, 0], [15, 5000, 0, 0, 0], [16, 5000, 0, 0, 0], [17, 5000, 0, 0, 0]].forEach(function (d, i) {
       var n = 'player_demo' + pad(d[0]);
       s.players.push({
         id: 1000 + d[0], name: n, email: n.replace('player_', '') + '@example.test', status: 'Active', referral: 'RF' + n.slice(-6).toUpperCase(), upline: '—',
@@ -483,6 +484,13 @@
     // 測試用新報名(尚未存款)
     at('2026-10-06 10:00');
     optIn(s, 1001, 101); optIn(s, 1002, 101); optIn(s, 1003, 101); optIn(s, 1004, 102); optIn(s, 1006, 105); optIn(s, 1007, 104);
+    // REQ-0013 日界測試:player_demo14 於 10-06 23:59:59 領取(前一日)、player_demo15 於 10-07 00:00:00 領取;
+    // player_demo16 / 17 為可領取,保留給模擬控制台「REQ-0013 日界測試」於 10-07 23:59:59 / 10-08 00:00:00 領取
+    at('2026-10-06 20:00'); optIn(s, 1014, 105); optIn(s, 1015, 101); optIn(s, 1016, 101); optIn(s, 1017, 105);
+    at('2026-10-06 20:10'); deposit(s, 1014, 1000); deposit(s, 1015, 1000); deposit(s, 1016, 800); deposit(s, 1017, 600);
+    at('2026-10-06 21:00'); addTurnover(s, 1014, 1000); addTurnover(s, 1015, 3000); addTurnover(s, 1016, 3000); addTurnover(s, 1017, 1000);
+    at('2026-10-06 23:59:59'); claim(s, rw(1014, 105), 1014);
+    at('2026-10-07 00:00:00'); claim(s, rw(1015, 101), 1015);
     // player_demo10 的 B(107)於 10-07 00:00:00 作廢;之後產生 C(103)並由後台取消
     at('2026-10-07 08:00'); optIn(s, 1010, 103);
     at('2026-10-07 08:10'); deposit(s, 1010, 1500);

@@ -11,7 +11,7 @@
 <div id="page">
   <div class="card">
     <h1>OKADA 後台原型</h1>
-    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
     <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
       <div>
         <h2>頁面清單</h2>
@@ -39,7 +39,7 @@
       ['promotions/settings/update.html?id=101', 'Promotion Settings 編輯', '/promotions/settings/update/:id', '同新增表單'],
       ['promotions/settings/view.html?id=102', 'Promotion Settings 詳情', '/promotions/settings/view/:id', ''],
       ['promotions/opt-in/list.html', 'Promotion Opt-In List', '/promotions/opt-in/list', '任務進度、對應獎勵'],
-      ['promotions/payout/list.html', 'Promotion Payout', '/promotions/payout/list', '新增 Distribution 欄;REQ-0011 Reward ID']]],
+      ['promotions/payout/list.html', 'Promotion Payout', '/promotions/payout/list', '新增 Distribution 欄;REQ-0011 Reward ID;REQ-0013 Payout Date 日期篩選']]],
     ['後台 · 錢包 / 玩家', [
       ['wallets/promo-wallet/list.html', 'Promo Wallet 優惠錢包總覽', '/wallets/promo-wallet/list', 'NEW:查詢、取消(必填原因)、稽核紀錄;REQ-0011 追溯鏈'],
       ['players/list.html', 'Player List', '/players/list', ''],
@@ -75,7 +75,12 @@
     ['REQ-0012 TC-06', '模擬控制台 player_demo07 存款 1,000(104 直接派發參加成功、未派彩)→ 前台登入 demo07 報名 101 不可用 → 推進流水 2,000(直接派彩)→ 可報名'],
     ['REQ-0012 TC-07', '前台登入 player_demo01(已報名 101)→ 報名 106(無存款條件)成功'],
     ['REQ-0012 TC-08', '模擬控制台「玩家行為」選 player_demo02 → 活動選 102 →「報名 Opt-In(直接呼叫後端報名,不經前台按鈕)」→ 被擋下並提示'],
-    ['REQ-0012 TC-09', 'player_demo01 只報名 101 → 存款 1,000 → 只有 101 產生獎勵(事件紀錄與 Promo Wallet 總覽)']
+    ['REQ-0012 TC-09', 'player_demo01 只報名 101 → 存款 1,000 → 只有 101 產生獎勵(事件紀錄與 Promo Wallet 總覽)'],
+    ['REQ-0013 TC-01', '先在模擬控制台按「REQ-0013 日界測試派彩」(時鐘推進到 10-08 00:00:00,產生 10-07 23:59:59 與 10-08 00:00:00 兩筆)→ ' + PAY + ' Payout Date 2026-10-07 ~ 2026-10-07 → Search:含 00:00:00(demo15)、23:59:59(demo16),不含 10-06 23:59:59(demo14)、10-08 00:00:00(demo17)'],
+    ['REQ-0013 TC-02', PAY + ' 日期區間 + Distribution = Via Promo Wallet → 頁尾「經由優惠錢包的派彩合計」;<a href="reports/promo-wallet/list.html">Promo Wallet Report</a> 同一期間(Group By Date 或 Promotion)的 Claimed 金額'],
+    ['REQ-0013 TC-03 / 04', PAY + ' 日期 + Search Player ID + Search Promotion Name 併用;Download CSV 筆數 / 金額 = 頁尾「篩選結果合計(全部頁)」'],
+    ['REQ-0013 TC-05 / 06', '起日晚於迄日 → Search 不查詢並提示;Clear 清空日期與其他條件'],
+    ['REQ-0013 TC-07', '欄位標題點擊排序(ID、Player ID、Promotion Name、Payout Amount、Payout Method、Payout Date、Status)、Items per page 與分頁、每列 View(比照實機 M04-P02 重現)']
   ];
   document.getElementById('pages').innerHTML = PAGES.map(function (g) {
     return '<h3>' + esc(g[0]) + '</h3>' + UI.table([
@@ -97,7 +102,9 @@
     ['player_demo10', 'REQ-0011:依序 A 101 已領取 1,000(OKash,10-02)→ B 107 已作廢 400(10-07 00:00:00)→ C 103 已取消 300(10-07 09:00,admin_demo)', 'REQ-0011 TC-03/04/05/06'],
     ['player_demo11', '107 獎勵已作廢(10-07 00:00:00)', 'REQ-0012 TC-04(已作廢)'],
     ['player_demo12', '103 獎勵已取消(10-04,admin_demo)', 'REQ-0012 TC-04(已取消)'],
-    ['player_demo13', '報名 107 始終未存款,107 已於 10-05 結束', 'REQ-0012 TC-05']], { count: false });
+    ['player_demo13', '報名 107 始終未存款,107 已於 10-05 結束', 'REQ-0012 TC-05'],
+    ['player_demo14 / 15', '105 於 2026-10-06 23:59:59 領取(Free Play)/ 101 於 2026-10-07 00:00:00 領取(OKash)', 'REQ-0013 TC-01 日界'],
+    ['player_demo16 / 17', '101 可領取 800 / 105 可領取 600,保留給模擬控制台「REQ-0013 日界測試派彩」', 'REQ-0013 TC-01 日界']], { count: false });
   document.getElementById('guide').innerHTML = UI.table([
     { t: '需求 / TC', k: function (r) { return '<b>' + r[0] + '</b>'; } }, { t: '頁面與操作', k: function (r) { return r[1]; } }], GUIDE, { count: false });
   Sim.mountInline(document.getElementById('sim-inline'));
