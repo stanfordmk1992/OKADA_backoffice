@@ -464,11 +464,15 @@ button.fr-tilebtn { line-height: 12px; }
 .rw .meta, .front .meta { font-size: 14px; font-weight: 500; line-height: 20px; color: rgb(113, 113, 122); }
 .rw .btn-claim, .btn-claim { min-width: 96px; }
 .front .chip { display: inline-block; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 700; line-height: 20px; white-space: nowrap; }
-.front .bar { height: 2px; border-radius: 9999px; background-color: rgb(175, 175, 175); overflow: hidden; margin: 4px 0 8px; }
+/* REQ-0018:非導航元素配色改為現有前台的顏色
+ * 進度條:比照大廳 Load More 進度條(軌道 rgb(175,175,175)、進度 rgb(152,17,109));滿格改用成功色 text-success-500 rgb(23,201,100)
+ * 狀態 / 提示:比照 Wallet History Status(處理中 / 鎖定 = text-gray-500 rgb(133,133,133)、成功 / 可領取 = text-success-500、失敗 / 錯誤 / 不可 = text-red-500 rgb(239,68,68))
+ * 其他只用現有前台出現過的顏色(#580A3F、#98116D、#33092B、金色 #F2E4B1、洋紅 #7E405C / #AA2567、白、灰、黑) */
+.front .bar { height: 4px; border-radius: 9999px; background-color: rgb(175, 175, 175); overflow: hidden; margin: 4px 0 8px; }
 .front .bar > i { display: block; height: 100%; border-radius: 9999px; background-color: rgb(152, 17, 109); }
-.front .bar.full > i { background-color: #2e9b5f; }
-.notice { display: block; padding: 8px 12px; border-radius: 8px; font-size: 14px; line-height: 20px; background: #FBF3D9; border: 1px solid #E7CF84; color: #5c4510; }
-.front .optin-blocked { color: #b3261e; }
+.front .bar.full > i { background-color: rgb(23, 201, 100); }
+.notice { display: block; padding: 8px 12px; border-radius: 8px; font-size: 14px; line-height: 20px; background-color: rgb(242, 228, 177); color: rgb(88, 10, 63); }
+.front .optin-blocked { color: rgb(239, 68, 68); }
 .fr-card { display: block; padding: 20px; border-radius: 14px; background-color: rgb(224, 224, 224); box-shadow: 0 0 #0000, 0 0 #0000, 0 4px 6px 0 rgba(0, 0, 0, .25); color: rgb(17, 24, 28); margin-bottom: 16px; }
 .fr-card h2 { font-size: 24px; font-weight: 700; line-height: 32px; margin-bottom: 12px; }
 
@@ -482,14 +486,21 @@ button.fr-tilebtn { line-height: 12px; }
 .front .dialog .dlg-body .small { font-size: 16px; line-height: 22px; margin: 0 0 16px; }
 .front .dialog select, .front .dialog input { width: 100%; height: 40px; padding: 0 12px; border-radius: 8px; border: 0; background-color: rgb(244, 244, 245); color: rgb(17, 24, 28); font-size: 14px; }
 .front .dialog-actions { display: flex; gap: 16px 64px; padding: 12px 16px 24px; margin: 0; }
-.front .dialog-actions .btn { flex: 1 1 0%; display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 8px; font-size: 16px; font-weight: 800; line-height: 24px; box-shadow: none; }
+.front .dialog-actions .btn { background-color: transparent; flex: 1 1 0%; display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 8px; font-size: 16px; font-weight: 800; line-height: 24px; box-shadow: none; }
 .front .dialog-actions .btn.sec { background: transparent; border: 2px solid rgb(251, 221, 73); color: rgb(251, 221, 73); }
 .front .dialog-actions .btn:not(.sec) { border: 1px solid rgb(235, 201, 75); color: rgb(51, 9, 43);
   background-image: radial-gradient(35% 80% at 60% 0px, rgba(255, 240, 160, .55), rgba(255, 240, 160, 0)), radial-gradient(30% 22% at 45% 100%, rgba(255, 245, 190, .45), rgba(255, 245, 190, 0)), radial-gradient(30% 90% at 100% 100%, rgba(100, 55, 5, .35), rgba(100, 55, 5, 0)), linear-gradient(rgba(255, 235, 150, .25), rgba(255, 235, 150, 0) 30%, rgba(120, 70, 10, 0) 55%, rgba(120, 70, 10, .35)), linear-gradient(90deg, rgb(212, 163, 80), rgb(232, 190, 106) 30%, rgb(247, 210, 124) 55%, rgb(226, 184, 102) 75%, rgb(176, 130, 56));
   box-shadow: 0 0 #0000, 0 0 #0000, 0 4px 6px 0 rgba(0, 0, 0, .25); }
 .front .toast { font-family: Montserrat, "Montserrat Fallback"; font-size: 14px; font-weight: 600; line-height: 20px; border-radius: 8px; padding: 10px 16px; background-color: rgb(88, 10, 63); color: rgb(242, 228, 177); }
-.front .toast.ok { background: #1f6b43; color: #fff; border: 1px solid #6fd39d; }
-.front .toast.err { background: #8c1d18; color: #fff; border: 1px solid #ff9c9d; }
+.front .toast.ok { background: rgb(255, 255, 255); color: rgb(23, 201, 100); border: 2px solid rgb(23, 201, 100); }
+.front .toast.err { background: rgb(255, 255, 255); color: rgb(239, 68, 68); border: 2px solid rgb(239, 68, 68); }
+/* 獎勵狀態標籤(白底 + 狀態色字與框) */
+.front .chip { background-color: rgb(255, 255, 255); border: 1px solid currentColor; }
+.front .chip.st-locked { color: rgb(133, 133, 133); }
+.front .chip.st-claimable { color: rgb(23, 201, 100); }
+.front .chip.st-claimed { color: rgb(88, 10, 63); }
+.front .chip.st-expired { color: rgb(61, 61, 61); }
+.front .chip.st-cancelled { color: rgb(239, 68, 68); }
 
 /* ---------- 模擬控制台(原型專用元素,不計入比對):避開右下客服鈕 ---------- */
 .front .sim-fab { bottom: 70px; right: 8px; font-family: Montserrat, "Montserrat Fallback"; outline: 2px dashed #fff; outline-offset: -5px; }

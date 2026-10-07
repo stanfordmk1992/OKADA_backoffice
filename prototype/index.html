@@ -11,7 +11,7 @@
 <div id="page">
   <div class="card">
     <h1>OKADA 後台原型</h1>
-    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance + REQ-0016 派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet)+ REQ-0017 前台頂部餘額只在進入頁面、按刷新、本頁 Claim 成功後讀取 + REQ-0020 原型前台樣式與元件與現有前台零誤差 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance + REQ-0016 派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet)+ REQ-0017 前台頂部餘額只在進入頁面、按刷新、本頁 Claim 成功後讀取 + REQ-0020 原型前台樣式與元件與現有前台零誤差 + REQ-0018 前台非導航元素配色改為現有前台的顏色 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
     <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
       <div>
         <h2>頁面清單</h2>
@@ -82,6 +82,8 @@
     ['REQ-0013 TC-05 / 06', '起日晚於迄日 → Search 不查詢並提示;Clear 清空日期與其他條件'],
     ['REQ-0014 說明', '前台樣式由 REQ-0020 取代(與現有前台零誤差;頂部主列 #98116D、分類按鈕洋紅漸層)。<b>REQ-0014 TC-02(#580A3F 系)已被 REQ-0020 取代</b>。頂部錢包金額規則見 REQ-0017。預設前台登入 player_demo01(OKash 20,000、Table 1,250、Slot 860.50);帳號 / Logout 在右上漢堡選單內'],
     ['REQ-0020 說明', '前台 4 頁的元件結構(class)與計算樣式、位置比照現有前台量測(.playwright-output/measure/reference.json,桌機 1440 / 手機 390,登入後);圖片為同尺寸佔位;手機版以直向(portrait)切換,同現有前台。原型專用元素(左下「原型導覽」、右下「模擬控制台」)以橘色虛線標示,不計入比對。現有前台沒有的新元件(錢包下拉框、Promo Wallet 卡片 / 頁籤、Claim、不可報名原因、漢堡選單展開內容)加 data-new 標記'],
+    ['REQ-0018 說明 / TC-01', '前台非導航元素只用現有前台出現過的顏色:成功提示 / 可領取 / 進度滿格 = 綠 rgb(23,201,100)(text-success-500)、錯誤提示 / 不可報名原因 / 已取消 = 紅 rgb(239,68,68)(text-red-500)、鎖定中 = 灰 rgb(133,133,133)(text-gray-500)、進度條軌道 / 進度同大廳 Load More 進度條、提示框金底紫字、遊戲縮圖佔位為 #98116D / #580A3F / 洋紅漸層。掃描腳本 scratchpad dev20/colorscan.js'],
+    ['REQ-0018 TC-02~04', 'TC-02:player_demo09 開 <a href="front/en/wallet.html?tab=promo">/en/wallet?tab=promo</a> Claim → 綠框成功提示;再用模擬控制台重複 Claim → 紅框錯誤提示;player_demo05 開 <a href="front/en/promotions.html">/en/promotions</a> → 紅字不可報名原因。TC-03:player_demo05(鎖定中,進度未滿,紫紅)/ player_demo09(可領取,滿格綠)。TC-04:<a href="front/en/index.html">大廳</a> 縮圖佔位'],
     ['REQ-0020 TC-01~05', '比對腳本(開發提供,scratchpad dev20/compare.js):<code>node compare.js</code>(登入後 16 頁 + TC-05 新元件)、<code>node compare.js --state out</code>(未登入)。比對既有元件時暫時隱藏 data-new 新元件;/en/promotions 現有前台為 Page not found,原型保留報名列表(保留同高度後比對頁尾)'],
     ['REQ-0014 TC-03~06', '<a href="front/en/index.html">前台</a> 滑鼠移到左上錢包區 → 下拉 OKash Balance / Table Bonus Credit / Slot Bonus Credit / Promo Wallet(鎖定 / 可領取、不可下注);點各項 → /en/wallet、/en/points、/en/wallet?tab=promo'],
     ['REQ-0014 TC-07 / 13', '(REQ-0017 後「不重新整理再 hover 即更新」改為:本頁 Claim 成功自動更新;外部變動按刷新或切換頁面才更新)模擬控制台 player_demo01 存款 1,000 → 推進流水 3,000 → 前台 /en/wallet?tab=promo 按刷新 → Claim → hover 錢包:OKash +1,000、可領取 −1,000;TC-13:存款後按刷新(鎖定 1,000),推進流水後按刷新(鎖定 0、可領取 1,000)'],

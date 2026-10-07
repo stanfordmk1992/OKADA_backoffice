@@ -31,8 +31,9 @@ FR.init({ active: 'home', render: function (s, pl) {
   };
   var kids = payouts.map(entry).join('');
   // 佔位圖(縮圖):以底色區分;名稱為假資料
-  var PH = ['linear-gradient(160deg,#c62828,#6d0f0f)', 'linear-gradient(160deg,#e0a526,#8a5a00)', 'linear-gradient(160deg,#3b2a8f,#150c45)'];
-  var img = function (i, name) { return '<div class="gameImage relative h-full"><div class="fr-gph" style="background:' + PH[i % 3] + ';color:#fff">' + esc(name) + '</div></div>'; };
+  // REQ-0018:佔位縮圖只用現有前台出現過的顏色(#98116D / #580A3F、洋紅 #7E405C / #AA2567、#580A3F / #33092B)
+  var PH = ['linear-gradient(160deg,rgb(152,17,109),rgb(88,10,63))', 'linear-gradient(160deg,rgb(170,37,103),rgb(126,64,92))', 'linear-gradient(160deg,rgb(88,10,63),rgb(51,9,43))'];
+  var img = function (i, name) { return '<div class="gameImage relative h-full"><div class="fr-gph" style="background:' + PH[i % 3] + ';color:rgb(242,228,177)">' + esc(name) + '</div></div>'; };
   var jackpot = '<div class="absolute bottom-[15%] left-0"><div class="jackpots"><div class="jackpotMeter mainLobby"><div class="wrapper"><span class="title">Grand</span><span class="runningNumber">₱ 1,234,567.89</span></div></div></div></div>';
   var slotTile = function (i) {
     return '<div class="gameTile liveslotTile">' + img(i, 'Demo Slot ' + (i + 1)) + (i ? jackpot : '') +
