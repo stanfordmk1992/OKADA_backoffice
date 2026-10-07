@@ -11,7 +11,7 @@
 <div id="page">
   <div class="card">
     <h1>OKADA 後台原型</h1>
-    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
     <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
       <div>
         <h2>頁面清單</h2>
@@ -53,7 +53,7 @@
     ['前台', [
       ['front/en/index.html', 'Front Home', '/en', '頂部導航'],
       ['front/en/wallet.html', 'Wallet 錢包 / 優惠錢包', '/en/wallet', 'NEW:優惠錢包畫面、Claim'],
-      ['front/en/promotions.html', 'Promotions(報名)', '/en/promotions', '原型輔助'],
+      ['front/en/promotions.html', 'Promotions(報名)', '/en/promotions', '原型輔助;REQ-0012 不可報名時按鈕不可用並顯示原因'],
       ['front/en/points.html', 'Points(唯讀參照)', '/en/points', '確認 Free Play 增加']]],
     ['說明圖', [['diagrams/promo-wallet.html', 'Promo Wallet 鏈路圖 / 系統交互圖', '—(原型說明頁)', 'NEW:鏈路圖、獎勵狀態流轉、系統交互圖、各環節寫入紀錄']]],
     ['其他', [['not-authorized.html', 'Not Authorized', '/not-authorized', '無權限導向頁']]]
@@ -66,7 +66,16 @@
     ['REQ-0011 TC-04', FT + ':Reward ID = player_demo10 的 101 獎勵(' + PWL + ' 查 player_demo10 可看編號)→ 只列 Issued、Claimed、Bonus Payout 三筆'],
     ['REQ-0011 TC-05 / 06', PWL + ' → player_demo10 → 各獎勵 View → 「Trace Chain 追溯鏈」;點任一節點跳到對應紀錄'],
     ['REQ-0011 TC-07', PAY + ' 的 Reward ID 欄(經由優惠錢包才有)→ 點擊開啟該獎勵詳情;直接派發(104)為空白'],
-    ['REQ-0011 TC-08', '<a href="reports/promo-wallet/list.html">Promo Wallet Report</a>、<a href="reports/cashless-liability/list.html">Cashless Liability</a>;player_demo07(104 直接派發)達標後只有 Bonus Payout(Ref PO-n),沒有 Reward Claimed']
+    ['REQ-0011 TC-08', '<a href="reports/promo-wallet/list.html">Promo Wallet Report</a>、<a href="reports/cashless-liability/list.html">Cashless Liability</a>;player_demo07(104 直接派發)達標後只有 Bonus Payout(Ref PO-n),沒有 Reward Claimed'],
+    ['REQ-0012 說明', '存款任務活動 = 有 Min/Max Deposit 的活動(101~105、107);106 為無存款條件的測試活動(現行後台表單無法建立,本原型不模擬其派彩)。前台 <a href="front/en/promotions.html">/en/promotions</a> 以「前台登入玩家」顯示;模擬控制台「玩家行為」會顯示該玩家「進行中的存款活動」'],
+    ['REQ-0012 TC-01', '前台登入 player_demo02(已報名 101 未存款)→ /en/promotions:102、103、104、105 的 Opt-In 不可用並顯示「你已有進行中的存款活動:Promo Wallet Welcome 100%」'],
+    ['REQ-0012 TC-02 / 03', '前台登入 player_demo05(103 鎖定中)/ player_demo09(105 可領取)→ /en/promotions 其他存款活動不可報名'],
+    ['REQ-0012 TC-04', '前台登入 player_demo08(已領取)/ player_demo11(已作廢)/ player_demo12(已取消)→ 可報名 101 等存款活動'],
+    ['REQ-0012 TC-05', '前台登入 player_demo13(107 已結束、未參加成功)→ 可報名'],
+    ['REQ-0012 TC-06', '模擬控制台 player_demo07 存款 1,000(104 直接派發參加成功、未派彩)→ 前台登入 demo07 報名 101 不可用 → 推進流水 2,000(直接派彩)→ 可報名'],
+    ['REQ-0012 TC-07', '前台登入 player_demo01(已報名 101)→ 報名 106(無存款條件)成功'],
+    ['REQ-0012 TC-08', '模擬控制台「玩家行為」選 player_demo02 → 活動選 102 →「報名 Opt-In(直接呼叫後端報名,不經前台按鈕)」→ 被擋下並提示'],
+    ['REQ-0012 TC-09', 'player_demo01 只報名 101 → 存款 1,000 → 只有 101 產生獎勵(事件紀錄與 Promo Wallet 總覽)']
   ];
   document.getElementById('pages').innerHTML = PAGES.map(function (g) {
     return '<h3>' + esc(g[0]) + '</h3>' + UI.table([
@@ -80,11 +89,15 @@
     ['player_demo02', '已報名 101,尚未存款', 'TC-04'],
     ['player_demo03', '已報名 101,尚未存款', 'TC-05'],
     ['player_demo04', '已報名 102(End of Promotion、HALO、50%、流水 2,000、等級點數 50、領取期 3 天,10-12 結束)', 'TC-09/21'],
-    ['player_demo05', '103 一筆鎖定中(400)、105 一筆可領取(2,000);兩活動 10-10 結束、領取期 1 天', 'TC-13/14'],
+    ['player_demo05', '103 一筆鎖定中(400);10-10 結束、領取期 1 天', 'TC-13/14(與 demo09 合看);REQ-0012 TC-02'],
     ['player_demo06', '已報名 105(Instant、HALO、流水 1,000、領取期 1 天)', 'TC-09'],
     ['player_demo07', '已報名 104(直接派發、Instant、OKash、30%、流水 2,000)', 'TC-17'],
-    ['player_demo08', '歷史資料:103 已領取 1,000、104 直接派彩 1,500', '參考'],
-    ['player_demo10', 'REQ-0011:依序 A 101 已領取 1,000(OKash,10-02)→ B 107 已作廢 400(10-07 00:00:00)→ C 103 已取消 300(10-07 09:00,admin_demo)', 'REQ-0011 TC-03/04/05/06']], { count: false });
+    ['player_demo08', '歷史資料:103 已領取 1,000 → 之後才報名 104,直接派彩 1,500', 'REQ-0012 TC-04(已領取)'],
+    ['player_demo09', '105 一筆可領取(2,000);10-10 結束、領取期 1 天', 'TC-14(與 demo05 合看);REQ-0012 TC-03'],
+    ['player_demo10', 'REQ-0011:依序 A 101 已領取 1,000(OKash,10-02)→ B 107 已作廢 400(10-07 00:00:00)→ C 103 已取消 300(10-07 09:00,admin_demo)', 'REQ-0011 TC-03/04/05/06'],
+    ['player_demo11', '107 獎勵已作廢(10-07 00:00:00)', 'REQ-0012 TC-04(已作廢)'],
+    ['player_demo12', '103 獎勵已取消(10-04,admin_demo)', 'REQ-0012 TC-04(已取消)'],
+    ['player_demo13', '報名 107 始終未存款,107 已於 10-05 結束', 'REQ-0012 TC-05']], { count: false });
   document.getElementById('guide').innerHTML = UI.table([
     { t: '需求 / TC', k: function (r) { return '<b>' + r[0] + '</b>'; } }, { t: '頁面與操作', k: function (r) { return r[1]; } }], GUIDE, { count: false });
   Sim.mountInline(document.getElementById('sim-inline'));

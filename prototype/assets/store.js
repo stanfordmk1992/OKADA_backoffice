@@ -2,7 +2,7 @@
  * 全部為假資料。時間一律以 UTC+8 顯示;模擬時鐘存在 state.now。 */
 (function () {
   'use strict';
-  var KEY = 'okada_proto_req0008_v2'; // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號
+  var KEY = 'okada_proto_req0008_v3'; // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
   var TZ = 8 * 3600e3;
   var DAY = 86400e3;
   var ROOT = document.documentElement.getAttribute('data-root') || '';
@@ -207,12 +207,39 @@
     });
   }
 
+  /* ---------- REQ-0012 存款任務活動同一時間只能參加一個 ---------- */
+  /** 存款任務活動 = 設有存款條件(Minimum / Maximum Deposit)的活動,不分派發方式 */
+  function isDepositTask(p) { return p.min != null || p.max != null; }
+  /** 報名是否為「進行中」的存款任務:
+   *  尚未參加成功且活動未結束;或已參加成功且獎勵鎖定中 / 可領取(直接派發:尚未派彩,活動結束後不再派彩) */
+  function depositTaskInProgress(s, o) {
+    var p = promo(s, o.promoId);
+    if (!isDepositTask(p)) return false;
+    if (!o.qualified) return s.now <= promoEnd(p);
+    if (p.distribution === 'promo_wallet') {
+      var r = s.rewards.find(function (x) { return x.optinId === o.id; });
+      return !!r && isPending(r);
+    }
+    return !o.directPaid && s.now <= promoEnd(p);
+  }
+  /** 報名 promoId 時擋下的原因:回傳進行中的存款任務活動(或 null);沒有存款條件的活動不受限制 */
+  function depositTaskBlock(s, pid, promoId) {
+    var p = promo(s, promoId), pl = player(s, pid);
+    if (!p || !pl || !isDepositTask(p)) return null;
+    var o = s.optins.find(function (x) { return x.playerId === pl.id && x.promoId !== p.id && depositTaskInProgress(s, x); });
+    return o ? promo(s, o.promoId) : null;
+  }
+  function depositTaskBlockMsg(bp) { return 'You already have an ongoing deposit promotion: ' + bp.name + '(你已有進行中的存款活動:' + bp.name + ')'; }
+
   /* ---------- 操作(由模擬控制台、前台、後台呼叫) ---------- */
   function optIn(s, pid, promoId) {
     var p = promo(s, promoId); var pl = player(s, pid);
     if (!p || !pl) throw new Error('找不到玩家或活動');
     if (!promoRunning(s, p)) throw new Error('活動不在期間內或已停用,無法報名');
     if (s.optins.some(function (o) { return o.playerId === pl.id && o.promoId === p.id; })) throw new Error('已報名過此活動');
+    // REQ-0012 後端檢查(前台按鈕之外也擋,不能繞過)
+    var bp = depositTaskBlock(s, pl.id, p.id);
+    if (bp) throw new Error(depositTaskBlockMsg(bp));
     var o = { id: nextId(s, 'optin'), playerId: pl.id, promoId: p.id, joinedAt: s.now, depositHandled: false, qualified: false, depositAmount: 0, firstDepositAmount: null, turnover: 0, tierPoints: 0, directPaid: false, updatedAt: s.now };
     s.optins.push(o);
     log(s, pl.name + ' 報名 ' + p.name);
@@ -226,7 +253,7 @@
     var msgs = ['存款 ' + money(amount)];
     s.optins.filter(function (o) { return o.playerId === pl.id && !o.depositHandled; }).forEach(function (o) {
       var p = promo(s, o.promoId);
-      if (!promoRunning(s, p)) return;
+      if (!promoRunning(s, p) || !isDepositTask(p)) return; // 沒有存款條件的活動不判定存款
       o.depositHandled = true; o.firstDepositAmount = amount; o.updatedAt = s.now;
       if (amount < p.min || amount > p.max) {
         msgs.push(p.name + ':報名後第一筆存款 ' + money(amount) + ' 不在 ' + money(p.min) + '~' + money(p.max) + ' 範圍,不算參加');
@@ -399,13 +426,14 @@
       role: 'super_admin', frontPlayer: 'player_demo01', simPlayer: 'player_demo01', seedStart: '2026-10-01',
       players: [], promos: [], optins: [], rewards: [], payouts: [], ftx: [], audits: [], log: []
     };
-    var names = ['player_demo01', 'player_demo02', 'player_demo03', 'player_demo04', 'player_demo05', 'player_demo06', 'player_demo07', 'player_demo08', 'player_demo10'];
-    names.forEach(function (n, i) {
-      var bal = [20000, 5000, 30000, 8000, 3000, 6000, 10000, 12000, 15000][i];
+    // [編號, OKash Balance, Free Play, iGaming Bonus, Live Table Bonus]
+    [[1, 20000, 0, 0, 0], [2, 5000, 0, 0, 3], [3, 30000, 0, 50, 0], [4, 8000, 150, 0, 0], [5, 3000, 0, 0, 0], [6, 6000, 300, 0, 0], [7, 10000, 0, 0, 0], [8, 12000, 0, 25, 0],
+      [9, 7000, 0, 0, 0], [10, 15000, 0, 0, 0], [11, 4000, 0, 0, 0], [12, 9000, 0, 0, 0], [13, 2000, 0, 0, 0]].forEach(function (d, i) {
+      var n = 'player_demo' + pad(d[0]);
       s.players.push({
-        id: 1000 + Number(n.slice(-2)), name: n, email: n.replace('player_', '') + '@example.test', status: 'Active', referral: 'RF' + n.slice(-6).toUpperCase(), upline: '—',
-        okash: bal, okashInit: bal, freePlay: [0, 0, 0, 150, 0, 300, 0, 0][i], circlePoint: 1200 + i * 100,
-        igBonus: [0, 0, 50, 0, 0, 0, 0, 25][i], liveSlotBonus: 0, liveTableBonus: [0, 3, 0, 0, 0, 0, 0, 0][i], createdAt: t0 - 30 * DAY
+        id: 1000 + d[0], name: n, email: n.replace('player_', '') + '@example.test', status: 'Active', referral: 'RF' + n.slice(-6).toUpperCase(), upline: '—',
+        okash: d[1], okashInit: d[1], freePlay: d[2], circlePoint: 1200 + i * 100,
+        igBonus: d[3], liveSlotBonus: 0, liveTableBonus: d[4], createdAt: t0 - 30 * DAY
       });
     });
     function P(o) {
@@ -419,25 +447,39 @@
     s.promos.push(P({ id: 105, name: 'Free Play Boost 100%', from: '2026-10-01', to: '2026-10-10', min: 500, max: 10000, freq: 'instant', payout: 'free_play_halo', pct: 100, maxCampaign: 2000, turnover: 1000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 }));
     // REQ-0011:已結束的活動(10-05 結束、領取期 1 天 → 10-07 00:00:00 作廢),提供作廢的追溯資料
     s.promos.push(P({ id: 107, name: 'Early October Reload 20% (Ended)', from: '2026-10-01', to: '2026-10-05', min: 500, max: 20000, freq: 'instant', payout: 'igaming_credit', pct: 20, maxCampaign: 1000, turnover: 4000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 }));
+    // REQ-0012:沒有存款條件的活動(原型測試用;現行後台 Min/Max Deposit 為必填,無法由表單建立此類活動;本原型不模擬其派彩)
+    s.promos.push(P({ id: 106, name: 'Turnover Challenge (No Deposit Requirement)', from: '2026-10-01', to: '2026-10-31', min: null, max: null, depOption: '', freq: 'instant', payout: 'igaming_credit', pct: 10, maxCampaign: 500, turnover: 5000, tierPoints: 0, distribution: 'direct', claimDays: null }));
+    s.promos.sort(function (a, b) { return a.id - b.id; });
     s.seq.promo = 7;
     function at(str) { s.now = parseDT(str); tick(s); }
-    // 歷史:player_demo08 已領取一筆、直接派彩一筆
-    at('2026-10-02 09:00'); optIn(s, 1008, 103); optIn(s, 1008, 104);
+    var rw = function (pid, promoId) { return s.rewards.find(function (r) { return r.playerId === pid && r.promoId === promoId; }).id; };
+    // 歷史:player_demo08 先參加 103 並領取,之後才報名 104(直接派發)並派彩(REQ-0012:存款任務一次只能參加一個)
+    at('2026-10-02 09:00'); optIn(s, 1008, 103);
     at('2026-10-02 09:10'); deposit(s, 1008, 5000);
     at('2026-10-02 11:00'); addTurnover(s, 1008, 5000);
-    at('2026-10-02 12:00'); claim(s, reward(s, 'PW-000001').id, 1008);
+    at('2026-10-02 12:00'); claim(s, rw(1008, 103), 1008);
     // REQ-0011 TC-03 / 05 / 06:player_demo10 依序 A 領取(101,OKash)→ B 作廢(107)→ C 取消(103)
-    var rw = function (pid, promoId) { return s.rewards.find(function (r) { return r.playerId === pid && r.promoId === promoId; }).id; };
     at('2026-10-02 12:10'); optIn(s, 1010, 101);
     at('2026-10-02 12:20'); deposit(s, 1010, 1000);
     at('2026-10-02 12:40'); addTurnover(s, 1010, 3000);
     at('2026-10-02 12:50'); claim(s, rw(1010, 101), 1010);
     at('2026-10-02 13:00'); optIn(s, 1010, 107);
     at('2026-10-02 13:10'); deposit(s, 1010, 2000);
-    // player_demo05:一筆鎖定中(103)+ 一筆可領取(105),兩個活動都 10-10 結束、領取期 1 天 → TC-14
-    at('2026-10-03 10:00'); optIn(s, 1005, 103); optIn(s, 1005, 105);
-    at('2026-10-03 10:05'); deposit(s, 1005, 2000);
-    at('2026-10-03 15:00'); addTurnover(s, 1005, 1200);
+    at('2026-10-02 13:30'); optIn(s, 1008, 104);
+    at('2026-10-02 13:40'); deposit(s, 1008, 5000);
+    at('2026-10-02 14:00'); addTurnover(s, 1008, 2000);
+    // REQ-0012 TC-04(已作廢):player_demo11 參加 107 → 10-07 00:00:00 作廢;TC-05:player_demo13 報名 107 始終未存款,活動已結束
+    at('2026-10-02 15:00'); optIn(s, 1011, 107); optIn(s, 1013, 107);
+    at('2026-10-02 15:10'); deposit(s, 1011, 1000);
+    // REQ-0008 TC-14:player_demo05 一筆鎖定中(103)、player_demo09 一筆可領取(105);兩活動都 10-10 結束、領取期 1 天
+    // (REQ-0012 後同一玩家不能同時有兩個進行中的存款活動,故分成兩位玩家)
+    at('2026-10-03 10:00'); optIn(s, 1005, 103); optIn(s, 1009, 105);
+    at('2026-10-03 10:05'); deposit(s, 1005, 2000); deposit(s, 1009, 2000);
+    at('2026-10-03 15:00'); addTurnover(s, 1005, 1200); addTurnover(s, 1009, 1200);
+    // REQ-0012 TC-04(已取消):player_demo12 參加 103 後由後台取消
+    at('2026-10-03 16:00'); optIn(s, 1012, 103);
+    at('2026-10-03 16:10'); deposit(s, 1012, 1000);
+    at('2026-10-04 10:00'); cancelReward(s, rw(1012, 103), '測試資料:重複帳號,取消獎勵', 'admin_demo');
     // 測試用新報名(尚未存款)
     at('2026-10-06 10:00');
     optIn(s, 1001, 101); optIn(s, 1002, 101); optIn(s, 1003, 101); optIn(s, 1004, 102); optIn(s, 1006, 105); optIn(s, 1007, 104);
@@ -460,7 +502,8 @@
     fmt: fmt, fmtDate: fmtDate, dayStart: dayStart, dayEnd: dayEnd, parseDT: parseDT, money: money, esc: esc, round2: round2,
     load: load, save: save, mutate: mutate, reset: reset, onChange: onChange, tick: tick,
     player: player, promo: promo, optin: optin, reward: reward, promoStart: promoStart, promoEnd: promoEnd, promoRunning: promoRunning,
-    pendingAt: pendingAt, okashAt: okashAt, trace: trace, tasks: tasks, isPending: isPending,
+    pendingAt: pendingAt, okashAt: okashAt, trace: trace, isDepositTask: isDepositTask, depositTaskInProgress: depositTaskInProgress,
+    depositTaskBlock: depositTaskBlock, depositTaskBlockMsg: depositTaskBlockMsg, tasks: tasks, isPending: isPending,
     optIn: optIn, deposit: deposit, addTurnover: addTurnover, bet: bet, addTierPoints: addTierPoints, claim: claim, cancelReward: cancelReward,
     savePromo: savePromo, setNow: setNow, summarize: summarize, dateList: dateList, can: can, url: url, qs: qs
   };

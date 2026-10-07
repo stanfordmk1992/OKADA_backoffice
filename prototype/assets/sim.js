@@ -19,7 +19,7 @@
     '<fieldset><legend>2. 玩家行為</legend>' +
     '<div class="row">玩家 <select class="sim-player" aria-label="simulated player"></select></div>' +
     '<div class="row small sim-player-info"></div>' +
-    '<div class="row"><select class="sim-promo-opt" aria-label="promotion to opt in"></select><button class="btn" data-act="optin">報名 Opt-In</button></div>' +
+    '<div class="row"><select class="sim-promo-opt" aria-label="promotion to opt in"></select><button class="btn" data-act="optin">報名 Opt-In(直接呼叫後端報名,不經前台按鈕)</button></div>' +
     '<div class="row"><input type="number" class="sim-dep" value="1000" min="1" aria-label="deposit amount"><button class="btn" data-act="deposit">模擬存款</button></div>' +
     '<div class="row"><input type="number" class="sim-bet" value="500" min="1" aria-label="bet amount"><button class="btn" data-act="bet">模擬下注(扣 OKash Balance,計流水)</button></div>' +
     '<div class="row"><input type="number" class="sim-to" value="1000" min="1" aria-label="turnover amount"><button class="btn" data-act="turnover">推進流水(不扣餘額)</button></div>' +
@@ -64,6 +64,8 @@
       var pend = s.rewards.filter(function (r) { return r.playerId === pl.id && S.isPending(r); });
       var joined = s.optins.filter(function (o) { return o.playerId === pl.id; }).map(function (o) { return o.promoId; });
       $('.sim-player-info').innerHTML = 'OKash Balance <b>' + money(pl.okash) + '</b> · Free Play ' + money(pl.freePlay) + ' · 優惠錢包待領取 <b>' + money(pend.reduce(function (a, r) { return a + r.amount; }, 0)) + '</b>(' + pend.length + ' 筆)<br>已報名活動:' + (joined.join(', ') || '無');
+      var act = s.optins.find(function (x) { return x.playerId === pl.id && S.depositTaskInProgress(s, x); });
+      $('.sim-player-info').innerHTML += '<br>進行中的存款活動 <span class="tag-new">REQ-0012</span>:' + (act ? '<b class="sim-active-dep">' + esc(act.promoId + ' ' + S.promo(s, act.promoId).name) + '</b>(不能再報名其他存款活動)' : '<span class="sim-active-dep">無</span>');
       var p = S.promo(s, $('.sim-promo-time').value);
       if (p) $('.sim-promo-info').innerHTML = '活動結束:' + S.fmt(S.promoEnd(p)) + (p.distribution === 'promo_wallet' ? ' · 領取期 ' + p.claimDays + ' 天 → 截止 ' + S.fmt(S.promoEnd(p) + p.claimDays * S.DAY) : ' · 直接派發(無領取期)');
       var cl = s.rewards.filter(function (r) { return r.status === 'claimable'; });

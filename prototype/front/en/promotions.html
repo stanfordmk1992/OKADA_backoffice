@@ -18,12 +18,17 @@
   var S = Store, esc = S.esc, money = S.money;
   function render(s, pl) {
     var list = s.promos.filter(function (p) { return S.promoRunning(s, p); });
-    document.getElementById('page').innerHTML = '<div class="fr-card"><h2>Promotions</h2><p class="meta" style="color:#9e9bb0">原型:報名 Opt-In 也可由模擬控制台操作。</p>' +
+    document.getElementById('page').innerHTML = '<div class="fr-card"><h2>Promotions</h2><p class="meta" style="color:#9e9bb0">原型:報名 Opt-In 也可由模擬控制台操作。存款任務活動同一時間只能參加一個。</p>' +
       (list.length ? list.map(function (p) {
         var joined = pl && s.optins.some(function (o) { return o.playerId === pl.id && o.promoId === p.id; });
-        return '<div class="rw"><div><div class="rw-title">' + esc(p.name) + '</div><div class="meta">' + p.from + ' ~ ' + p.to + ' · Deposit ' + money(p.min) + ' – ' + money(p.max) + ' · ' + p.pct + '% up to ' + money(p.maxCampaign) + ' · Turnover ' + money(p.turnover) +
+        // REQ-0012:已有進行中的存款活動 → 報名按鈕不可用並顯示原因(後端 Store.optIn 同樣檢查)
+        var block = pl && !joined ? S.depositTaskBlock(s, pl.id, p.id) : null;
+        var action = joined ? '<span class="chip st-claimed">Joined</span>'
+          : block ? '<button class="btn-claim" data-optin="' + p.id + '" disabled title="' + esc(S.depositTaskBlockMsg(block)) + '">Opt-In</button><div class="meta optin-blocked" data-blocked="' + p.id + '" style="max-width:240px;margin-top:6px;color:#ff9c9d">' + esc(S.depositTaskBlockMsg(block)) + '</div>'
+          : '<button class="btn-claim" data-optin="' + p.id + '">Opt-In</button>';
+        return '<div class="rw"><div><div class="rw-title">' + esc(p.name) + '</div><div class="meta">' + p.from + ' ~ ' + p.to + ' · ' + (S.isDepositTask(p) ? 'Deposit ' + money(p.min) + ' – ' + money(p.max) + '(存款任務)' : 'No deposit requirement(無存款條件)') + ' · ' + p.pct + '% up to ' + money(p.maxCampaign) + ' · Turnover ' + money(p.turnover) +
           (p.tierPoints ? ' · Tier Points ' + p.tierPoints : '') + ' · ' + S.FREQ[p.freq] + ' · ' + (p.distribution === 'promo_wallet' ? 'Reward goes to Promo Wallet(經由優惠錢包)' : 'Paid directly(直接派發)') + '</div></div>' +
-          '<div style="align-self:center">' + (joined ? '<span class="chip st-claimed">Joined</span>' : '<button class="btn-claim" data-optin="' + p.id + '">Opt-In</button>') + '</div></div>';
+          '<div style="align-self:center;text-align:right">' + action + '</div></div>';
       }).join('') : '<div class="meta">No running promotions.</div>') + '</div>';
   }
   document.getElementById('page').addEventListener('click', function (e) {
