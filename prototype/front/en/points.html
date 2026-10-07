@@ -7,28 +7,38 @@
 <title>OKADA | Points</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/front.css">
 </head>
 <body>
-<div id="page"></div>
+<main id="page" class="mx-auto w-[calc(100vw-218px)] max-w-main-content fr-main"></main>
 <script src="../../assets/store.js"></script>
 <script src="../../assets/ui.js"></script>
 <script src="../../assets/sim.js"></script>
 <script src="../../assets/front.js"></script>
 <script>
+/* /en/points(REQ-0020:版面比照現有前台 Point Conversion;REQ-0014:原型唯讀,換算不在範圍)
+ * 卡片順序與名稱同現有前台:Circle Point、Free Play、Live Slots Bonus Credit、Live Table Bonus Credit(= 頂部錢包下拉的 Slot / Table Bonus Credit) */
 FR.init({ active: 'points', needLogin: true, render: function (s, pl) {
-  var m = Store.money;
-  // REQ-0014:名稱用前台現有叫法 Table / Slot Bonus Credit;金額與頂部錢包下拉讀同一份資料(後台 Live Table / Live Slot Bonus Wallet 為其鏡像)
-  document.getElementById('page').innerHTML =
-    '<div class="fr-sec-h"><h2>Points</h2><span class="ln"></span></div>' +
-    '<div class="fr-bal" id="points-summary">' +
-      '<div><div class="h">Free Play (HALO)</div><b id="fr-freeplay">' + m(pl.freePlay) + '</b></div>' +
-      '<div><div class="h">Circle Point</div><b id="fr-circle">' + pl.circlePoint + '</b></div>' +
-      '<div><div class="h">Table Bonus Credit</div><b id="fr-table">₱ ' + m(pl.liveTableBonus) + '</b></div>' +
-      '<div><div class="h">Slot Bonus Credit</div><b id="fr-slot">₱ ' + m(pl.liveSlotBonus) + '</b></div>' +
-    '</div>' +
-    '<div class="notice">原型參照頁(唯讀):Points 換算頁與外部系統 HALO 不在範圍、不修改。這裡用來確認 Free Play (HALO) 派發後 Free Play 增加,以及頂部錢包下拉的 Table / Slot Bonus Credit 金額。</div>';
+  var m = Store.money, I = FR.icons;
+  var card = function (id, nm, val) { return '<div class="portrait:min-w-[45%]"><div class="flex flex-col justify-between fr-pcard"><p class="text-[clamp(0.65rem,1.3vw,1rem)] font-semibold nm">' + nm + '</p><p class="break-all text-[clamp(0.75rem,1vw,1rem)] font-bold val" id="' + id + '">' + val + '</p></div></div>'; };
+  var sel = function (lbl, txt, ph, w) { return '<div class="group flex flex-col fr-field"><div class="hsel" aria-hidden="true"><label>' + lbl + ' <select tabindex="-1" style="width:' + w + 'px"><option>' + txt + '</option></select></label></div><label class="lbl">' + lbl + '</label><div class="w-full flex flex-col"><button type="button" class="fr-selbtn" disabled><div class="inline-flex h-fit w-[calc(100%_-_theme(spacing.6))]"><span class="' + (ph ? 'ph' : '') + '">' + txt + '</span></div></button></div></div>'; };
+  var box = function (side, title) { return '<div class="box ' + side + ' fr-box"><p class="title">' + title + '</p><div class="textfigures"><p class="subtitle">Current</p><span class="italic">-</span></div><div class="textfigures"><p class="subtitle">After</p><span class="italic">-</span></div></div>'; };
+  document.getElementById('page').innerHTML = '<div class="flex w-full flex-grow fr-tabsec"><div class="flex h-full w-full fr-points">' +
+    '<div class="grid w-full gap-2 fr-pcards" id="points-summary">' + card('fr-circle', 'Circle Point', String(pl.circlePoint)) + card('fr-freeplay', 'Free Play', m(pl.freePlay)) +
+      card('fr-slot', 'Live Slots Bonus Credit', '₱ ' + m(pl.liveSlotBonus)) + card('fr-table', 'Live Table Bonus Credit', '₱ ' + m(pl.liveTableBonus)) + '</div>' +
+    '<div class="inline-flex oocTabListWrapper pb-3"><div class="fr-tablist" role="tablist"><button type="button" role="tab" class="fr-tab" id="points-tab-conversion" aria-selected="true"><span class="absolute z-0 inset-0"></span><div class="relative z-10 whitespace-nowrap">Point Conversion</div></button>' +
+      '<button type="button" role="tab" class="fr-tab" id="points-tab-history" aria-selected="false" disabled><div class="relative z-10 whitespace-nowrap">Point History</div></button></div></div>' +
+    '<div class="fr-tabpanel" role="tabpanel" id="points-tabpanel-conversion"><div class="flex flex-col relative fr-panel"><div class="relative flex w-full"><div class="flex h-full w-full fr-panel-in">' +
+      '<div class="mx-auto flex w-[90%] fr-conv"><div class="convertSelectionSection"><div class="conversionUpper">' + sel('From', 'Circle Point', false, 112) +
+        '<button type="button" class="z-0 group relative fr-gold fr-swap" disabled aria-label="Swap"><span style="display:block;width:16px;height:16px">' + I.refresh + '</span></button>' + sel('To', 'Select a wallet', true, 208) + '</div>' +
+        '<div class="conversionBottom">' + box('leftSide', 'Circle Point') + box('rightSide', '-') + '</div></div>' +
+        '<div class="my-4 portrait:my-2 fr-total"><span class="text-base font-bold lb">Total Convert Amount</span><div class="flex w-full items-center row"><button type="button" class="z-0 group relative fr-reset" disabled>Reset</button>' +
+          '<div class="w-4/5 fr-amt"><div class="group flex flex-col"><div class="h-full flex flex-col"><div class="relative w-full inline-flex"><div class="inline-flex w-full items-center"><input type="text" value="" disabled aria-label="Points">Points</div></div></div></div></div></div></div>' +
+        '<div class="mt-auto flex justify-center"><button type="button" class="z-0 group relative fr-gold lg" disabled>Convert</button></div>' +
+        '<p class="fr-ro-note proto-only" data-new="points-note">原型參照頁(唯讀):Points 換算與外部系統 HALO 不在範圍。這裡用來確認 Free Play (HALO) 派發後 Free Play 增加,以及頂部錢包下拉的 Table / Slot Bonus Credit 金額。</p>' +
+      '</div></div></div></div></div></div></div>';
 } });
 </script>
 </body>

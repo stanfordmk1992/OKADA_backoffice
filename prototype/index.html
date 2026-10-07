@@ -11,7 +11,7 @@
 <div id="page">
   <div class="card">
     <h1>OKADA 後台原型</h1>
-    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance + REQ-0016 派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet)+ REQ-0017 前台頂部餘額只在進入頁面、按刷新、本頁 Claim 成功後讀取 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance + REQ-0016 派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet)+ REQ-0017 前台頂部餘額只在進入頁面、按刷新、本頁 Claim 成功後讀取 + REQ-0020 原型前台樣式與元件與現有前台零誤差 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
     <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
       <div>
         <h2>頁面清單</h2>
@@ -51,10 +51,10 @@
       ['reports/cashless-liability/list.html', 'Cashless Liability Report', '/reports/cashless-liability/list', '新增 Promo Wallet 欄'],
       ['reports/fund-transaction/list.html', 'Fund Transactions Report', '/reports/fund-transaction/list', '新交易類型;REQ-0011 Reward ID 查詢 / 欄位']]],
     ['前台', [
-      ['front/en/index.html', 'Front Home', '/en', 'REQ-0014:改用現有前台樣式;頂部錢包下拉 4 個錢包(桌機 hover / 手機點擊)、刷新餘額'],
+      ['front/en/index.html', 'Front Home', '/en', 'REQ-0020:版面與元件比照現有前台(零誤差);頂部錢包下拉 4 個錢包(桌機 hover / 手機點擊)、刷新餘額;登入後右上為 Promotion + 漢堡選單(帳號 / Logout)'],
       ['front/en/wallet.html', 'Wallet 錢包 / 優惠錢包', '/en/wallet', 'NEW:優惠錢包畫面、Claim;REQ-0014 上方 Promo Wallet 卡片(鎖定 / 可領取)+ Promo Wallet 頁籤(?tab=promo)'],
       ['front/en/promotions.html', 'Promotions(報名)', '/en/promotions', '原型輔助;REQ-0012 不可報名時按鈕不可用並顯示原因'],
-      ['front/en/points.html', 'Points(唯讀參照)', '/en/points', '確認 Free Play 增加;REQ-0014 Table / Slot Bonus Credit 與頂部錢包下拉一致']]],
+      ['front/en/points.html', 'Points(唯讀參照)', '/en/points', 'REQ-0020 版面同現有前台 Point Conversion(唯讀);Free Play、Live Slots / Live Table Bonus Credit(= 下拉的 Slot / Table Bonus Credit)']]],
     ['說明圖', [['diagrams/promo-wallet.html', 'Promo Wallet 鏈路圖 / 系統交互圖', '—(原型說明頁)', 'NEW:鏈路圖、獎勵狀態流轉、系統交互圖、各環節寫入紀錄']]],
     ['其他', [['not-authorized.html', 'Not Authorized', '/not-authorized', '無權限導向頁']]]
   ];
@@ -80,7 +80,9 @@
     ['REQ-0013 TC-02', PAY + ' 日期區間 + Distribution = Via Promo Wallet → 頁尾「經由優惠錢包的派彩合計」;<a href="reports/promo-wallet/list.html">Promo Wallet Report</a> 同一期間(Group By Date 或 Promotion)的 Claimed 金額'],
     ['REQ-0013 TC-03 / 04', PAY + ' 日期 + Search Player ID + Search Promotion Name 併用;Download CSV 筆數 / 金額 = 頁尾「篩選結果合計(全部頁)」'],
     ['REQ-0013 TC-05 / 06', '起日晚於迄日 → Search 不查詢並提示;Clear 清空日期與其他條件'],
-    ['REQ-0014 說明', '前台頁面改用現有前台樣式(Montserrat、頂部主列 #33092B / 跑馬燈與側欄 #580A3F、金色 #F2E4B1、圓角 8px)。頂部錢包金額規則見 REQ-0017。預設前台登入 player_demo01(OKash 20,000、Table 1,250、Slot 860.50)'],
+    ['REQ-0014 說明', '前台樣式由 REQ-0020 取代(與現有前台零誤差;頂部主列 #98116D、分類按鈕洋紅漸層)。<b>REQ-0014 TC-02(#580A3F 系)已被 REQ-0020 取代</b>。頂部錢包金額規則見 REQ-0017。預設前台登入 player_demo01(OKash 20,000、Table 1,250、Slot 860.50);帳號 / Logout 在右上漢堡選單內'],
+    ['REQ-0020 說明', '前台 4 頁的元件結構(class)與計算樣式、位置比照現有前台量測(.playwright-output/measure/reference.json,桌機 1440 / 手機 390,登入後);圖片為同尺寸佔位;手機版以直向(portrait)切換,同現有前台。原型專用元素(左下「原型導覽」、右下「模擬控制台」)以橘色虛線標示,不計入比對。現有前台沒有的新元件(錢包下拉框、Promo Wallet 卡片 / 頁籤、Claim、不可報名原因、漢堡選單展開內容)加 data-new 標記'],
+    ['REQ-0020 TC-01~05', '比對腳本(開發提供,scratchpad dev20/compare.js):<code>node compare.js</code>(登入後 16 頁 + TC-05 新元件)、<code>node compare.js --state out</code>(未登入)。比對既有元件時暫時隱藏 data-new 新元件;/en/promotions 現有前台為 Page not found,原型保留報名列表(保留同高度後比對頁尾)'],
     ['REQ-0014 TC-03~06', '<a href="front/en/index.html">前台</a> 滑鼠移到左上錢包區 → 下拉 OKash Balance / Table Bonus Credit / Slot Bonus Credit / Promo Wallet(鎖定 / 可領取、不可下注);點各項 → /en/wallet、/en/points、/en/wallet?tab=promo'],
     ['REQ-0014 TC-07 / 13', '(REQ-0017 後「不重新整理再 hover 即更新」改為:本頁 Claim 成功自動更新;外部變動按刷新或切換頁面才更新)模擬控制台 player_demo01 存款 1,000 → 推進流水 3,000 → 前台 /en/wallet?tab=promo 按刷新 → Claim → hover 錢包:OKash +1,000、可領取 −1,000;TC-13:存款後按刷新(鎖定 1,000),推進流水後按刷新(鎖定 0、可領取 1,000)'],
     ['REQ-0014 TC-12 / 15', '模擬控制台「REQ-0014 前台頂部錢包」→ 建立 player_demo18(鎖定 500 + 300、可領取 1,000)→ 下拉與 /en/wallet 卡片:鎖定 800、可領取 1,000;TC-15:player_demo09(105 可領取 2,000)→ 時鐘活動選 105 →「推進到領取期截止後」→ 可領取 0'],

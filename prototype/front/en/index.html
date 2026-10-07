@@ -7,30 +7,66 @@
 <title>OKADA | Home</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap">
 <link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/front.css">
 </head>
 <body>
-<div id="page"></div>
+<main id="page" class="mx-auto w-[calc(100vw-218px)] max-w-main-content fr-main"></main>
 <script src="../../assets/store.js"></script>
 <script src="../../assets/ui.js"></script>
 <script src="../../assets/sim.js"></script>
 <script src="../../assets/front.js"></script>
 <script>
+/* 大廳 /en(REQ-0020:結構與尺寸比照現有前台 /en/main-lobby;遊戲縮圖、Banner 為同尺寸佔位,名稱與金額為假資料) */
 FR.init({ active: 'home', render: function (s, pl) {
-  var esc = Store.esc;
-  var games = ['Demo Slot 1', 'Demo Slot 2', 'Demo Slot 3', 'Demo Slot 4', 'Demo Slot 5'];
-  var tiles = function (prefix) { return '<div class="fr-games">' + games.map(function (g, i) { return '<div class="fr-game">' + esc(prefix + ' ' + (i + 1)) + '<i>GRAND ₱ 0.00</i></div>'; }).join('') + '</div>'; };
-  document.getElementById('page').innerHTML =
-    '<div class="fr-payout"><span class="lb">TOP PAYOUT</span><span class="tx">Player Name: d***o01 · Game Name: Demo Slot 1 · Amount: ₱0.00(假資料)</span></div>' +
-    '<div class="fr-banner"><b>OKADA ONLINE CASINO</b><span>Prototype banner(原型橫幅,假資料)</span></div>' +
-    '<div class="fr-chips">' + ['Provider A', 'Provider B', 'Provider C', 'Provider D', 'Arcade', 'Sport'].map(function (c) { return '<a href="javascript:void(0)">' + c + '</a>'; }).join('') + '</div>' +
-    '<div class="fr-card" style="margin-top:16px"><h2>Prototype front site 原型前台</h2><p>' +
-      (pl ? 'Logged in as <b>' + esc(pl.name) + '</b>. Hover the wallet at the top left to see your 4 wallets(手機版點擊錢包區);click it to open My Wallet.'
-          : 'Please <b>LOGIN</b> (top left) to see your wallet.') + '</p>' +
-      '<p class="meta">原型前台:示範頂部導航錢包下拉、/en/wallet 的優惠錢包與 Claim、/en/promotions 報名;其他前台功能為版面示意。</p></div>' +
-    '<div class="fr-sec-h"><h2>Live Slots</h2><span class="ln"></span><span class="va">View All</span></div>' + tiles('Live Slot') +
-    '<div class="fr-sec-h"><h2>Live Tables</h2><span class="ln"></span><span class="va">View All</span></div>' + tiles('Live Table');
+  var I = FR.icons, esc = Store.esc;
+  var QUICK = ['inferno play', 'pragmatic play', 'jili', 'habanero', 'playtech', 'jdb', 'fachai', 'yellowbat', 'etg', 'zitro', 'nsoft', 'arcade', 'sport', 'fishing', 'bingo', 'Prototype quick access', 'table games', 'skivot', 'omniplay', 'new jumbo', 'Playtech Quick A'];
+  var payouts = [['d***o01', 'Demo Slot Alpha', '2026-10-07 09:12:44', '₱1,250.00'], ['d***o05', 'Demo Table Beta', '2026-10-07 08:40:10', '₱880.00'], ['d***o09', 'Demo Slot Gamma', '2026-10-07 08:02:31', '₱3,400.00']];
+  var entry = function (p) {
+    return '<div class="rfm-child"><div class="payoutEntry"><span class="playerName"><span class="label">Player Name<!---->:</span><span class="value">' + p[0] + '</span></span>' +
+      '<span class="gameName"><span class="label">Game Name<!---->:</span><span class="value">' + p[1] + '</span></span>' +
+      '<span class="dateTime"><span class="label">Date Time<!---->:</span><span class="value">' + p[2] + '</span></span>' +
+      '<span class="amount"><span class="label">Amount<!---->:</span><span class="value font-extrabold">' + p[3] + '</span></span></div></div>';
+  };
+  var kids = payouts.map(entry).join('');
+  // 佔位圖(縮圖):以底色區分;名稱為假資料
+  var PH = ['linear-gradient(160deg,#c62828,#6d0f0f)', 'linear-gradient(160deg,#e0a526,#8a5a00)', 'linear-gradient(160deg,#3b2a8f,#150c45)'];
+  var img = function (i, name) { return '<div class="gameImage relative h-full"><div class="fr-gph" style="background:' + PH[i % 3] + ';color:#fff">' + esc(name) + '</div></div>'; };
+  var jackpot = '<div class="absolute bottom-[15%] left-0"><div class="jackpots"><div class="jackpotMeter mainLobby"><div class="wrapper"><span class="title">Grand</span><span class="runningNumber">₱ 1,234,567.89</span></div></div></div></div>';
+  var slotTile = function (i) {
+    return '<div class="gameTile liveslotTile">' + img(i, 'Demo Slot ' + (i + 1)) + (i ? jackpot : '') +
+      '<div class="GameTileOverlay"><div class="actions hidden"><a class="z-0 group relative fr-tilebtn y" href="javascript:void(0)">Explore</a></div></div></div>';
+  };
+  var rpsTile = function (i) { return '<div class="gameTile rpsTile">' + img(i + 1, 'Demo New ' + (i + 1)) + '<div class="GameTileOverlay"><div class="actions hidden"><a class="z-0 group relative fr-tilebtn y" href="javascript:void(0)">Explore</a></div></div></div>'; };
+  var tableTile = function (i) { return '<div class="gameTile liveTableTile relative">' + img(i + 2, 'Demo Table ' + (i + 1)) + '<div class="GameTileOverlay"><div class="actions hidden"><button type="button" class="z-0 group relative fr-tilebtn y">Play Now</button></div></div></div>'; };
+  var HOT = [0, 1, 16, 20], NEW = [5, 6, 19];
+  var eTile = function (i) {
+    var tag = HOT.indexOf(i) >= 0 ? '<div class="GameTag_gameTag__9a8U1 GameTag_hot__hV5Vn"><span>Hot</span></div>' : NEW.indexOf(i) >= 0 ? '<div class="GameTag_gameTag__9a8U1 GameTag_new__ZibK0"><span>New</span></div>' : '';
+    return '<div class="relative flex flex-col fr-gcard">' + tag + '<div class="gameTile eGameTile cursor-pointer">' + img(i, 'eGame ' + (i + 1)) +
+      '<div class="GameTileOverlay"><button type="button" class="z-0 group relative fav" aria-label="Favorite"><span style="display:block;width:20px;height:20px">' + I.star + '</span></button>' +
+      '<div class="actions hidden"><button type="button" class="z-0 group relative fr-tilebtn y">Play Now</button><button type="button" class="z-0 group relative fr-tilebtn c">Play Demo</button></div></div></div>' +
+      '<span class="line-clamp-1 pt-1 text-center">demo egame ' + (i + 1) + '</span></div>';
+  };
+  var range = function (n, f) { var a = []; for (var i = 0; i < n; i++) a.push(f(i)); return a.join(''); };
+  var section = function (title, big, list, cls) {
+    return '<div class="MainLobbySection_mainLobbySection__m_inW"><div class="MainLobbySection_header__MhlV5"><h2><span class="ic' + (big ? ' lg' : '') + '">' + I.slot + '</span><span>' + title + '</span></h2>' +
+      '<a class="tap-highlight-transparent hover:opacity-hover relative fr-viewall" href="javascript:void(0)">View All</a></div><div class="MainLobbySection_gameList__vVjaJ' + (cls || '') + '">' + list + '</div>';
+  };
+  var mobile = window.matchMedia('(orientation: portrait)').matches;
+  document.getElementById('page').innerHTML = '<div class="flex w-full flex-col fr-lobby">' +
+    '<a class="topPayoutMarquee" href="javascript:void(0)"><div class="marqueeTitle"><span>Top Payout</span></div><div class="marqueeWrapper"><div class="rfm-marquee-container"><div class="rfm-marquee"><div class="rfm-initial-child-container">' + kids + '</div>' + kids + '</div><div class="rfm-marquee" aria-hidden="true">' + kids + kids + '</div></div></div></a>' +
+    '<div class="w-full overflow-hidden rounded-xl fr-banner"><div class="relative h-auto w-full"><div class="flex h-auto w-full"><div class="relative flex h-full"><div class="ph-txt">OKADA ONLINE<small>Banner placeholder 原型橫幅佔位(假資料)</small></div></div></div>' +
+      '<button type="button" class="absolute left-2 top-1/2 nav" aria-label="Previous">' + I.chevL + '</button><button type="button" class="absolute right-2 top-1/2 nav" aria-label="Next">' + I.chevR + '</button></div></div>' +
+    '<div class="QuickAccessCarousel_quickAccessCarousel__UfJlP"><button type="button" class="QuickAccessCarousel_navButton__E39uV" aria-label="Previous">' + I.chevL + '</button><div class="QuickAccessCarousel_scroller__4Iye7"><div class="QuickAccessCarousel_buttonWrapper__42j3A">' +
+      QUICK.map(function (q) { return '<a class="z-0 group relative fr-chip" href="javascript:void(0)">' + esc(q) + '</a>'; }).join('') + '</div></div><button type="button" class="QuickAccessCarousel_navButton__E39uV" aria-label="Next">' + I.chevR + '</button></div>' +
+    section('Live Slots', false, range(4, slotTile)) + '</div>' +
+    section('Live Slots - New', false, range(2, rpsTile)) + '</div>' +
+    section('Live Tables', true, range(3, tableTile)) + '</div>' +
+    section('eGaming', true, range(32, eTile), ' fr-egame') +
+      '<div class="MainLobbySection_loadMoreSection___UlbA"><div><div class="fr-progress" role="progressbar" aria-label="Loaded games"><div class="z-0 relative overflow-hidden track"><div class="h-full rounded-full transition-transform fill" style="transform:translateX(' + (mobile ? '-99.2%' : '-97.5%') + ')"></div></div></div>' +
+      '<div class="MainLobbySection_label__AEdZw">Displaying ' + (mobile ? 12 : 32) + ' of 960 games</div></div><button type="button" class="z-0 group relative fr-gold sm">Load More</button></div><div class="h-8 w-full"></div><div class="fr-sentinel" aria-hidden="true" style="height:1px"></div></div>' +
+    '</div>';
 } });
 </script>
 </body>
