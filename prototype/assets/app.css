@@ -131,10 +131,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .sim-msg { font-size: 12px; margin-top: 4px; }
 
 /* ---- 前台(REQ-0014:比照現有前台 okada-dev-ooc-2 的版面、配色、字體;2026-10-07 量測) ----
- * 字體 Montserrat;頂部導航 #98116D(高 66 + 跑馬燈 32 = 98px;手機 61 + 30);側欄 / 跑馬燈 #580A3F;更深 #33092B;
+ * 字體 Montserrat;頂部導航主列 #33092B(#580A3F 系,依 TC-02;不用現有前台的 #98116D)(高 66 + 跑馬燈 32 = 98px;手機 61 + 30);側欄 / 跑馬燈 #580A3F;更深 #33092B;
  * 金色文字 #F2E4B1;主內容底 #ECECEC;區塊標題 #580A3F 18px/600;頁尾 #1A1A1A;按鈕圓角 8px;側欄選單圓角 16px */
 body.front {
-  --fr-top: #98116D; --fr-plum: #580A3F; --fr-deep: #33092B; --fr-gold: #F2E4B1; --fr-gold-2: #C9BD99; --fr-gold-line: #EBC94B;
+  --fr-top: #33092B; --fr-plum: #580A3F; --fr-deep: #33092B; --fr-gold: #F2E4B1; --fr-gold-2: #C9BD99; --fr-gold-line: #EBC94B;
   --fr-bg: #ECECEC; --fr-ink: #11181C; --fr-muted: #6b5d66; --fr-card: #fff; --fr-line: #e1d7dd;
   font-family: Montserrat, "Montserrat Fallback", "Segoe UI", system-ui, "Microsoft JhengHei", sans-serif;
   background: var(--fr-bg); color: var(--fr-ink); font-size: 14px;
@@ -228,7 +228,7 @@ body.front {
 .fr-payout { display: flex; height: 32px; border-radius: 8px; overflow: hidden; background: #F5E9C2; margin-bottom: 16px; }
 .fr-payout .lb { background: var(--fr-plum); color: var(--fr-gold); font-weight: 600; font-size: 14.4px; padding: 0 24px; display: flex; align-items: center; white-space: nowrap; }
 .fr-payout .tx { display: flex; align-items: center; padding: 0 16px; font-size: 14px; color: var(--fr-deep); white-space: nowrap; overflow: hidden; }
-.fr-banner { border-radius: 16px; min-height: 220px; background: radial-gradient(circle at 75% 40%, #c03ab0 0, transparent 45%), linear-gradient(120deg, #2a0b4a, #6b1374 55%, #98116D); color: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 18px; }
+.fr-banner { border-radius: 16px; min-height: 220px; background: radial-gradient(circle at 75% 40%, rgba(242,228,177,.18) 0, transparent 45%), linear-gradient(120deg, #33092B, #580A3F 55%, #6E1450); color: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 18px; }
 .fr-banner b { font-size: 34px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,.4); }
 .fr-banner span { color: var(--fr-gold); font-weight: 700; margin-top: 8px; }
 .fr-chips { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -316,7 +316,7 @@ body.front {
   .fr-mask-side.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 47; }
   .fr-main { padding: 16px 16px 90px; }
   .fr-foot { padding-bottom: 90px; }
-  .fr-mbar { display: grid; grid-template-columns: 1fr 1fr 1fr; position: fixed; left: 0; right: 0; bottom: 0; height: 65px; z-index: 44; background: linear-gradient(#98116D, #580A3F); color: var(--fr-gold); }
+  .fr-mbar { display: grid; grid-template-columns: 1fr 1fr 1fr; position: fixed; left: 0; right: 0; bottom: 0; height: 65px; z-index: 44; background: linear-gradient(#580A3F, #33092B); color: var(--fr-gold); }
   .fr-mbar a, .fr-mbar button { font: inherit; background: none; border: 0; color: var(--fr-gold) !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; font-weight: 700; text-decoration: none !important; cursor: pointer; }
   .fr-mbar svg { width: 24px; height: 24px; }
   .fr-mbar .games { position: relative; }
