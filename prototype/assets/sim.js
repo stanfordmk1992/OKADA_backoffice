@@ -54,8 +54,18 @@
     '<div class="small muted">不經促銷設定表單,直接呼叫後端儲存,三項都應被拒絕,活動不會建立 / 修改(TC-06)。</div>' +
     '<div class="row"><button class="btn" data-act="pwBadPayout">直接呼叫儲存:新增活動,派發錢包 = bonus_wallet(不存在的值)</button></div>' +
     '<div class="row"><button class="btn" data-act="pwOkashClaim">直接呼叫儲存:新增活動,OKash Balance + 領取期 3 天</button></div>' +
-    '<div class="row"><button class="btn" data-act="pwLockedEdit">直接呼叫儲存:把 105(仍有可領取獎勵)的派發錢包改成 OKash Balance</button></div>' +
-    '<div class="small muted">105 預設有 player_demo09、player_demo17 的可領取獎勵;這些獎勵全部領取 / 作廢 / 取消後,第 3 項就會成功(符合 TC-05「獎勵全部結束後可修改」)。</div>' +
+    '<div class="row"><button class="btn" data-act="pwLockedEdit">直接呼叫儲存:把 105 的派發錢包改成 OKash Balance</button></div>' +
+    '<div class="small muted">REQ-0019 後:105 已開始,第 3 項一律被拒絕(「活動已開始,不可修改派發錢包」);REQ-0016 TC-05「獎勵全部結束後可修改」改以 REQ-0019 驗證。</div>' +
+    '</fieldset>' +
+    '<fieldset><legend>REQ-0019 活動開始後不可修改派發錢包 / 領取期</legend>' +
+    '<div class="small muted">109「Future Reload 25% (Not Started)」10-08 00:00:00 開始(Promo Wallet、領取期 2 天);預設時鐘 10-07 10:00 尚未開始,可修改。時鐘只能往後。</div>' +
+    '<div class="row"><button class="btn" data-act="r19Before">時鐘 → 109 開始前 1 秒(2026-10-07 23:59:59)</button></div>' +
+    '<div class="row"><button class="btn" data-act="r19At">時鐘 → 109 開始當下(2026-10-08 00:00:00)</button></div>' +
+    '<div class="small muted">繞過表單直接呼叫後端儲存(TC-05 / TC-08):已開始的活動都應被拒絕、值不變;未開始(109 在 10-08 前)應成功。</div>' +
+    '<div class="row"><button class="btn" data-act="r19Payout">直接呼叫儲存:把 101(已開始)的派發錢包改成 OKash Balance</button></div>' +
+    '<div class="row"><button class="btn" data-act="r19Claim">直接呼叫儲存:把 101(已開始,Promo Wallet)的領取期改成 5 天</button></div>' +
+    '<div class="row"><button class="btn" data-act="r19Pct">直接呼叫儲存:把 101(已開始)的百分比改成 90%(其他欄位,應成功)</button></div>' +
+    '<div class="row"><button class="btn" data-act="r19Future">直接呼叫儲存:把 109 的領取期改成 3 天(未開始應成功;開始後應被拒絕)</button></div>' +
     '</fieldset>' +
     '<fieldset><legend>5. 資料</legend><div class="row"><button class="btn err" data-act="reset">重設所有資料(回到預設假資料)</button></div></fieldset>' +
     '<div class="sim-msg" role="status"></div>' +
@@ -141,6 +151,12 @@
           : { id: 105, payout: 'igaming_credit', claimDays: null };
         S.savePromo(s, data, user);
       }, a === 'pwLockedEdit' ? '儲存成功:105 已沒有未結束的獎勵,派發錢包改為 OKash Balance' : '儲存成功(不應發生)');
+      if (a === 'r19Before' || a === 'r19At') run(function (s) { var t = S.parseDT(a === 'r19Before' ? '2026-10-07 23:59:59' : '2026-10-08 00:00:00'); if (t < s.now) throw new Error('目前時鐘已晚於 ' + S.fmt(t) + '(時鐘只能往後,請重設資料)'); if (t > s.now) S.setNow(s, t); S.tick(s); }, a === 'r19Before' ? '時鐘 = 2026-10-07 23:59:59(109 尚未開始)' : '時鐘 = 2026-10-08 00:00:00(109 已開始)');
+      if (a === 'r19Payout' || a === 'r19Claim' || a === 'r19Pct' || a === 'r19Future') run(function (s) {
+        var user = S.ROLES[s.role].user;
+        var data = a === 'r19Payout' ? { id: 101, payout: 'igaming_credit', claimDays: null } : a === 'r19Claim' ? { id: 101, claimDays: 5 } : a === 'r19Pct' ? { id: 101, pct: 90 } : { id: 109, claimDays: 3 };
+        S.savePromo(s, data, user);
+      }, a === 'r19Pct' ? '儲存成功:101 百分比 = 90%(派發錢包 / 領取期不變)' : a === 'r19Future' ? '儲存成功:109 尚未開始,領取期 = 3 天' : '儲存成功(不應發生)');
       if (a === 'tc12') run(function (s) { S.addTc12Player(s); }, '已建立 player_demo18 並登入前台(鎖定 800、可領取 1,000)');
       if (a === 'reset') { if (confirm('確定重設所有原型資料?')) { S.reset(); msg('已重設'); } }
       if (a === 'dblclaim') {

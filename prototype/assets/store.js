@@ -2,7 +2,7 @@
  * 全部為假資料。時間一律以 UTC+8 顯示;模擬時鐘存在 state.now。 */
 (function () {
   'use strict';
-  var KEY = 'okada_proto_req0008_v7'; // v7:REQ-0016 派發錢包三選一,經由優惠錢包的活動派發錢包改為 Promo Wallet // v6:REQ-0015 經由優惠錢包的活動一律派發 OKash Balance(102、105 改 OKash)、新增 108 直接派發 + Free Play (HALO) // v5:REQ-0014 前台 Table / Slot Bonus Credit 假資料、TC-12 測試玩家 // v4:REQ-0013 日界測試派彩假資料 // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
+  var KEY = 'okada_proto_req0008_v8'; // v8:REQ-0019 新增未開始的活動 109(Promo Wallet,10-08 開始),驗證「活動開始後不可修改派發錢包 / 領取期」 // v7: v7:REQ-0016 派發錢包三選一,經由優惠錢包的活動派發錢包改為 Promo Wallet // v6:REQ-0015 經由優惠錢包的活動一律派發 OKash Balance(102、105 改 OKash)、新增 108 直接派發 + Free Play (HALO) // v5:REQ-0014 前台 Table / Slot Bonus Credit 假資料、TC-12 測試玩家 // v4:REQ-0013 日界測試派彩假資料 // v2:REQ-0011 交易紀錄加 Reward ID / 交易編號;v3:REQ-0012 假資料符合「存款任務同時只能參加一個」
   var TZ = 8 * 3600e3;
   var DAY = 86400e3;
   var ROOT = document.documentElement.getAttribute('data-root') || '';
@@ -359,7 +359,10 @@
   /** REQ-0016 後端檢查訊息 */
   var PAYOUT_INVALID_MSG = 'Invalid Payout Method.(派發錢包只能是 OKash Balance、Free Play (HALO)、Promo Wallet)';
   var CLAIM_ONLY_PW_MSG = 'Claim period is only allowed when Payout Method = Promo Wallet.(只有派發錢包 = Promo Wallet 才能設定領取期)';
-  var PAYOUT_LOCKED_MSG = '此活動仍有未結束的優惠錢包獎勵,不可修改派發錢包(This promotion still has locked or claimable Promo Wallet rewards; Payout Method cannot be changed)';
+  // REQ-0019(取代 REQ-0016「有未結束獎勵才鎖」):活動開始(Start Date 00:00:00 UTC+8)後,派發錢包與領取期一律不可修改
+  var PAYOUT_LOCKED_MSG = '活動已開始,不可修改派發錢包(The promotion has started; Payout Method cannot be changed)';
+  var CLAIM_LOCKED_MSG = '活動已開始,不可修改領取期(The promotion has started; claim period cannot be changed)';
+  function promoStarted(s, p) { return !!p && s.now >= promoStart(p); }
   function savePromo(s, data, user) {
     var p;
     if (data.id && !promo(s, data.id)) throw new Error('找不到活動');
@@ -370,8 +373,9 @@
     if (PAYOUT_OPTIONS.indexOf(merged.payout) < 0) throw new Error(PAYOUT_INVALID_MSG);
     // REQ-0015 / 0016:舊格式「經由優惠錢包 + 非 Promo Wallet」(例:+ HALO)或與派發錢包矛盾的派發方式一律拒絕
     if (data.distribution != null && data.distribution !== distOf(merged)) throw new Error(data.distribution === 'promo_wallet' ? PW_HALO_MSG : 'Distribution is derived from Payout Method.(派發方式由派發錢包決定)');
-    // REQ-0016:有鎖定中或可領取的獎勵時不可修改派發錢包
-    if (cur && data.payout != null && data.payout !== cur.payout && hasOpenRewards(s, cur.id)) throw new Error(PAYOUT_LOCKED_MSG);
+    // REQ-0019:活動已開始(以目前儲存的 Start Date 判斷)→ 不可修改派發錢包(取代 REQ-0016 有未結束獎勵才鎖的規則)
+    var started = !!cur && promoStarted(s, cur);
+    if (started && data.payout != null && data.payout !== cur.payout) throw new Error(PAYOUT_LOCKED_MSG);
     // REQ-0016:領取期只在 Promo Wallet 時有值;規則同 REQ-0008(End of Promotion ≥ 1;Instant 可 0)
     var hasCd = function (v) { return v != null && v !== ''; };
     if (merged.payout !== 'promo_wallet') {
@@ -383,6 +387,9 @@
       if (merged.freq === 'end_of_promotion' && Number(cd) < 1) throw new Error('Claim period must be at least 1 day for End of Promotion(派彩頻率 End of Promotion 時,領取期至少 1 天)');
       data.claimDays = Number(cd);
     }
+    // REQ-0019:活動已開始 → 領取期也不可修改(含繞過表單直接呼叫)
+    var curCd = cur ? (cur.claimDays == null ? null : Number(cur.claimDays)) : null;
+    if (started && 'claimDays' in data && (data.claimDays == null ? null : Number(data.claimDays)) !== curCd) throw new Error(CLAIM_LOCKED_MSG);
     data.distribution = distOf(merged);
     if (data.id) {
       p = promo(s, data.id); Object.assign(p, data); p.updatedAt = s.now; p.updatedBy = user;
@@ -540,8 +547,10 @@
     s.promos.push(P({ id: 106, name: 'Turnover Challenge (No Deposit Requirement)', from: '2026-10-01', to: '2026-10-31', min: null, max: null, depOption: '', freq: 'instant', payout: 'igaming_credit', pct: 10, maxCampaign: 500, turnover: 5000, tierPoints: 0, claimDays: null }));
     // REQ-0015 TC-09:直接派發 + Free Play (HALO) 的活動(達標後直接派彩到 HALO,不進優惠錢包)
     s.promos.push(P({ id: 108, name: 'Free Play Direct 50% (HALO)', from: '2026-10-01', to: '2026-10-31', min: 500, max: 10000, freq: 'instant', payout: 'free_play_halo', pct: 50, maxCampaign: 1000, turnover: 1000, tierPoints: 0, claimDays: null }));
+    // REQ-0019:尚未開始的活動(10-08 00:00:00 開始;預設時鐘 10-07 10:00),派發錢包 / 領取期仍可修改
+    s.promos.push(P({ id: 109, name: 'Future Reload 25% (Not Started)', from: '2026-10-08', to: '2026-10-20', min: 500, max: 10000, freq: 'instant', payout: 'promo_wallet', pct: 25, maxCampaign: 1000, turnover: 1000, tierPoints: 0, claimDays: 2 }));
     s.promos.sort(function (a, b) { return a.id - b.id; });
-    s.seq.promo = 8;
+    s.seq.promo = 9;
     function at(str) { s.now = parseDT(str); tick(s); }
     var rw = function (pid, promoId) { return s.rewards.find(function (r) { return r.playerId === pid && r.promoId === promoId; }).id; };
     // 歷史:player_demo08 先參加 103 並領取,之後才報名 104(直接派發)並派彩(REQ-0012:存款任務一次只能參加一個)
@@ -596,7 +605,7 @@
 
   window.Store = {
     KEY: KEY, DAY: DAY, ROOT: ROOT, PAYOUT: PAYOUT, PAYOUT_OPTIONS: PAYOUT_OPTIONS, PW_CREDIT: PW_CREDIT, distOf: distOf, hasOpenRewards: hasOpenRewards,
-    PAYOUT_INVALID_MSG: PAYOUT_INVALID_MSG, CLAIM_ONLY_PW_MSG: CLAIM_ONLY_PW_MSG, PAYOUT_LOCKED_MSG: PAYOUT_LOCKED_MSG, FREQ: FREQ, DIST: DIST, STATUS: STATUS, WALLET_TYPES: WALLET_TYPES, PROVIDERS: PROVIDERS,
+    PAYOUT_INVALID_MSG: PAYOUT_INVALID_MSG, CLAIM_ONLY_PW_MSG: CLAIM_ONLY_PW_MSG, PAYOUT_LOCKED_MSG: PAYOUT_LOCKED_MSG, CLAIM_LOCKED_MSG: CLAIM_LOCKED_MSG, promoStarted: promoStarted, FREQ: FREQ, DIST: DIST, STATUS: STATUS, WALLET_TYPES: WALLET_TYPES, PROVIDERS: PROVIDERS,
     RANKS: RANKS, DEP_OPTIONS: DEP_OPTIONS, TX: TX, ROLES: ROLES,
     fmt: fmt, fmtDate: fmtDate, dayStart: dayStart, dayEnd: dayEnd, parseDT: parseDT, money: money, esc: esc, round2: round2,
     load: load, save: save, mutate: mutate, reset: reset, onChange: onChange, tick: tick,

@@ -11,7 +11,7 @@
 <div id="page">
   <div class="card">
     <h1>OKADA 後台原型</h1>
-    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance + REQ-0016 派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet)+ REQ-0017 前台頂部餘額只在進入頁面、按刷新、本頁 Claim 成功後讀取 + REQ-0020 原型前台樣式與元件與現有前台零誤差 + REQ-0018 前台非導航元素配色改為現有前台的顏色 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance + REQ-0016 派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet)+ REQ-0017 前台頂部餘額只在進入頁面、按刷新、本頁 Claim 成功後讀取 + REQ-0020 原型前台樣式與元件與現有前台零誤差 + REQ-0018 前台非導航元素配色改為現有前台的顏色 + REQ-0019 活動開始後不可修改派發錢包與領取期 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
     <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
       <div>
         <h2>頁面清單</h2>
@@ -36,7 +36,7 @@
     ['後台 · 促銷活動 M04', [
       ['promotions/settings/list.html', 'Promotion Settings 列表', '/promotions/settings/list', 'REQ-0016:Payout Method 欄顯示三種派發錢包(Promo Wallet 另顯示領取期、Claim 後入帳 OKash Balance)'],
       ['promotions/settings/add.html', 'Promotion Settings 新增', '/promotions/settings/add', 'REQ-0016:派發錢包三選一(OKash Balance / Free Play (HALO) / Promo Wallet),無獨立派發方式欄位;Promo Wallet 才顯示領取期'],
-      ['promotions/settings/update.html?id=101', 'Promotion Settings 編輯', '/promotions/settings/update/:id', '同新增表單;REQ-0016 有鎖定中 / 可領取獎勵時派發錢包唯讀並顯示原因'],
+      ['promotions/settings/update.html?id=101', 'Promotion Settings 編輯', '/promotions/settings/update/:id', '同新增表單;REQ-0019 活動開始後派發錢包與領取期唯讀並顯示原因(取代 REQ-0016 有未結束獎勵才鎖)'],
       ['promotions/settings/view.html?id=102', 'Promotion Settings 詳情', '/promotions/settings/view/:id', ''],
       ['promotions/opt-in/list.html', 'Promotion Opt-In List', '/promotions/opt-in/list', '任務進度、對應獎勵'],
       ['promotions/payout/list.html', 'Promotion Payout', '/promotions/payout/list', '新增 Distribution 欄;REQ-0011 Reward ID;REQ-0013 Payout Date 日期篩選']]],
@@ -101,8 +101,12 @@
     ['REQ-0015 TC-09', '模擬控制台選 player_demo06(已報名 108:直接派發 + Free Play (HALO)、50%、上限 1,000、流水 1,000)→ 存款 1,000 → 推進流水 1,000 → 直接派彩 500 到 HALO:' + PAY + ' 派彩方式 Free Play (HaLo)、Distribution Direct Payout;/en/points Free Play +500;不進優惠錢包'],
     ['REQ-0016 TC-01 / 04', '<a href="promotions/settings/add.html">新增</a>:Payout Method 下拉三個選項 OKash Balance、Free Play (HALO)、Promo Wallet,沒有派發方式欄位;三種各新增一個 → <a href="promotions/settings/list.html">列表</a> Payout Method 欄與詳情 Payment Method 分別顯示三種值'],
     ['REQ-0016 TC-02 / 03', '新增選 Promo Wallet → 出現「活動結束後領取期(天)」;End of Promotion 填 0 或空白 → 無法儲存;Instant 可填 0;填領取期後改選 OKash Balance / Free Play (HALO) → 領取期隱藏並清空,儲存為直接派發(詳情 Claim Period 為 —)'],
-    ['REQ-0016 TC-05', '<a href="promotions/settings/update.html?id=105">編輯 105</a>(player_demo09 / 17 可領取)或 <a href="promotions/settings/update.html?id=103">103</a>(player_demo05 鎖定中)→ 派發錢包唯讀並顯示「此活動仍有未結束的優惠錢包獎勵,不可修改派發錢包」;<a href="promotions/settings/update.html?id=102">102</a>(尚無獎勵)、<a href="promotions/settings/update.html?id=107">107</a>(全部已作廢)可修改。獎勵全部結束:' + PWL + ' 取消 103 的鎖定中獎勵(player_demo05)後,再開編輯 103 即可修改'],
+    ['REQ-0016 TC-05', '<b>已被 REQ-0019 取代</b>(活動開始後一律不可修改派發錢包,不再以「是否有未結束獎勵」判斷;「獎勵全部結束後可修改」不再成立)→ 改以 REQ-0019 TC-01~08 驗證。REQ-0016 其他 TC 可用未開始的 <a href="promotions/settings/update.html?id=109">109</a> 或新增的活動操作'],
     ['REQ-0016 TC-06', '模擬控制台「REQ-0016 後端檢查」三個按鈕(不存在的派發錢包值、OKash Balance + 領取期、把 105 的派發錢包改成 OKash Balance)→ 全部被拒絕,列表沒有新增活動、105 仍為 Promo Wallet'],
+    ['REQ-0019 說明', '活動開始(Start Date 00:00:00 UTC+8,依模擬時鐘)後,編輯頁派發錢包與領取期唯讀並顯示「活動已開始,不可修改派發錢包」「活動已開始,不可修改領取期」;後端 savePromo 一併拒絕;其他欄位仍可改。預設時鐘 2026-10-07 10:00:101~108 皆已開始,<b>109 Future Reload 25% (Not Started)</b>(Promo Wallet、領取期 2 天)10-08 00:00:00 開始'],
+    ['REQ-0019 TC-01 / 07', 'TC-01:<a href="promotions/settings/update.html?id=109">編輯 109</a> → 派發錢包可改並儲存。TC-07:模擬控制台「REQ-0019」→「時鐘 → 109 開始前 1 秒」→ 109 可改(或按「把 109 的領取期改成 3 天」成功)→「時鐘 → 109 開始當下」→ 再開編輯 109:唯讀;「把 109 的領取期改成 3 天」被拒絕'],
+    ['REQ-0019 TC-02~04 / 06', 'TC-02:<a href="promotions/settings/update.html?id=101">編輯 101</a> / <a href="promotions/settings/update.html?id=105">105</a>(已開始)→ 唯讀 + 原因。TC-03:<a href="promotions/settings/update.html?id=107">107</a>(獎勵全部已作廢)或 <a href="promotions/settings/update.html?id=102">102</a>(已開始、無獎勵)仍唯讀。TC-04:107 已結束 → 仍唯讀。TC-06:編輯 101 改 Percentage 後 Save → 成功'],
+    ['REQ-0019 TC-05 / 08', '模擬控制台「REQ-0019」:「把 101 的派發錢包改成 OKash Balance」「把 101 的領取期改成 5 天」→ 皆被拒絕、值不變;「把 101 的百分比改成 90%」→ 成功(其他欄位可改)'],
     ['REQ-0016 TC-07', '同 REQ-0015 TC-07:player_demo01 存款 1,000 → 流水 3,000 → 前台 Claim → OKash +1,000;' + PAY + ' 派彩方式 OKash Balance、Distribution Via Promo Wallet'],
     ['REQ-0016 TC-08', 'REQ-0015 TC-09(108 HALO 直接派彩)、REQ-0012 TC-06(104 OKash 直接派彩)、REQ-0008 TC-15 對帳照舊'],
     ['REQ-0013 TC-07', '欄位標題點擊排序(ID、Player ID、Promotion Name、Payout Amount、Payout Method、Payout Date、Status)、Items per page 與分頁、每列 View(比照實機 M04-P02 重現)']
