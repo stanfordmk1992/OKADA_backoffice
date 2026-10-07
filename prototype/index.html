@@ -11,14 +11,14 @@
 <div id="page">
   <div class="card">
     <h1>OKADA 後台原型</h1>
-    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)+ REQ-0011 領取紀錄可追溯 + REQ-0012 存款任務同時只能參加一個 + REQ-0013 派彩紀錄日期篩選 + REQ-0015 經由優惠錢包只能派發 OKash Balance · 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
     <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
       <div>
         <h2>頁面清單</h2>
         <div id="pages"></div>
         <h2 style="margin-top:20px">預設假資料(測試情境)</h2>
         <div id="scenarios"></div>
-        <h2 style="margin-top:20px">REQ-0011~0013 測試指引</h2>
+        <h2 style="margin-top:20px">REQ-0011~0015 測試指引</h2>
         <div id="guide"></div>
       </div>
       <div id="sim-inline" style="background:#fffdf9;border:1px solid #f1d9bd;border-radius:8px;padding:12px 14px"></div>
@@ -35,7 +35,7 @@
   var PAGES = [
     ['後台 · 促銷活動 M04', [
       ['promotions/settings/list.html', 'Promotion Settings 列表', '/promotions/settings/list', '新增欄位 Distribution'],
-      ['promotions/settings/add.html', 'Promotion Settings 新增', '/promotions/settings/add', '派發錢包、派發方式、領取期與驗證'],
+      ['promotions/settings/add.html', 'Promotion Settings 新增', '/promotions/settings/add', '派發錢包、派發方式、領取期與驗證;REQ-0015 選 OKash Balance 才顯示派發方式'],
       ['promotions/settings/update.html?id=101', 'Promotion Settings 編輯', '/promotions/settings/update/:id', '同新增表單'],
       ['promotions/settings/view.html?id=102', 'Promotion Settings 詳情', '/promotions/settings/view/:id', ''],
       ['promotions/opt-in/list.html', 'Promotion Opt-In List', '/promotions/opt-in/list', '任務進度、對應獎勵'],
@@ -61,14 +61,14 @@
   var FT = '<a href="reports/fund-transaction/list.html">Fund Transactions Report</a>', PWL = '<a href="wallets/promo-wallet/list.html">Promo Wallet</a>', PAY = '<a href="promotions/payout/list.html">Promotion Payout</a>';
   var GUIDE = [
     ['REQ-0011 TC-01', '模擬控制台選 player_demo01 → 存款 1,000 → 推進流水 3,000(可領取)→ 前台 <a href="front/en/wallet.html">/en/wallet</a> Claim → ' + FT + ' 以 Reward ID 查詢:Reward Claimed(優惠錢包餘額)+ Bonus Payout(OKash Balance 餘額)'],
-    ['REQ-0011 TC-02', 'player_demo06(105,Free Play (HALO))存款 1,000 → 流水 1,000 → 前台登入 player_demo06 Claim → ' + FT + ' 只有 Reward Claimed,沒有 Bonus Payout'],
+    ['REQ-0011 TC-02', '已被 REQ-0015 取代(經由優惠錢包不再派發到 HALO);預設資料沒有經由優惠錢包 + HALO 的活動'],
     ['REQ-0011 TC-03', FT + ':Player ID = player_demo10、Transaction Type = Promo Wallet - All → 每筆 Before = 上一筆 After,最後 0(也可自行重做一次)'],
     ['REQ-0011 TC-04', FT + ':Reward ID = player_demo10 的 101 獎勵(' + PWL + ' 查 player_demo10 可看編號)→ 只列 Issued、Claimed、Bonus Payout 三筆'],
     ['REQ-0011 TC-05 / 06', PWL + ' → player_demo10 → 各獎勵 View → 「Trace Chain 追溯鏈」;點任一節點跳到對應紀錄'],
     ['REQ-0011 TC-07', PAY + ' 的 Reward ID 欄(經由優惠錢包才有)→ 點擊開啟該獎勵詳情;直接派發(104)為空白'],
     ['REQ-0011 TC-08', '<a href="reports/promo-wallet/list.html">Promo Wallet Report</a>、<a href="reports/cashless-liability/list.html">Cashless Liability</a>;player_demo07(104 直接派發)達標後只有 Bonus Payout(Ref PO-n),沒有 Reward Claimed'],
-    ['REQ-0012 說明', '存款任務活動 = 有 Min/Max Deposit 的活動(101~105、107);106 為無存款條件的測試活動(現行後台表單無法建立,本原型不模擬其派彩)。前台 <a href="front/en/promotions.html">/en/promotions</a> 以「前台登入玩家」顯示;模擬控制台「玩家行為」會顯示該玩家「進行中的存款活動」'],
-    ['REQ-0012 TC-01', '前台登入 player_demo02(已報名 101 未存款)→ /en/promotions:102、103、104、105 的 Opt-In 不可用並顯示「你已有進行中的存款活動:Promo Wallet Welcome 100%」'],
+    ['REQ-0012 說明', '存款任務活動 = 有 Min/Max Deposit 的活動(101~105、107、108);106 為無存款條件的測試活動(現行後台表單無法建立,本原型不模擬其派彩)。前台 <a href="front/en/promotions.html">/en/promotions</a> 以「前台登入玩家」顯示;模擬控制台「玩家行為」會顯示該玩家「進行中的存款活動」'],
+    ['REQ-0012 TC-01', '前台登入 player_demo02(已報名 101 未存款)→ /en/promotions:102、103、104、105、108 的 Opt-In 不可用並顯示「你已有進行中的存款活動:Promo Wallet Welcome 100%」'],
     ['REQ-0012 TC-02 / 03', '前台登入 player_demo05(103 鎖定中)/ player_demo09(105 可領取)→ /en/promotions 其他存款活動不可報名'],
     ['REQ-0012 TC-04', '前台登入 player_demo08(已領取)/ player_demo11(已作廢)/ player_demo12(已取消)→ 可報名 101 等存款活動'],
     ['REQ-0012 TC-05', '前台登入 player_demo13(107 已結束、未參加成功)→ 可報名'],
@@ -86,6 +86,11 @@
     ['REQ-0014 TC-12 / 15', '模擬控制台「REQ-0014 前台頂部錢包」→ 建立 player_demo18(鎖定 500 + 300、可領取 1,000)→ 下拉與 /en/wallet 卡片:鎖定 800、可領取 1,000;TC-15:player_demo09(105 可領取 2,000)→ 時鐘活動選 105 →「推進到領取期截止後」→ 可領取 0'],
     ['REQ-0014 TC-14', '瀏覽器寬 390(手機):點頂部錢包區展開,再點一次或點下拉框外收起;底部 Browse / Games / Promo 列'],
     ['REQ-0014 TC-16', '前台頁面開著不重新整理 → 模擬控制台存款 1,000(或 Table / Slot Bonus Credit +100)→ 頂部 ₱ 不變 → 按錢包旁刷新(轉圈約 0.8 秒)→ 頂部 ₱ 與下拉 4 個錢包都是最新值'],
+    ['REQ-0015 TC-01~04', '<a href="promotions/settings/add.html">新增</a> / <a href="promotions/settings/update.html?id=101">編輯 101</a>:派發錢包未選 → 不顯示派發方式;選 OKash Balance → 顯示直接派發 / 經由優惠錢包(經由優惠錢包才顯示領取期);選 Free Play (HALO) → 隱藏,儲存為直接派發;OKash + 經由優惠錢包 + 領取期 → 改 HALO → 改回 OKash:派發方式回到直接派發、領取期空白'],
+    ['REQ-0015 TC-05', '模擬控制台「REQ-0015 後端檢查」→「新增 Via Promo Wallet + HALO」或「把 101 改成 HALO」→ 被拒絕;<a href="promotions/settings/list.html">列表</a>沒有新增活動、101 仍為 OKash Balance'],
+    ['REQ-0015 TC-06 / 10', '<a href="promotions/settings/list.html">Promotion Settings 列表</a> / 詳情:經由優惠錢包的活動(101、102、103、105、107)派發錢包都是 OKash Balance;' + PWL + ' 總覽與獎勵詳情、前台 <a href="front/en/wallet.html?tab=promo">/en/wallet Promo Wallet</a> 的派發錢包都是 OKash Balance'],
+    ['REQ-0015 TC-07 / 08', 'player_demo01 存款 1,000 → 流水 3,000 → 前台 Claim → OKash +1,000,' + FT + ' 有 Reward Claimed + Bonus Payout(Promo Wallet → OKash Balance),' + PAY + ' 派彩方式 OKash Balance,<a href="front/en/points.html">/en/points</a> Free Play 不變;TC-08:<a href="reports/promo-wallet/list.html">Promo Wallet Report</a> 任一期間的 Claimed = ' + PAY + ' 同期 Via Promo Wallet 合計 = ' + FT + ' 同期 Bonus Payout(From Promo Wallet)合計'],
+    ['REQ-0015 TC-09', '模擬控制台選 player_demo06(已報名 108:直接派發 + Free Play (HALO)、50%、上限 1,000、流水 1,000)→ 存款 1,000 → 推進流水 1,000 → 直接派彩 500 到 HALO:' + PAY + ' 派彩方式 Free Play (HaLo)、Distribution Direct Payout;/en/points Free Play +500;不進優惠錢包'],
     ['REQ-0013 TC-07', '欄位標題點擊排序(ID、Player ID、Promotion Name、Payout Amount、Payout Method、Payout Date、Status)、Items per page 與分頁、每列 View(比照實機 M04-P02 重現)']
   ];
   document.getElementById('pages').innerHTML = PAGES.map(function (g) {
@@ -99,9 +104,9 @@
     ['player_demo01', '已報名 101(Instant、OKash、經由優惠錢包、100%、上限 5,000、流水 3,000、領取期 0 天),尚未存款', 'TC-02/03/04b/06/07/08/10/22'],
     ['player_demo02', '已報名 101,尚未存款', 'TC-04'],
     ['player_demo03', '已報名 101,尚未存款', 'TC-05'],
-    ['player_demo04', '已報名 102(End of Promotion、HALO、50%、流水 2,000、等級點數 50、領取期 3 天,10-12 結束)', 'TC-09/21'],
+    ['player_demo04', '已報名 102(End of Promotion、OKash、經由優惠錢包、50%、流水 2,000、等級點數 50、領取期 3 天,10-12 結束)', 'TC-21'],
     ['player_demo05', '103 一筆鎖定中(400);10-10 結束、領取期 1 天', 'TC-13/14(與 demo09 合看);REQ-0012 TC-02'],
-    ['player_demo06', '已報名 105(Instant、HALO、流水 1,000、領取期 1 天)', 'TC-09'],
+    ['player_demo06', '已報名 108(直接派發、Instant、Free Play (HALO)、50%、上限 1,000、流水 1,000)', 'REQ-0015 TC-09(HALO 直接派彩)'],
     ['player_demo07', '已報名 104(直接派發、Instant、OKash、30%、流水 2,000)', 'TC-17'],
     ['player_demo08', '歷史資料:103 已領取 1,000 → 之後才報名 104,直接派彩 1,500', 'REQ-0012 TC-04(已領取)'],
     ['player_demo09', '105 一筆可領取(2,000);10-10 結束、領取期 1 天', 'TC-14(與 demo05 合看);REQ-0012 TC-03'],
@@ -109,7 +114,7 @@
     ['player_demo11', '107 獎勵已作廢(10-07 00:00:00)', 'REQ-0012 TC-04(已作廢)'],
     ['player_demo12', '103 獎勵已取消(10-04,admin_demo)', 'REQ-0012 TC-04(已取消)'],
     ['player_demo13', '報名 107 始終未存款,107 已於 10-05 結束', 'REQ-0012 TC-05'],
-    ['player_demo14 / 15', '105 於 2026-10-06 23:59:59 領取(Free Play)/ 101 於 2026-10-07 00:00:00 領取(OKash)', 'REQ-0013 TC-01 日界'],
+    ['player_demo14 / 15', '105 於 2026-10-06 23:59:59 領取(OKash)/ 101 於 2026-10-07 00:00:00 領取(OKash)', 'REQ-0013 TC-01 日界'],
     ['player_demo18(按鈕建立)', 'REQ-0014:模擬控制台按「建立 TC-12 測試玩家」才出現;鎖定 500 + 300、可領取 1,000,已領取 200 / 已作廢 150 / 已取消 100', 'REQ-0014 TC-12/13'],
     ['player_demo16 / 17', '101 可領取 800 / 105 可領取 600,保留給模擬控制台「REQ-0013 日界測試派彩」', 'REQ-0013 TC-01 日界']], { count: false });
   document.getElementById('guide').innerHTML = UI.table([

@@ -26,12 +26,12 @@
       f('frequency_code', 'Payout Frequency', '<select id="frequency_code">' + opt([['end_of_promotion', 'End of Promotion'], ['instant', 'Instant']], v.freq) + '</select>', true) +
       f('vendor_id', 'Vendors', checks('vendor_id', S.PROVIDERS, v.vendors), true) +
       f('term_and_condition', 'Terms and Conditions', '<textarea id="term_and_condition" rows="4">' + esc(v.tnc) + '</textarea>', false, '', 'full') +
-      f('payout_option_code', 'Payout Method(派發錢包)', '<select id="payout_option_code">' + opt([['igaming_credit', 'OKash Balance'], ['free_play_halo', 'Free Play (HALO)']], v.payout) + '</select>', true, '獎勵最終入帳的錢包') +
+      f('payout_option_code', 'Payout Method(派發錢包)', '<select id="payout_option_code">' + opt([['igaming_credit', 'OKash Balance'], ['free_play_halo', 'Free Play (HALO)']], v.payout) + '</select>', true, '獎勵最終入帳的錢包。REQ-0015:選 OKash Balance 才可選派發方式(直接派發 / 經由優惠錢包);Free Play (HALO) 固定直接派發') +
       f('percentage', 'Percentage(%)', '<input type="number" step="0.0001" id="percentage" value="' + esc(v.pct) + '">', true) +
       f('max_campaign_amount', 'Max Campaign Amount', '<input type="number" id="max_campaign_amount" value="' + esc(v.maxCampaign) + '">', true) +
       f('turnover_amount', 'Turnover Amount', '<input type="number" id="turnover_amount" value="' + esc(v.turnover) + '">', true) +
       f('tier_points', 'Earn Points(Tier Points)', '<input type="number" id="tier_points" value="' + esc(v.tierPoints || '') + '">', false) +
-      '<div class="full newbox"><div class="newbox-title">NEW · REQ-0008 優惠錢包</div><div class="form-grid">' +
+      '<div class="full newbox" id="dist-box"><div class="newbox-title">NEW · REQ-0008 優惠錢包(REQ-0015:派發錢包 = OKash Balance 才顯示)</div><div class="form-grid">' +
       f('distribution', 'Distribution Method(派發方式)', '<div class="radio-row" id="distribution">' +
         '<label><input type="radio" name="distribution" value="direct"' + (v.distribution === 'direct' ? ' checked' : '') + '> Direct Payout(直接派發,現行)</label>' +
         '<label><input type="radio" name="distribution" value="promo_wallet"' + (v.distribution === 'promo_wallet' ? ' checked' : '') + '> Via Promo Wallet(經由優惠錢包)</label></div>', true, '經由優惠錢包:獎勵先進優惠錢包(鎖定中),任務完成後玩家在前台 Claim 才派發到上方派發錢包') +
@@ -42,10 +42,19 @@
       '</div><div class="dialog-actions" style="justify-content:flex-start"><button type="submit" class="btn" id="btn-save">Save</button><a class="btn sec" id="btn-cancel" href="' + S.url('promotions/settings/list.html') + '">Cancel</a></div></form></div>';
     document.getElementById('page').innerHTML = h;
     var form = document.getElementById('promo-form');
+    var payoutSel = document.getElementById('payout_option_code');
     var syncClaim = function () {
+      // REQ-0015:派發錢包 = OKash Balance 才顯示派發方式;HALO / 未選不顯示(固定直接派發)
+      var okash = payoutSel.value === 'igaming_credit';
+      document.getElementById('dist-box').style.display = okash ? '' : 'none';
       var pw = form.querySelector('input[name=distribution]:checked');
-      form.querySelector('.claim-wrap').style.display = pw && pw.value === 'promo_wallet' ? '' : 'none';
+      form.querySelector('.claim-wrap').style.display = okash && pw && pw.value === 'promo_wallet' ? '' : 'none';
     };
+    payoutSel.addEventListener('change', function () {
+      // 切換派發錢包:派發方式重設為直接派發、領取期清空
+      form.querySelector('input[name=distribution][value=direct]').checked = true;
+      document.getElementById('claim_period_days').value = '';
+    });
     form.addEventListener('change', syncClaim); syncClaim();
     form.addEventListener('submit', function (e) { e.preventDefault(); submit(p); });
   }
@@ -71,7 +80,9 @@
     var tov = g('turnover_amount'); if (tov === '') errs.turnover_amount = REQ;
     var tp = g('tier_points');
     var distEl = document.querySelector('input[name=distribution]:checked');
-    var dist = distEl ? distEl.value : ''; if (!dist) errs.distribution = REQ;
+    var dist = distEl ? distEl.value : '';
+    if (payout !== 'igaming_credit') dist = 'direct'; // REQ-0015:HALO / 未選固定直接派發
+    else if (!dist) errs.distribution = REQ;
     var cd = g('claim_period_days'), claimDays = null;
     if (dist === 'promo_wallet') {
       if (freq === 'end_of_promotion') {
@@ -96,7 +107,9 @@
     var data = { name: name, from: from, to: to, ranks: ranks, depOption: dep, min: Number(min), max: Number(max), freq: freq, vendors: vendors, tnc: g('term_and_condition'),
       payout: payout, pct: Number(pct), maxCampaign: Number(mc), turnover: Number(tov), tierPoints: tp === '' ? 0 : Number(tp), distribution: dist, claimDays: claimDays };
     if (p) data.id = p.id;
-    var saved = S.mutate(function (s) { return S.savePromo(s, data, S.ROLES[s.role].user); });
+    try { S.mutate(function (s) { return S.savePromo(s, data, S.ROLES[s.role].user); }); }
+    catch (ex) { UI.toast(ex.message, 'err'); return; } // 後端拒絕(REQ-0015)
+
     UI.toast(p ? 'Promotion updated successfully' : 'Promotion created successfully', 'ok');
     document.getElementById('btn-save').disabled = true;
     setTimeout(function () { location.href = S.url('promotions/settings/list.html'); }, 1200);

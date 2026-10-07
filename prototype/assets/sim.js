@@ -45,6 +45,11 @@
     '<div class="row"><button class="btn" data-act="tc12">建立 TC-12 測試玩家 player_demo18 並登入前台</button></div>' +
     '<div class="small muted">player_demo18:鎖定 500(105)+ 300(103)、可領取 1,000(101,派發 OKash);另有已領取 200、已作廢 150、已取消 100(不計入)。REQ-0012 後這種「同時多筆進行中」的資料不會自然產生,此處直接寫入,只用來驗證加總;請在預設時鐘(10-07)使用。</div>' +
     '</fieldset>' +
+    '<fieldset><legend>REQ-0015 後端檢查(繞過表單)</legend>' +
+    '<div class="small muted">不經促銷設定表單,直接呼叫後端儲存「Via Promo Wallet + Free Play (HALO)」,應被拒絕,活動不會建立 / 修改(TC-05)。</div>' +
+    '<div class="row"><button class="btn" data-act="pwHaloNew">直接呼叫儲存:新增 Via Promo Wallet + HALO</button></div>' +
+    '<div class="row"><button class="btn" data-act="pwHaloEdit">直接呼叫儲存:把 101(Via Promo Wallet)的派發錢包改成 HALO</button></div>' +
+    '</fieldset>' +
     '<fieldset><legend>5. 資料</legend><div class="row"><button class="btn err" data-act="reset">重設所有資料(回到預設假資料)</button></div></fieldset>' +
     '<div class="sim-msg" role="status"></div>' +
     '<h3>事件紀錄</h3><div class="sim-log"></div>' +
@@ -114,6 +119,13 @@
         S.setNow(s, t2); S.tick(s); S.claim(s, r17.id, 1017);
       }, '已產生派彩:2026-10-07 23:59:59(player_demo16)、2026-10-08 00:00:00(player_demo17);時鐘 = 2026-10-08 00:00:00');
       if (a === 'bonusTable' || a === 'bonusSlot') run(function (s) { var p = S.player(s, s.simPlayer), k = a === 'bonusTable' ? 'liveTableBonus' : 'liveSlotBonus'; p[k] = S.round2(p[k] + 100); s.log.unshift({ at: s.now, text: p.name + ' ' + (a === 'bonusTable' ? 'Table' : 'Slot') + ' Bonus Credit +100(模擬外部換算)→ ' + money(p[k]) }); }, (a === 'bonusTable' ? 'Table' : 'Slot') + ' Bonus Credit +100');
+      if (a === 'pwHaloNew' || a === 'pwHaloEdit') run(function (s) {
+        var user = S.ROLES[s.role].user;
+        var data = a === 'pwHaloEdit' ? { id: 101, payout: 'free_play_halo', distribution: 'promo_wallet' } :
+          { name: 'REQ-0015 Bypass Test (Via Promo Wallet + HALO)', from: '2026-10-07', to: '2026-10-20', ranks: ['All Member'], depOption: 'first_promo_deposit', min: 500, max: 10000, freq: 'instant',
+            vendors: ['Jili'], tnc: '', payout: 'free_play_halo', pct: 10, maxCampaign: 500, turnover: 1000, tierPoints: 0, distribution: 'promo_wallet', claimDays: 1 };
+        S.savePromo(s, data, user);
+      }, '儲存成功(不應發生)');
       if (a === 'tc12') run(function (s) { S.addTc12Player(s); }, '已建立 player_demo18 並登入前台(鎖定 800、可領取 1,000)');
       if (a === 'reset') { if (confirm('確定重設所有原型資料?')) { S.reset(); msg('已重設'); } }
       if (a === 'dblclaim') {

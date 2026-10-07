@@ -39,7 +39,7 @@
       { t: 'Start Date', k: function (p) { return p.from; }, cls: 'nowrap' },
       { t: 'End Date', k: function (p) { return p.to; }, cls: 'nowrap' },
       { t: 'Payout Frequency', k: function (p) { return S.FREQ[p.freq]; } },
-      { t: 'Distribution', newCol: true, k: function (p) { return S.DIST[p.distribution] + (p.distribution === 'promo_wallet' ? '<div class="small muted">Claim period ' + p.claimDays + ' day(s)</div>' : ''); } },
+      { t: 'Distribution', newCol: true, k: function (p) { return S.DIST[p.distribution] + (p.distribution === 'promo_wallet' ? '<div class="small muted">Claim period ' + p.claimDays + ' day(s)</div>' : '') + '<div class="small muted dist-payout">Payout to ' + esc(S.PAYOUT[p.payout] ? S.PAYOUT[p.payout].name : '—') + '</div>'; } },
       { t: 'Created At', k: function (p) { return S.fmt(p.createdAt); }, cls: 'nowrap' },
       { t: 'Updated At', k: function (p) { return S.fmt(p.updatedAt); }, cls: 'nowrap' },
       { t: 'Actions', k: function (p) { return '<a href="view.html?id=' + p.id + '">View</a>' + (S.can(s, 'update:promotions-settings') ? ' · <a href="update.html?id=' + p.id + '">Edit</a>' : ''); }, cls: 'nowrap' }
