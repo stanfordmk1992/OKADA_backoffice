@@ -132,7 +132,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 
 /* ---- 前台(REQ-0014:比照現有前台 okada-dev-ooc-2 的版面、配色、字體;2026-10-07 量測) ----
  * 字體 Montserrat;頂部導航主列 #33092B(#580A3F 系,依 TC-02;不用現有前台的 #98116D)(高 66 + 跑馬燈 32 = 98px;手機 61 + 30);側欄 / 跑馬燈 #580A3F;更深 #33092B;
- * 金色文字 #F2E4B1;主內容底 #ECECEC;區塊標題 #580A3F 18px/600;頁尾 #1A1A1A;按鈕圓角 8px;側欄選單圓角 16px */
+ * 金色文字 #F2E4B1;主內容底 #ECECEC;區塊標題 #580A3F 18px/600;頁尾 #1A1A1A;按鈕圓角 8px;側欄選單圓角 16px
+ * REQ-0014 TC-02 第 2 次修復:所有按鈕、頁籤、chip、連結按鈕、導航元素只用 #580A3F 系(#580A3F、#33092B)與金色系(#F2E4B1、#C9BD99、#F3DD8C~#C29A35),
+ * 不用現有前台的洋紅(#98116D、#AA2567、#7E405C);按鈕類圓角一律 8px(含 EN 語系鈕、頁籤、Provider 分類鈕、狀態標籤、模擬控制台按鈕) */
 body.front {
   --fr-top: #33092B; --fr-plum: #580A3F; --fr-deep: #33092B; --fr-gold: #F2E4B1; --fr-gold-2: #C9BD99; --fr-gold-line: #EBC94B;
   --fr-bg: #ECECEC; --fr-ink: #11181C; --fr-muted: #6b5d66; --fr-card: #fff; --fr-line: #e1d7dd;
@@ -155,7 +157,7 @@ body.front {
 .fr-btn.login { background: linear-gradient(#F0E6C3, #C9BD99); color: var(--fr-plum) !important; }
 .fr-btn.signup { background: transparent; color: var(--fr-gold) !important; border: 2px solid var(--fr-gold); }
 .fr-btn.plum { background: var(--fr-plum); color: var(--fr-gold) !important; font-size: 14px; font-weight: 600; }
-.fr-btn.lang { background: var(--fr-plum); color: var(--fr-gold); border-radius: 12px; font-size: 14px; font-weight: 600; }
+.fr-btn.lang { background: var(--fr-plum); color: var(--fr-gold); border-radius: 8px; font-size: 14px; font-weight: 600; }
 .fr-btn svg { width: 18px; height: 18px; }
 /* 錢包區(已登入) */
 .fr-wal { position: relative; display: inline-flex; }
@@ -184,12 +186,12 @@ body.front {
 .fr-dd .pw-lines { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; margin-top: 6px; font-size: 13px; }
 .fr-dd .pw-lines span { color: var(--fr-gold-2); }
 .fr-dd .pw-lines b { color: #fff; text-align: right; }
-.fr-tag { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 6px; padding: 1px 6px; background: #5a1f1f; color: #ffb4a8; border: 1px solid #a8483d; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+.fr-tag { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 8px; padding: 1px 6px; background: var(--fr-deep); color: var(--fr-gold); border: 1px solid var(--fr-gold-2); margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
 .fr-acc { position: relative; }
 .fr-acc-menu { position: absolute; right: 0; top: calc(100% + 6px); background: var(--fr-deep); border: 1px solid var(--fr-gold-2); border-radius: 8px; min-width: 190px; padding: 6px; z-index: 46; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
 .fr-acc-menu[hidden] { display: none; }
 .fr-acc-menu .who { font-size: 12px; color: var(--fr-gold-2); padding: 6px 8px; }
-.fr-acc-menu button, .fr-acc-menu a { display: block; width: 100%; text-align: left; font: inherit; background: none; border: 0; color: var(--fr-gold) !important; padding: 8px; border-radius: 6px; cursor: pointer; text-decoration: none !important; }
+.fr-acc-menu button, .fr-acc-menu a { display: block; width: 100%; text-align: left; font: inherit; background: none; border: 0; color: var(--fr-gold) !important; padding: 8px; border-radius: 8px; cursor: pointer; text-decoration: none !important; }
 .fr-acc-menu button:hover, .fr-acc-menu a:hover { background: var(--fr-plum); }
 /* 跑馬燈 */
 .fr-marq { background: var(--fr-plum); color: var(--fr-gold); height: 32px; padding: 4px 0; overflow: hidden; white-space: nowrap; font-size: 16px; }
@@ -228,16 +230,16 @@ body.front {
 .fr-payout { display: flex; height: 32px; border-radius: 8px; overflow: hidden; background: #F5E9C2; margin-bottom: 16px; }
 .fr-payout .lb { background: var(--fr-plum); color: var(--fr-gold); font-weight: 600; font-size: 14.4px; padding: 0 24px; display: flex; align-items: center; white-space: nowrap; }
 .fr-payout .tx { display: flex; align-items: center; padding: 0 16px; font-size: 14px; color: var(--fr-deep); white-space: nowrap; overflow: hidden; }
-.fr-banner { border-radius: 16px; min-height: 220px; background: radial-gradient(circle at 75% 40%, rgba(242,228,177,.18) 0, transparent 45%), linear-gradient(120deg, #33092B, #580A3F 55%, #6E1450); color: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 18px; }
+.fr-banner { border-radius: 16px; min-height: 220px; background: radial-gradient(circle at 75% 40%, rgba(242,228,177,.18) 0, transparent 45%), linear-gradient(120deg, #33092B, #580A3F 70%, #33092B); color: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 18px; }
 .fr-banner b { font-size: 34px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,.4); }
 .fr-banner span { color: var(--fr-gold); font-weight: 700; margin-top: 8px; }
 .fr-chips { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
-.fr-chips a { height: 32px; padding: 0 12px; border-radius: 6px; background: linear-gradient(90deg, #7E405C, #AA2567 50%, #7E405C); color: var(--fr-gold) !important; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; text-decoration: none !important; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+.fr-chips a { height: 32px; padding: 0 12px; border-radius: 8px; background: linear-gradient(90deg, #33092B, #580A3F 50%, #33092B); border: 1px solid rgba(242,228,177,.35); color: var(--fr-gold) !important; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; text-decoration: none !important; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
 .fr-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 20px; }
 .fr-game { aspect-ratio: 1 / 1; border-radius: 8px; background: linear-gradient(160deg, #c62828, #6d0f0f); color: #fff; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 10px; font-weight: 700; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.2); text-align: center; }
 .fr-game:nth-child(3n+2) { background: linear-gradient(160deg, #e0a526, #8a5a00); }
 .fr-game:nth-child(3n) { background: linear-gradient(160deg, #3b2a8f, #150c45); }
-.fr-game i { font-style: normal; border: 1px solid #f0c75e; border-radius: 6px; padding: 2px 8px; background: rgba(0,0,0,.45); color: #f6d77a; margin-top: 6px; }
+.fr-game i { font-style: normal; border: 1px solid #f0c75e; border-radius: 8px; padding: 2px 8px; background: rgba(0,0,0,.45); color: #f6d77a; margin-top: 6px; }
 /* 主按鈕(金色漸層,比照 Accept)/ 次按鈕(深紫紅,比照 Promotion) */
 .front .btn, .btn-claim { font: inherit; font-weight: 800; min-height: 36px; padding: 0 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--fr-gold-line); color: var(--fr-deep);
   background: radial-gradient(35% 80% at 60% 0, rgba(255,240,160,.55), rgba(255,240,160,0)), linear-gradient(180deg, #F3DD8C 0%, #DDBB5C 48%, #C29A35 100%); box-shadow: none; white-space: nowrap; }
@@ -254,15 +256,15 @@ body.front {
 .fr-bal .pw2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .fr-bal .pw2 > div { background: rgba(0,0,0,.18); border-radius: 8px; padding: 8px 10px; }
 .fr-bal .pw2 b { font-size: 18px; }
-.fr-bal .go { color: var(--fr-gold) !important; font-size: 12px; font-weight: 600; text-decoration: underline; background: none; border: 0; cursor: pointer; padding: 0; font-family: inherit; }
+.fr-bal .go { color: var(--fr-gold) !important; font-size: 12px; font-weight: 600; text-decoration: underline; background: none; border: 0; cursor: pointer; padding: 0; font-family: inherit; border-radius: 8px; }
 .fr-tabbar { display: flex; gap: 4px; background: var(--fr-plum); border-radius: 8px; padding: 4px; margin-bottom: 16px; overflow-x: auto; }
-.fr-tabbar button { font: inherit; flex: 1 0 auto; background: none; border: 0; color: var(--fr-gold); padding: 0 16px; height: 36px; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+.fr-tabbar button { font: inherit; flex: 1 0 auto; background: none; border: 0; color: var(--fr-gold); padding: 0 16px; height: 36px; border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap; }
 .fr-tabbar button[aria-selected=true] { background: linear-gradient(#F0E6C3, #C9BD99); color: var(--fr-plum); font-weight: 700; }
 .fr-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 .fr-tabs button { font: inherit; background: #fff; color: var(--fr-plum); border: 1px solid var(--fr-plum); border-radius: 8px; padding: 0 14px; height: 32px; cursor: pointer; font-weight: 600; }
 .fr-tabs button.on { background: var(--fr-plum); color: var(--fr-gold); }
 .fr-pay { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 10px 0 16px; }
-.fr-pay button { font: inherit; height: 64px; border-radius: 8px; border: 1px solid var(--fr-line); background: #faf7f8; color: var(--fr-plum); font-weight: 700; cursor: pointer; }
+.fr-pay button { font: inherit; height: 64px; border-radius: 8px; border: 1px solid var(--fr-gold-2); background: #fff; color: var(--fr-plum); font-weight: 700; cursor: pointer; }
 .fr-pay button.on { border: 2px solid var(--fr-plum); background: #fff; }
 .front .tbl th { background: var(--fr-plum); color: var(--fr-gold); text-transform: none; font-size: 13px; }
 .front .tbl td { border-bottom-color: var(--fr-line); }
@@ -277,26 +279,31 @@ body.front {
 .rw .bar.full > i { background: #2e9b5f; }
 .notice { background: #FBF3D9; border: 1px solid #E7CF84; color: #5c4510; border-radius: 8px; padding: 8px 12px; font-size: 12px; margin-bottom: 12px; }
 .front .optin-blocked { color: #b3261e !important; }
-.front .chip.st-locked { background: #fff1e3; color: #a65a00; }
-.front .chip.st-claimable { background: #ddf6e8; color: #1a7a45; }
-.front .chip.st-claimed { background: #efe3ea; color: var(--fr-plum); }
-.front .chip.st-expired { background: #ececee; color: #6d6b77; }
-.front .chip.st-cancelled { background: #fce4e4; color: #b3261e; }
-.front input, .front select { background: #fff; color: var(--fr-ink); border-color: #cdbfc7; border-radius: 8px; }
+/* 狀態標籤也改用深紫紅 / 金色系、圓角 8px(REQ-0014 TC-02) */
+.front .chip { border-radius: 8px; border: 1px solid transparent; }
+.front .chip.st-locked { background: #F5E9C2; color: var(--fr-plum); border-color: var(--fr-gold-2); }
+.front .chip.st-claimable { background: linear-gradient(180deg, #F3DD8C, #DDBB5C); color: var(--fr-deep); border-color: #C29A35; }
+.front .chip.st-claimed { background: var(--fr-plum); color: var(--fr-gold); }
+.front .chip.st-expired { background: #ECECEC; color: #6d6b77; border-color: #cfcfcf; }
+.front .chip.st-cancelled { background: var(--fr-deep); color: var(--fr-gold-2); }
+.front input, .front select { background: #fff; color: #1a1a1a; border-color: var(--fr-gold-2); border-radius: 8px; }
 /* 對話框、提示訊息(比照 Status Declaration 對話框) */
 .front .mask { background: rgba(0,0,0,.55); }
-.front .dialog { background: linear-gradient(180deg, #5C0A46, #33092B); color: #fff; border: 2px solid var(--fr-gold-2); border-radius: 8px; }
+.front .dialog { background: linear-gradient(180deg, #580A3F, #33092B); color: #fff; border: 2px solid var(--fr-gold-2); border-radius: 8px; }
 .front .dialog h2 { color: #fff; font-size: 22px; font-weight: 800; text-align: center; }
 .front .dialog .small { color: var(--fr-gold); }
 .front .dialog-actions .btn { flex: 1; }
 .front .toast { background: var(--fr-deep); color: var(--fr-gold); border: 1px solid var(--fr-gold-2); border-radius: 8px; font-weight: 600; }
 .front .toast.ok { background: #1f6b43; color: #fff; border-color: #6fd39d; }
 .front .toast.err { background: #8c1d18; color: #fff; border-color: #ff9c9d; }
-.front .sim-fab, .front .sim-drawer { font-family: "Public Sans", "Segoe UI", system-ui, "Microsoft JhengHei", sans-serif; }
-.front .sim .btn { min-height: 0; font-weight: 400; border: 0; color: #fff; background: #ff9f43; border-radius: 6px; }
-.front .sim .btn.sec { background: #f1f1f2; color: #2f2b3d; }
-.front .sim .btn.err { background: var(--err); }
-.front .sim-drawer .btn.sec { background: #f1f1f2; color: #2f2b3d; border: 0; min-height: 0; font-weight: 400; }
+.front .sim-fab, .front .sim-drawer { font-family: Montserrat, "Segoe UI", system-ui, "Microsoft JhengHei", sans-serif; }
+.front .sim-drawer input, .front .sim-drawer select, .front .sim-drawer button { font-family: inherit; }
+/* 模擬控制台(原型工具)在前台頁面也改用深紫紅 / 金色、圓角 8px(REQ-0014 TC-02) */
+.front .sim-fab { background: var(--fr-deep); color: var(--fr-gold); border: 1px solid var(--fr-gold-2); border-radius: 8px; }
+.front .sim .btn { min-height: 0; font-weight: 600; border: 0; color: var(--fr-gold); background: var(--fr-plum); border-radius: 8px; }
+.front .sim .btn.sec { background: #fff; color: var(--fr-plum); border: 1px solid var(--fr-plum); }
+.front .sim .btn.err { background: var(--fr-deep); color: var(--fr-gold); border: 1px solid var(--fr-gold-2); }
+.front .sim-drawer .btn.sec { background: #fff; color: var(--fr-plum); border: 1px solid var(--fr-plum); min-height: 0; font-weight: 600; border-radius: 8px; }
 @media (max-width: 768px) {
   .fr-bar { height: 61px; grid-template-columns: auto 1fr auto; padding: 8px 12px; gap: 8px; }
   .fr-bar .fr-center { order: -1; }
@@ -317,10 +324,10 @@ body.front {
   .fr-main { padding: 16px 16px 90px; }
   .fr-foot { padding-bottom: 90px; }
   .fr-mbar { display: grid; grid-template-columns: 1fr 1fr 1fr; position: fixed; left: 0; right: 0; bottom: 0; height: 65px; z-index: 44; background: linear-gradient(#580A3F, #33092B); color: var(--fr-gold); }
-  .fr-mbar a, .fr-mbar button { font: inherit; background: none; border: 0; color: var(--fr-gold) !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; font-weight: 700; text-decoration: none !important; cursor: pointer; }
+  .fr-mbar a, .fr-mbar button { font: inherit; background: none; border: 0; border-radius: 8px; color: var(--fr-gold) !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; font-weight: 700; text-decoration: none !important; cursor: pointer; }
   .fr-mbar svg { width: 24px; height: 24px; }
   .fr-mbar .games { position: relative; }
-  .fr-mbar .games .circ { position: absolute; top: -18px; width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(#5C0A46, #380628, #1D0316); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; box-shadow: 0 -2px 8px rgba(0,0,0,.3); }
+  .fr-mbar .games .circ { position: absolute; top: -18px; width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(#580A3F, #33092B, #1D0316); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; box-shadow: 0 -2px 8px rgba(0,0,0,.3); }
   .front .sim-fab { bottom: 80px; }
   .fr-banner { min-height: 160px; padding: 20px; }
   .fr-banner b { font-size: 24px; }
