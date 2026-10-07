@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Add Promotion</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page"></div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script src="../../assets/promo-form.js"></script>
+<script>
+BO.init({ perm: 'create:promotions-settings', active: 'promotions-settings', crumb: 'Promotions / Promotion Settings / Add' });
+PromoForm.render('add');
+</script>
+</body>
+</html>

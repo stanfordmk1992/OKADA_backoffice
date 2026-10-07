@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Promotion Settings</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><h1>Promotion Settings</h1><a class="btn" id="btn-add" href="add.html">+ Add Promotion</a></div>
+    <div class="filters">
+      <div class="field"><label for="f-name">Search Promotion Name</label><input id="f-name"></div>
+      <div class="field"><label for="f-freq">Search Payout Frequency</label><select id="f-freq"><option value="">All</option><option value="end_of_promotion">End of Promotion</option><option value="instant">Instant</option></select></div>
+      <div class="field"><label>Start Date (FROM) ~ Start Date (TO)</label><div style="display:flex;gap:6px"><input type="date" id="f-from" aria-label="Start Date FROM"><input type="date" id="f-to" aria-label="Start Date TO"></div></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, q = {};
+  function render(s) {
+    document.getElementById('btn-add').style.display = S.can(s, 'create:promotions-settings') ? '' : 'none';
+    var rows = s.promos.slice().sort(function (a, b) { return b.id - a.id; }).filter(function (p) {
+      return (!q.name || p.name.toLowerCase().indexOf(q.name.toLowerCase()) >= 0) && (!q.freq || p.freq === q.freq) &&
+        (!q.from || p.from >= q.from) && (!q.to || p.from <= q.to);
+    });
+    document.getElementById('result').innerHTML = UI.table([
+      { t: 'ID', k: function (p) { return p.id; } },
+      { t: 'Promotion Name', k: function (p) { return esc(p.name); } },
+      { t: 'Start Date', k: function (p) { return p.from; }, cls: 'nowrap' },
+      { t: 'End Date', k: function (p) { return p.to; }, cls: 'nowrap' },
+      { t: 'Payout Frequency', k: function (p) { return S.FREQ[p.freq]; } },
+      { t: 'Distribution', newCol: true, k: function (p) { return S.DIST[p.distribution] + (p.distribution === 'promo_wallet' ? '<div class="small muted">Claim period ' + p.claimDays + ' day(s)</div>' : ''); } },
+      { t: 'Created At', k: function (p) { return S.fmt(p.createdAt); }, cls: 'nowrap' },
+      { t: 'Updated At', k: function (p) { return S.fmt(p.updatedAt); }, cls: 'nowrap' },
+      { t: 'Actions', k: function (p) { return '<a href="view.html?id=' + p.id + '">View</a>' + (S.can(s, 'update:promotions-settings') ? ' · <a href="update.html?id=' + p.id + '">Edit</a>' : ''); }, cls: 'nowrap' }
+    ], rows, { id: 'tbl-promos' });
+  }
+  document.getElementById('btn-search').onclick = function () { q = { name: UI.val('f-name'), freq: UI.val('f-freq'), from: UI.val('f-from'), to: UI.val('f-to') }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { ['f-name', 'f-freq', 'f-from', 'f-to'].forEach(function (i) { document.getElementById(i).value = ''; }); q = {}; render(S.load()); };
+  BO.init({ perm: 'view:promotions-settings', active: 'promotions-settings', crumb: 'Promotions / Promotion Settings', render: render });
+})();
+</script>
+</body>
+</html>

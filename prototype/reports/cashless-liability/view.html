@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Player Cashless Liability</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><div><h1>Player Cashless Liability</h1><div class="muted small" id="sub"></div></div><div><button class="btn sec" id="btn-csv">Download CSV</button> <a class="btn sec" href="list.html">Back</a></div></div>
+    <div class="filters">
+      <div class="field"><label for="f-player">Search Player ID</label><input id="f-player"></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money, q = {};
+  function rows(s) {
+    var d = S.qs('date') || S.fmtDate(s.now), t = Math.min(S.dayEnd(d), s.now);
+    return s.players.filter(function (p) { return !q.player || p.name.indexOf(q.player) >= 0; }).map(function (p) {
+      return { name: p.name, ig: S.okashAt(s, p.id, t), bonus: p.igBonus, pw: S.pendingAt(s, t, function (r) { return r.playerId === p.id; }), prov: 0, date: d };
+    });
+  }
+  function render(s) {
+    var d = S.qs('date') || S.fmtDate(s.now);
+    document.getElementById('sub').textContent = 'Gaming Date ' + d;
+    var rs = rows(s);
+    var sum = function (k) { return money(rs.reduce(function (a, r) { return a + r[k]; }, 0)); };
+    document.getElementById('result').innerHTML = UI.table([
+      { t: 'Player ID', k: function (r) { return esc(r.name); } },
+      { t: 'iGaming Wallet', k: function (r) { return money(r.ig); }, cls: 'right' },
+      { t: 'iGaming Bonus Wallet', k: function (r) { return money(r.bonus); }, cls: 'right' },
+      { t: 'Promo Wallet', newCol: true, k: function (r) { return money(r.pw); }, cls: 'right' },
+      { t: 'Total Provider Wallet', k: function (r) { return money(r.prov); }, cls: 'right' },
+      { t: 'Gaming Date', k: function (r) { return r.date; } }
+    ], rs, { id: 'tbl-player-cashless', foot: '<tfoot><tr><td>Total</td><td class="right">' + sum('ig') + '</td><td class="right">' + sum('bonus') + '</td><td class="right">' + sum('pw') + '</td><td class="right">' + sum('prov') + '</td><td></td></tr></tfoot>' });
+  }
+  document.getElementById('btn-search').onclick = function () { q = { player: UI.val('f-player') }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { document.getElementById('f-player').value = ''; q = {}; render(S.load()); };
+  document.getElementById('btn-csv').onclick = function () {
+    UI.csv('player-cashless-liability.csv', ['Player ID', 'iGaming Wallet', 'iGaming Bonus Wallet', 'Promo Wallet', 'Total Provider Wallet', 'Gaming Date'],
+      rows(S.load()).map(function (r) { return [r.name, r.ig.toFixed(2), r.bonus.toFixed(2), r.pw.toFixed(2), r.prov.toFixed(2), r.date]; }));
+  };
+  BO.init({ perm: 'view:cashless-liability-report', active: 'cashless', crumb: 'Reports / Cashless Liability Report / View', render: render });
+})();
+</script>
+</body>
+</html>

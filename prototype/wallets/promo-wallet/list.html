@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Promo Wallet</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><div><h1>Promo Wallet <span class="tag-new">NEW</span></h1><div class="muted small">優惠錢包總覽:每筆待領取 / 已處理的活動獎勵(鎖定中、可領取的獎勵不能下注)</div></div><button class="btn sec" id="btn-csv">Download CSV</button></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="filters">
+      <div class="field"><label for="f-player">Player ID</label><input id="f-player" placeholder="e.g. player_demo01"></div>
+      <div class="field"><label for="f-promo">Promotion</label><select id="f-promo"></select></div>
+      <div class="field"><label for="f-status">Status</label><select id="f-status"><option value="">All</option></select></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money;
+  var q = { player: S.qs('player') || '', promo: S.qs('promo') || '', status: S.qs('status') || '', reward: S.qs('reward') || '' };
+  var st0 = S.load();
+  document.getElementById('f-player').value = q.player;
+  document.getElementById('f-promo').innerHTML = '<option value="">All</option>' + st0.promos.filter(function (p) { return p.distribution === 'promo_wallet'; }).map(function (p) { return '<option value="' + p.id + '">' + p.id + ' ' + esc(p.name) + '</option>'; }).join('');
+  document.getElementById('f-promo').value = q.promo;
+  document.getElementById('f-status').innerHTML += Object.keys(S.STATUS).map(function (k) { return '<option value="' + k + '">' + S.STATUS[k].en + ' ' + S.STATUS[k].zh + '</option>'; }).join('');
+  document.getElementById('f-status').value = q.status;
+
+  function rows(s) {
+    return s.rewards.slice().sort(function (a, b) { return b.createdAt - a.createdAt || (b.id > a.id ? 1 : -1); }).filter(function (r) {
+      return (!q.player || S.player(s, r.playerId).name.indexOf(q.player) >= 0) && (!q.promo || r.promoId === Number(q.promo)) && (!q.status || r.status === q.status) && (!q.reward || r.id === q.reward);
+    });
+  }
+  function render(s) {
+    var all = rows(s);
+    var sum = function (st) { return all.filter(function (r) { return r.status === st; }).reduce(function (a, r) { return a + r.amount; }, 0); };
+    document.getElementById('kpis').innerHTML = ['locked', 'claimable', 'claimed', 'expired', 'cancelled'].map(function (k) {
+      return '<div class="kpi" data-kpi="' + k + '"><span>' + S.STATUS[k].en + ' ' + S.STATUS[k].zh + '</span><b>' + money(sum(k)) + '</b><span>' + all.filter(function (r) { return r.status === k; }).length + ' 筆</span></div>';
+    }).join('') + (q.reward ? '<div class="kpi"><span>只顯示獎勵</span><b>' + esc(q.reward) + '</b><a href="list.html">顯示全部</a></div>' : '');
+    var canCancel = S.can(s, 'update:promo-wallet');
+    document.getElementById('result').innerHTML = UI.table([
+      { t: 'Reward ID', k: function (r) { return '<span class="mono">' + r.id + '</span>'; }, cls: 'nowrap' },
+      { t: 'Player ID', k: function (r) { var pl = S.player(s, r.playerId); return S.can(s, 'view:players') ? '<a href="' + S.url('players/view.html') + '?id=' + pl.id + '">' + esc(pl.name) + '</a>' : esc(pl.name); } },
+      { t: 'Promotion', k: function (r) { var p = S.promo(s, r.promoId); return esc(p.name) + '<div class="small muted">' + S.FREQ[p.freq] + ' · 結束 ' + S.fmt(S.promoEnd(p)) + '</div>'; } },
+      { t: 'Amount', k: function (r) { return '<b>' + money(r.amount) + '</b><div class="small muted">Deposit ' + money(r.depositAmount) + '</div>'; }, cls: 'right nowrap' },
+      { t: 'Created At', k: function (r) { return S.fmt(r.createdAt); }, cls: 'nowrap' },
+      { t: 'Task Progress', k: function (r) { return UI.progress(s, r); } },
+      { t: 'Status', k: function (r) { return UI.statusChip(r.status); } },
+      { t: 'Unlocked At', k: function (r) { return S.fmt(r.unlockedAt); }, cls: 'nowrap' },
+      { t: 'Claim Deadline', k: function (r) { return S.fmt(r.claimDeadline); }, cls: 'nowrap' },
+      { t: 'Claimed At', k: function (r) { return S.fmt(r.claimedAt); }, cls: 'nowrap' },
+      { t: 'Payout Wallet', k: function (r) { return S.PAYOUT[r.payout].name; }, cls: 'nowrap' },
+      { t: 'Actions', k: function (r) {
+        return '<button class="btn link" data-view="' + r.id + '">View</button>' +
+          (canCancel && S.isPending(r) ? '<button class="btn sm err" data-cancel="' + r.id + '">Cancel</button>' : '');
+      }, cls: 'nowrap' }
+    ], all, { id: 'tbl-rewards' });
+  }
+  function viewDialog(id) {
+    var s = S.load(), r = S.reward(s, id), p = S.promo(s, r.promoId), pl = S.player(s, r.playerId);
+    var kv = function (k, v) { return '<dt>' + k + '</dt><dd>' + v + '</dd>'; };
+    UI.dialog({ title: 'Reward ' + r.id, body: '<dl class="kv">' + kv('Player ID', esc(pl.name)) + kv('Promotion', esc(p.name)) + kv('Amount', money(r.amount)) + kv('Deposit', money(r.depositAmount) + ' × ' + p.pct + '%(上限 ' + money(p.maxCampaign) + ')') +
+      kv('Status', UI.statusChip(r.status)) + kv('Payout Wallet', S.PAYOUT[r.payout].name) + kv('Created At', S.fmt(r.createdAt)) + kv('Unlocked At', S.fmt(r.unlockedAt)) + kv('Claim Deadline', S.fmt(r.claimDeadline)) +
+      kv('Claimed At', S.fmt(r.claimedAt)) + kv('Expired At', S.fmt(r.expiredAt)) + kv('Cancelled At', S.fmt(r.cancelledAt)) + kv('Cancelled By', esc(r.cancelledBy || '—')) + kv('Cancel Reason', esc(r.cancelReason || '—')) + kv('Task Progress', UI.progress(s, r)) + '</dl>' +
+      '<h3>Audit Trail(稽核紀錄)</h3>' + UI.table([
+        { t: 'Time', k: function (a) { return S.fmt(a.at); }, cls: 'nowrap' }, { t: 'Operator', k: function (a) { return esc(a.by); } },
+        { t: 'Action', k: function (a) { return esc(a.action); } }, { t: 'Reason / Note', k: function (a) { return esc(a.note); } }], r.audit, { id: 'tbl-audit', count: false }) });
+  }
+  function cancelDialog(id) {
+    var s = S.load(), r = S.reward(s, id);
+    var d = UI.dialog({ title: 'Cancel Reward ' + r.id, modal: true,
+      body: '<p>Player <b>' + esc(S.player(s, r.playerId).name) + '</b> · ' + esc(S.promo(s, r.promoId).name) + ' · <b>' + money(r.amount) + '</b> · ' + UI.statusChip(r.status) + '</p>' +
+        '<p class="small muted">取消後獎勵狀態變「已取消」,不入帳,前台不再顯示 Claim;操作會寫入稽核紀錄與資金交易紀錄。</p>' +
+        '<div class="field"><label for="cancel-reason">Cancellation Reason <span class="req" style="color:var(--err)">*</span></label><textarea id="cancel-reason" rows="3"></textarea><div class="err-msg" id="err-cancel-reason"></div></div>',
+      actions: [{ label: 'Close', cls: 'sec' }, { label: 'Confirm Cancel', cls: 'err', id: 'btn-confirm-cancel', onClick: function (close, root) {
+        var reason = root.querySelector('#cancel-reason').value;
+        if (!reason.trim()) { root.querySelector('#err-cancel-reason').textContent = 'Cancellation reason is required.(必填取消原因)'; root.querySelector('#cancel-reason').classList.add('err-input'); return; }
+        try {
+          S.mutate(function (st) { return S.cancelReward(st, id, reason, S.ROLES[st.role].user); });
+          close(); UI.toast('Reward ' + id + ' cancelled successfully', 'ok');
+        } catch (e) { root.querySelector('#err-cancel-reason').textContent = e.message; }
+      } }] });
+    d.root.querySelector('#cancel-reason').focus();
+  }
+  document.getElementById('result').addEventListener('click', function (e) {
+    var v = e.target.getAttribute('data-view'), c = e.target.getAttribute('data-cancel');
+    if (v) viewDialog(v); if (c) cancelDialog(c);
+  });
+  document.getElementById('btn-search').onclick = function () { q = { player: UI.val('f-player'), promo: UI.val('f-promo'), status: UI.val('f-status'), reward: '' }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { ['f-player', 'f-promo', 'f-status'].forEach(function (i) { document.getElementById(i).value = ''; }); q = {}; render(S.load()); };
+  document.getElementById('btn-csv').onclick = function () {
+    var s = S.load();
+    UI.csv('promo-wallet-rewards.csv', ['Reward ID', 'Player ID', 'Promotion', 'Amount', 'Created At', 'Deposit', 'Turnover', 'Tier Points', 'Status', 'Unlocked At', 'Claim Deadline', 'Claimed At', 'Payout Wallet'],
+      rows(s).map(function (r) { var t = S.tasks(s, r); return [r.id, S.player(s, r.playerId).name, S.promo(s, r.promoId).name, r.amount.toFixed(2), S.fmt(r.createdAt), t.deposit.cur + '/' + t.deposit.target, t.turnover.cur + '/' + t.turnover.target, t.tier ? t.tier.cur + '/' + t.tier.target : '', S.STATUS[r.status].en, S.fmt(r.unlockedAt), S.fmt(r.claimDeadline), S.fmt(r.claimedAt), S.PAYOUT[r.payout].name]; }));
+  };
+  BO.init({ perm: 'view:promo-wallet', active: 'promo-wallet', crumb: 'Wallets Management / Promo Wallet', render: render });
+})();
+</script>
+</body>
+</html>

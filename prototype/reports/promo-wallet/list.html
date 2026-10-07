@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Promo Wallet Report</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><div><h1>Promo Wallet Report <span class="tag-new">NEW</span></h1><div class="muted small">優惠錢包報表:期初 + 產生 − 領取 − 作廢 − 取消 = 期末待領取(解鎖只改變狀態,不影響待領取金額)</div></div><button class="btn sec" id="btn-csv">Download CSV</button></div>
+    <div class="filters">
+      <div class="field"><label>Date From ~ Date To</label><div style="display:flex;gap:6px"><input type="date" id="f-from" aria-label="Date From"><input type="date" id="f-to" aria-label="Date To"></div></div>
+      <div class="field"><label for="f-group">Group By</label><select id="f-group"><option value="promotion">Promotion(依活動)</option><option value="date">Date(依日期)</option></select></div>
+      <div class="field"><label for="f-promo">Promotion</label><select id="f-promo"></select></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div class="small muted" id="range-note"></div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money;
+  var s0 = S.load();
+  function defaults(s) { return { from: s.seedStart, to: S.fmtDate(s.now), group: 'promotion', promo: '' }; }
+  var q = defaults(s0);
+  document.getElementById('f-promo').innerHTML = '<option value="">All</option>' + s0.promos.filter(function (p) { return p.distribution === 'promo_wallet'; }).map(function (p) { return '<option value="' + p.id + '">' + p.id + ' ' + esc(p.name) + '</option>'; }).join('');
+  function fill() { document.getElementById('f-from').value = q.from; document.getElementById('f-to').value = q.to; document.getElementById('f-group').value = q.group; document.getElementById('f-promo').value = q.promo; }
+  fill();
+  function compute(s) {
+    var a = S.dayStart(q.from), b = Math.min(S.dayEnd(q.to), s.now);
+    var rws = s.rewards.filter(function (r) { return !q.promo || r.promoId === Number(q.promo); });
+    var groups = [];
+    if (q.group === 'promotion') {
+      s.promos.filter(function (p) { return p.distribution === 'promo_wallet' && (!q.promo || p.id === Number(q.promo)); }).forEach(function (p) {
+        groups.push({ label: p.id + ' ' + p.name, sum: S.summarize(s, rws.filter(function (r) { return r.promoId === p.id; }), a, b) });
+      });
+    } else {
+      S.dateList(q.from, q.to).forEach(function (d) {
+        var da = S.dayStart(d), db = Math.min(S.dayEnd(d), s.now); if (da > s.now) return;
+        groups.push({ label: d, sum: S.summarize(s, rws, da, db) });
+      });
+    }
+    var total = S.summarize(s, rws, a, b);
+    return { groups: groups, total: total, a: a, b: b };
+  }
+  var COLS = [['opening', 'Opening Pending 期初'], ['issued', 'Issued 產生'], ['unlocked', 'Unlocked 解鎖'], ['claimed', 'Claimed 領取'], ['expired', 'Expired 作廢'], ['cancelled', 'Cancelled 取消'], ['closing', 'Closing Pending 期末待領取']];
+  function cell(o, k) { return k === 'opening' || k === 'closing' ? money(o[k]) : o[k + 'N'] + ' 筆 / ' + money(o[k]); }
+  function render(s) {
+    if (!q.userSet) { var keepPromo = q.promo, keepGroup = q.group; q = defaults(s); q.promo = keepPromo; q.group = keepGroup; fill(); }
+    var c = compute(s);
+    document.getElementById('range-note').textContent = '統計區間:' + S.fmt(c.a) + ' ~ ' + S.fmt(c.b) + '(區間結束不超過目前模擬時間)';
+    var cols = [{ t: q.group === 'promotion' ? 'Promotion' : 'Date', k: function (g) { return esc(g.label); } }].concat(COLS.map(function (x) {
+      return { t: x[1], k: function (g) { return cell(g.sum, x[0]); }, cls: 'right nowrap' };
+    })).concat([{ t: 'Check 期初+產生−領取−作廢−取消', k: function (g) { return money(g.sum.calc) + ' ' + (g.sum.ok ? '<span class="ok-text">✓ = 期末</span>' : '<span class="bad-text">✗</span>'); }, cls: 'right nowrap' }]);
+    var foot = q.group === 'promotion' ? '<tfoot><tr><td>Total</td>' + COLS.map(function (x) { return '<td class="right nowrap" data-total="' + x[0] + '">' + cell(c.total, x[0]) + '</td>'; }).join('') + '<td class="right">' + money(c.total.calc) + ' ' + (c.total.ok ? '<span class="ok-text">✓</span>' : '<span class="bad-text">✗</span>') + '</td></tr></tfoot>' : '';
+    document.getElementById('result').innerHTML = UI.table(cols, c.groups, { id: 'tbl-report', foot: foot });
+  }
+  document.getElementById('btn-search').onclick = function () { q = { from: UI.val('f-from'), to: UI.val('f-to'), group: UI.val('f-group'), promo: UI.val('f-promo'), userSet: true }; if (!q.from || !q.to || q.from > q.to) { UI.toast('請選擇正確的日期區間', 'err'); return; } render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { q = defaults(S.load()); fill(); render(S.load()); };
+  document.getElementById('btn-csv').onclick = function () {
+    var s = S.load(), c = compute(s);
+    var header = [q.group === 'promotion' ? 'Promotion' : 'Date', 'Opening Pending', 'Issued Count', 'Issued Amount', 'Unlocked Count', 'Unlocked Amount', 'Claimed Count', 'Claimed Amount', 'Expired Count', 'Expired Amount', 'Cancelled Count', 'Cancelled Amount', 'Closing Pending', 'Check'];
+    var line = function (label, o) { return [label, o.opening.toFixed(2), o.issuedN, o.issued.toFixed(2), o.unlockedN, o.unlocked.toFixed(2), o.claimedN, o.claimed.toFixed(2), o.expiredN, o.expired.toFixed(2), o.cancelledN, o.cancelled.toFixed(2), o.closing.toFixed(2), o.ok ? 'OK' : 'MISMATCH']; };
+    var rows = c.groups.map(function (g) { return line(g.label, g.sum); });
+    if (q.group === 'promotion') rows.push(line('Total', c.total));
+    UI.csv('promo-wallet-report_' + q.from + '_' + q.to + '_' + q.group + '.csv', header, rows);
+    UI.toast('已匯出 CSV', 'ok');
+  };
+  BO.init({ perm: 'view:promo-wallet-report', active: 'promo-wallet-report', crumb: 'Reports / Promo Wallet Report', render: render });
+})();
+</script>
+</body>
+</html>

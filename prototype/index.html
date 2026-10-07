@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" data-root="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>OKADA Backoffice Prototype</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <h1>OKADA 後台原型</h1>
+    <p class="muted">REQ-0008 新增優惠錢包功能(Promo Wallet)· 純靜態原型,所有資料皆為假資料,存在瀏覽器 localStorage;所有頁面共用同一份狀態。每個頁面右下角都有「模擬控制台」。</p>
+    <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,1fr);gap:20px" id="home-grid">
+      <div>
+        <h2>頁面清單</h2>
+        <div id="pages"></div>
+        <h2 style="margin-top:20px">預設假資料(測試情境)</h2>
+        <div id="scenarios"></div>
+      </div>
+      <div id="sim-inline" style="background:#fffdf9;border:1px solid #f1d9bd;border-radius:8px;padding:12px 14px"></div>
+    </div>
+  </div>
+</div>
+<script src="assets/store.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/sim.js"></script>
+<script src="assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc;
+  var PAGES = [
+    ['後台 · 促銷活動 M04', [
+      ['promotions/settings/list.html', 'Promotion Settings 列表', '/promotions/settings/list', '新增欄位 Distribution'],
+      ['promotions/settings/add.html', 'Promotion Settings 新增', '/promotions/settings/add', '派發錢包、派發方式、領取期與驗證'],
+      ['promotions/settings/update.html?id=101', 'Promotion Settings 編輯', '/promotions/settings/update/:id', '同新增表單'],
+      ['promotions/settings/view.html?id=102', 'Promotion Settings 詳情', '/promotions/settings/view/:id', ''],
+      ['promotions/opt-in/list.html', 'Promotion Opt-In List', '/promotions/opt-in/list', '任務進度、對應獎勵'],
+      ['promotions/payout/list.html', 'Promotion Payout', '/promotions/payout/list', '新增 Distribution 欄']]],
+    ['後台 · 錢包 / 玩家', [
+      ['wallets/promo-wallet/list.html', 'Promo Wallet 優惠錢包總覽', '/wallets/promo-wallet/list', 'NEW:查詢、取消(必填原因)、稽核紀錄'],
+      ['players/list.html', 'Player List', '/players/list', ''],
+      ['players/view.html?id=1005&tab=wallets', 'Player 詳情 Wallet Details', '/players/view/:id', '新增 Promo Wallet 列'],
+      ['wallets/adjustment/list.html', 'Wallet Adjustment(錢包類型清單)', '/wallets/adjustment/list', '錢包類型新增 Promo Wallet'],
+      ['audits/list.html', 'Audit Logs', '/audits/list', '取消獎勵的稽核紀錄']]],
+    ['後台 · 報表 M12', [
+      ['reports/promo-wallet/list.html', 'Promo Wallet Report 優惠錢包報表', '/reports/promo-wallet/list', 'NEW:彙總 + 匯出'],
+      ['reports/cashless-liability/list.html', 'Cashless Liability Report', '/reports/cashless-liability/list', '新增 Promo Wallet 欄'],
+      ['reports/fund-transaction/list.html', 'Fund Transactions Report', '/reports/fund-transaction/list', '新交易類型']]],
+    ['前台', [
+      ['front/en/index.html', 'Front Home', '/en', '頂部導航'],
+      ['front/en/wallet.html', 'Wallet 錢包 / 優惠錢包', '/en/wallet', 'NEW:優惠錢包畫面、Claim'],
+      ['front/en/promotions.html', 'Promotions(報名)', '/en/promotions', '原型輔助'],
+      ['front/en/points.html', 'Points(唯讀參照)', '/en/points', '確認 Free Play 增加']]],
+    ['其他', [['not-authorized.html', 'Not Authorized', '/not-authorized', '無權限導向頁']]]
+  ];
+  document.getElementById('pages').innerHTML = PAGES.map(function (g) {
+    return '<h3>' + esc(g[0]) + '</h3>' + UI.table([
+      { t: '頁面', k: function (p) { return '<a href="' + p[0] + '">' + esc(p[1]) + '</a>'; } },
+      { t: '對應路由', k: function (p) { return '<span class="mono small">' + esc(p[2]) + '</span>'; } },
+      { t: '本需求改動', k: function (p) { return esc(p[3]); } }], g[1], { count: false });
+  }).join('');
+  document.getElementById('scenarios').innerHTML = UI.table([
+    { t: '玩家', k: function (r) { return '<b>' + r[0] + '</b>'; } }, { t: '預設狀態', k: function (r) { return r[1]; } }, { t: '適用 TC', k: function (r) { return r[2]; } }], [
+    ['player_demo01', '已報名 101(Instant、OKash、經由優惠錢包、100%、上限 5,000、流水 3,000、領取期 0 天),尚未存款', 'TC-02/03/04b/06/07/08/10/22'],
+    ['player_demo02', '已報名 101,尚未存款', 'TC-04'],
+    ['player_demo03', '已報名 101,尚未存款', 'TC-05'],
+    ['player_demo04', '已報名 102(End of Promotion、HALO、50%、流水 2,000、等級點數 50、領取期 3 天,10-12 結束)', 'TC-09/21'],
+    ['player_demo05', '103 一筆鎖定中(400)、105 一筆可領取(2,000);兩活動 10-10 結束、領取期 1 天', 'TC-13/14'],
+    ['player_demo06', '已報名 105(Instant、HALO、流水 1,000、領取期 1 天)', 'TC-09'],
+    ['player_demo07', '已報名 104(直接派發、Instant、OKash、30%、流水 2,000)', 'TC-17'],
+    ['player_demo08', '歷史資料:103 已領取 1,000、104 直接派彩 1,500', '參考']], { count: false });
+  Sim.mountInline(document.getElementById('sim-inline'));
+  BO.init({ crumb: 'Prototype Home' });
+})();
+</script>
+</body>
+</html>

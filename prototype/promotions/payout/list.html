@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Promotion Payout</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><h1>Promotion Payout</h1><button class="btn sec" id="btn-csv">Download CSV</button></div>
+    <div class="filters">
+      <div class="field"><label for="f-player">Search Player ID</label><input id="f-player"></div>
+      <div class="field"><label for="f-promo">Search Promotion Name</label><input id="f-promo"></div>
+      <div class="field"><label for="f-route">Distribution <span class="tag-new">NEW</span></label><select id="f-route"><option value="">All</option><option value="direct">Direct Payout</option><option value="promo_wallet">Via Promo Wallet</option></select></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money, q = {};
+  function rows(s) {
+    return s.payouts.slice().sort(function (a, b) { return b.id - a.id; }).filter(function (x) {
+      return (!q.player || S.player(s, x.playerId).name.indexOf(q.player) >= 0) && (!q.promo || S.promo(s, x.promoId).name.toLowerCase().indexOf(q.promo.toLowerCase()) >= 0) && (!q.route || x.route === q.route);
+    });
+  }
+  function render(s) {
+    var rs = rows(s);
+    var pwSum = rs.filter(function (x) { return x.route === 'promo_wallet'; }).reduce(function (a, x) { return a + x.amount; }, 0);
+    document.getElementById('result').innerHTML = UI.table([
+      { t: 'ID', k: function (x) { return x.id; } },
+      { t: 'Player ID', k: function (x) { return esc(S.player(s, x.playerId).name); } },
+      { t: 'Promotion Name', k: function (x) { return esc(S.promo(s, x.promoId).name); } },
+      { t: 'Payout Amount', k: function (x) { return money(x.amount); }, cls: 'right' },
+      { t: 'Payout Method', k: function (x) { return S.PAYOUT[x.method].payoutListName; } },
+      { t: 'Payout Date', k: function (x) { return S.fmt(x.date); }, cls: 'nowrap' },
+      { t: 'Status', k: function (x) { return '<span class="chip st-paid">' + x.status + '</span>'; } },
+      { t: 'Distribution', newCol: true, k: function (x) { return x.route === 'promo_wallet' ? 'Via Promo Wallet<div class="small mono">' + x.rewardId + '</div>' : 'Direct Payout'; } }
+    ], rs, { id: 'tbl-payout' }) + '<div class="count">本頁經由優惠錢包的派彩合計:<b id="pw-payout-sum">' + money(pwSum) + '</b></div>';
+  }
+  document.getElementById('btn-search').onclick = function () { q = { player: UI.val('f-player'), promo: UI.val('f-promo'), route: UI.val('f-route') }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { ['f-player', 'f-promo', 'f-route'].forEach(function (i) { document.getElementById(i).value = ''; }); q = {}; render(S.load()); };
+  document.getElementById('btn-csv').onclick = function () {
+    var s = S.load();
+    UI.csv('promotion-payout.csv', ['ID', 'Player ID', 'Promotion Name', 'Payout Amount', 'Payout Method', 'Payout Date', 'Status', 'Distribution', 'Reward ID'],
+      rows(s).map(function (x) { return [x.id, S.player(s, x.playerId).name, S.promo(s, x.promoId).name, x.amount.toFixed(2), S.PAYOUT[x.method].payoutListName, S.fmt(x.date), x.status, S.DIST[x.route], x.rewardId || '']; }));
+  };
+  BO.init({ perm: 'view:promotions-payout', active: 'promotions-payout', crumb: 'Promotions / Promotion Payout', render: render });
+})();
+</script>
+</body>
+</html>

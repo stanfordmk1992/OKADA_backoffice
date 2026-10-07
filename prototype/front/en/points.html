@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>OKADA | Points</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page"></div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/front.js"></script>
+<script>
+FR.init({ active: 'points', needLogin: true, render: function (s, pl) {
+  var m = Store.money;
+  document.getElementById('page').innerHTML = '<div class="fr-card"><h2>Points</h2>' +
+    '<div class="notice">原型參照頁(唯讀):Points 換算頁與外部系統 HALO 不在 REQ-0008 範圍、不修改。這裡只用來確認 Free Play (HALO) 派發後 Free Play 增加。</div>' +
+    '<div class="fr-bal"><div><span>Free Play (HALO)</span><b id="fr-freeplay">' + m(pl.freePlay) + '</b></div>' +
+    '<div><span>Circle Point</span><b>' + pl.circlePoint + '</b></div>' +
+    '<div><span>Live Slots Bonus Credit</span><b>' + m(pl.liveSlotBonus) + '</b></div>' +
+    '<div><span>Live Table Bonus Credit</span><b>' + m(pl.liveTableBonus) + '</b></div></div></div>';
+} });
+</script>
+</body>
+</html>

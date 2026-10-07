@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Promotion Opt-In List</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><h1>Promotion Opt-In List</h1><button class="btn sec" id="btn-csv">Download CSV</button></div>
+    <div class="filters">
+      <div class="field"><label for="f-player">Search Player ID</label><input id="f-player"></div>
+      <div class="field"><label for="f-promo">Search Promotion Name</label><input id="f-promo"></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money, q = {};
+  function rows(s) {
+    return s.optins.slice().sort(function (a, b) { return b.id - a.id; }).filter(function (o) {
+      var pl = S.player(s, o.playerId), p = S.promo(s, o.promoId);
+      return (!q.player || pl.name.indexOf(q.player) >= 0) && (!q.promo || p.name.toLowerCase().indexOf(q.promo.toLowerCase()) >= 0);
+    });
+  }
+  function rewardOf(s, o) { return s.rewards.find(function (r) { return r.optinId === o.id; }); }
+  function render(s) {
+    document.getElementById('result').innerHTML = UI.table([
+      { t: 'ID', k: function (o) { return o.id; } },
+      { t: 'Player ID', k: function (o) { return esc(S.player(s, o.playerId).name); } },
+      { t: 'Promotion Name', k: function (o) { return esc(S.promo(s, o.promoId).name); } },
+      { t: 'Game Provider', k: function (o) { return esc(S.promo(s, o.promoId).vendors.join(', ')); } },
+      { t: 'Min/Max Deposit', k: function (o) { var p = S.promo(s, o.promoId); return money(p.min) + ' / ' + money(p.max); }, cls: 'nowrap' },
+      { t: 'Deposit Information', k: function (o) { var p = S.promo(s, o.promoId); return (o.qualified ? money(o.depositAmount) : (o.depositHandled ? '<span class="bad-text">' + money(o.firstDepositAmount) + '(不符範圍,未參加)</span>' : money(0))) + ' / ' + money(p.min); }, cls: 'nowrap' },
+      { t: 'Turnover Information', k: function (o) { return money(o.turnover) + ' / ' + money(S.promo(s, o.promoId).turnover); }, cls: 'nowrap' },
+      { t: 'Tier Points Information', k: function (o) { var p = S.promo(s, o.promoId); return p.tierPoints ? o.tierPoints + ' / ' + p.tierPoints : '—'; }, cls: 'nowrap' },
+      { t: 'Join Date', k: function (o) { return S.fmt(o.joinedAt); }, cls: 'nowrap' },
+      { t: 'Payment Method', k: function (o) { return S.PAYOUT[S.promo(s, o.promoId).payout].name; } },
+      { t: 'Distribution', newCol: true, k: function (o) { var p = S.promo(s, o.promoId); return S.DIST[p.distribution]; } },
+      { t: 'Promo Wallet Reward', newCol: true, k: function (o) { var r = rewardOf(s, o); return r ? (S.can(s, 'view:promo-wallet') ? '<a href="' + S.url('wallets/promo-wallet/list.html') + '?reward=' + r.id + '">' + r.id + '</a>' : r.id) + '<br>' + UI.statusChip(r.status) : '—'; } },
+      { t: 'Created At', k: function (o) { return S.fmt(o.joinedAt); }, cls: 'nowrap' },
+      { t: 'Updated At', k: function (o) { return S.fmt(o.updatedAt); }, cls: 'nowrap' }
+    ], rows(s), { id: 'tbl-optin' });
+  }
+  document.getElementById('btn-search').onclick = function () { q = { player: UI.val('f-player'), promo: UI.val('f-promo') }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { document.getElementById('f-player').value = ''; document.getElementById('f-promo').value = ''; q = {}; render(S.load()); };
+  document.getElementById('btn-csv').onclick = function () {
+    var s = S.load();
+    UI.csv('promotion-opt-in.csv', ['ID', 'Player ID', 'Promotion Name', 'Deposit', 'Turnover', 'Tier Points', 'Join Date', 'Distribution'],
+      rows(s).map(function (o) { var p = S.promo(s, o.promoId); return [o.id, S.player(s, o.playerId).name, p.name, o.depositAmount + '/' + p.min, o.turnover + '/' + p.turnover, o.tierPoints + '/' + p.tierPoints, S.fmt(o.joinedAt), S.DIST[p.distribution]]; }));
+  };
+  BO.init({ perm: 'view:promotions-opt-in', active: 'promotions-opt-in', crumb: 'Promotions / Promotion Opt-In List', render: render });
+})();
+</script>
+</body>
+</html>

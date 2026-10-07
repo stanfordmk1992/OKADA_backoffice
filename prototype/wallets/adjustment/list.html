@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Wallet Adjustment</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><div><h1>Wallet Adjustment</h1><div class="muted small">本頁只用來呈現錢包類型清單(GET /lookup/wallet_types)新增「Promo Wallet」;調帳功能本身不在 REQ-0008 範圍,行為不變</div></div></div>
+    <div class="filters">
+      <div class="field"><label for="f-player">Player ID</label><input id="f-player"></div>
+      <div class="field"><label for="f-wallet">Wallet Type</label><select id="f-wallet"></select></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+  <div class="card">
+    <h2>Wallet Types(錢包類型清單)</h2>
+    <div id="types"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc;
+  document.getElementById('f-wallet').innerHTML = '<option value="">All</option>' + S.WALLET_TYPES.map(function (w) { return '<option>' + esc(w) + '</option>'; }).join('');
+  function render() {
+    document.getElementById('result').innerHTML = UI.table([{ t: 'ID', k: function () { return ''; } }, { t: 'Player ID', k: function () { return ''; } }, { t: 'Wallet', k: function () { return ''; } },
+      { t: 'Balance Before', k: function () { return ''; } }, { t: 'Balance After', k: function () { return ''; } }, { t: 'Amount Debit (+)', k: function () { return ''; } },
+      { t: 'Amount Credit (-)', k: function () { return ''; } }, { t: 'Adjusted By', k: function () { return ''; } }, { t: 'Created At', k: function () { return ''; } }, { t: 'Action', k: function () { return ''; } }], [], {});
+    document.getElementById('types').innerHTML = UI.table([
+      { t: '#', k: function (w) { return S.WALLET_TYPES.indexOf(w) + 1; } },
+      { t: 'Wallet Type', k: function (w) { return '<span data-wallet-type>' + esc(w) + '</span>' + (w === 'Promo Wallet' ? ' <span class="tag-new">NEW</span>' : ''); } },
+      { t: 'Note', k: function (w) { return w === 'Promo Wallet' ? '優惠錢包:後台自行記帳的待領取獎勵(鎖定中 / 可領取),不可下注' : (w === 'iGaming Bonus Wallet' ? '照舊沿用,不修改' : ''); } }
+    ], S.WALLET_TYPES, { id: 'tbl-wallet-types' });
+  }
+  document.getElementById('btn-search').onclick = render;
+  document.getElementById('btn-clear').onclick = function () { document.getElementById('f-player').value = ''; document.getElementById('f-wallet').value = ''; render(); };
+  BO.init({ perm: 'view:wallet-adjustment', active: 'wallets-adjustment', crumb: 'Wallets Management / Credit Adjustment / Wallet Adjustment', render: render });
+})();
+</script>
+</body>
+</html>

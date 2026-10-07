@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Wallet | OKADA</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page"></div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/front.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money;
+  var view = 'active';
+  var busy = {};
+  function bar(label, t, pts) {
+    if (!t) return '';
+    var pct = t.target > 0 ? Math.min(100, t.cur / t.target * 100) : 100;
+    return '<div class="meta">' + label + ' ' + (pts ? t.cur : money(t.cur)) + ' / ' + (pts ? t.target : money(t.target)) + (t.done ? ' ✓' : '') + '</div><div class="bar' + (t.done ? ' full' : '') + '"><i style="width:' + pct + '%"></i></div>';
+  }
+  function card(s, r) {
+    var p = S.promo(s, r.promoId), t = S.tasks(s, r);
+    var lines = ['Promotion ends 活動結束:' + S.fmt(S.promoEnd(p))];
+    if (S.isPending(r)) lines.push('Claim deadline 領取截止:' + S.fmt(r.claimDeadline));
+    if (r.status === 'locked' && p.freq === 'end_of_promotion' && t.all) lines.push('Tasks completed — unlocks when the promotion ends(任務已完成,活動結束時解鎖)');
+    if (r.unlockedAt) lines.push('Unlocked 解鎖:' + S.fmt(r.unlockedAt));
+    if (r.claimedAt) lines.push('Claimed 領取:' + S.fmt(r.claimedAt) + ' → ' + S.PAYOUT[r.payout].name);
+    if (r.expiredAt) lines.push('Expired 作廢:' + S.fmt(r.expiredAt) + '(領取期已結束,未入帳)');
+    if (r.cancelledAt) lines.push('Cancelled 取消:' + S.fmt(r.cancelledAt) + '(未入帳)');
+    var action = r.status === 'claimable'
+      ? '<button class="btn-claim" data-claim="' + r.id + '"' + (busy[r.id] ? ' disabled' : '') + '>' + (busy[r.id] ? 'Claiming…' : 'Claim') + '</button>'
+      : '';
+    return '<div class="rw" data-reward="' + r.id + '"><div><div class="rw-title">' + esc(p.name) + '</div><div class="meta">' + r.id + ' · Payout to ' + S.PAYOUT[r.payout].name + ' · ' + S.FREQ[p.freq] + '</div></div>' +
+      '<div class="rw-amt">₱ ' + money(r.amount) + '<div>' + UI.statusChip(r.status) + '</div></div>' +
+      '<div>' + bar('Deposit 存款', t.deposit) + bar('Turnover 流水', t.turnover) + bar('Tier Points 等級點數', t.tier, true) + lines.map(function (l) { return '<div class="meta">' + l + '</div>'; }).join('') + '</div>' +
+      '<div style="align-self:end;text-align:right">' + action + '</div></div>';
+  }
+  function render(s, pl) {
+    var mine = s.rewards.filter(function (r) { return r.playerId === pl.id; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var locked = mine.filter(function (r) { return r.status === 'locked'; }), claimable = mine.filter(function (r) { return r.status === 'claimable'; });
+    var sum = function (l) { return money(l.reduce(function (a, r) { return a + r.amount; }, 0)); };
+    var list = mine.filter(function (r) { return view === 'active' ? S.isPending(r) : !S.isPending(r); });
+    var page = document.getElementById('page');
+    page.innerHTML =
+      '<div class="fr-card"><h2>My Wallet</h2><div class="fr-bal">' +
+        '<div><span>OKash Balance(可下注 Available to bet)</span><b id="fr-okash">₱ ' + money(pl.okash) + '</b></div>' +
+        '<div><span>Promo Wallet · Locked 鎖定中</span><b id="fr-locked">₱ ' + sum(locked) + '</b><span>' + locked.length + ' reward(s)</span></div>' +
+        '<div><span>Promo Wallet · Claimable 可領取</span><b id="fr-claimable">₱ ' + sum(claimable) + '</b><span>' + claimable.length + ' reward(s)</span></div>' +
+      '</div></div>' +
+      '<div class="fr-card" id="promo-wallet"><h2>Promo Wallet 優惠錢包</h2>' +
+        '<div class="notice">Rewards in the Promo Wallet are pending and <b>cannot be used for betting</b>. Complete all tasks to unlock, then press Claim before the claim deadline. Unclaimed rewards expire after the claim deadline.<br>優惠錢包內的獎勵為待領取,不能用來下注;完成任務後在領取截止前按 Claim,獎勵才會派發到活動的派發錢包。</div>' +
+        '<div class="fr-tabs"><button data-view="active" class="' + (view === 'active' ? 'on' : '') + '">Active 進行中 (' + (locked.length + claimable.length) + ')</button><button data-view="history" class="' + (view === 'history' ? 'on' : '') + '">History 紀錄 (' + (mine.length - locked.length - claimable.length) + ')</button></div>' +
+        '<div id="reward-list">' + (list.length ? list.map(function (r) { return card(s, r); }).join('') : '<div class="meta" id="no-rewards">No rewards yet.(目前沒有獎勵)</div>') + '</div>' +
+      '</div>';
+  }
+  document.getElementById('page').addEventListener('click', function (e) {
+    var v = e.target.getAttribute('data-view'); if (v) { view = v; render(S.load(), S.player(S.load(), S.load().frontPlayer)); return; }
+    var id = e.target.getAttribute('data-claim'); if (!id) return;
+    if (busy[id]) return; // 前端防連點
+    busy[id] = true; e.target.disabled = true; e.target.textContent = 'Claiming…';
+    var s = S.load();
+    Sim.claimSafe(id, s.frontPlayer).then(function (r) {
+      UI.toast('Claimed ₱ ' + money(r.amount) + ' to ' + S.PAYOUT[r.payout].name + ' successfully!(領取成功)', 'ok');
+    }, function (err) { UI.toast(err.message, 'err'); }).then(function () { delete busy[id]; var st = S.load(); if (st.frontPlayer) render(st, S.player(st, st.frontPlayer)); });
+  });
+  FR.init({ active: 'wallet', needLogin: true, render: render });
+})();
+</script>
+</body>
+</html>

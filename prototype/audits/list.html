@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Audit Logs</title>
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><div><h1>Audit Logs</h1><div class="muted small">原型只記錄本需求相關的後台操作(取消優惠錢包獎勵、儲存促銷設定)</div></div></div>
+    <div class="filters">
+      <div class="field"><label for="f-module">Module</label><select id="f-module"><option value="">All</option><option>Promo Wallet</option><option>Promotion Settings</option></select></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../assets/store.js"></script>
+<script src="../assets/ui.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, q = {};
+  function render(s) {
+    var rows = s.audits.slice().reverse().filter(function (a) { return !q.module || a.module === q.module; });
+    document.getElementById('result').innerHTML = UI.table([
+      { t: 'ID', k: function (a) { return a.id; } },
+      { t: 'Date Time', k: function (a) { return S.fmt(a.at); }, cls: 'nowrap' },
+      { t: 'User', k: function (a) { return esc(a.user); } },
+      { t: 'Module', k: function (a) { return esc(a.module); } },
+      { t: 'Action', k: function (a) { return esc(a.action); } },
+      { t: 'Target', k: function (a) { return esc(a.target); } },
+      { t: 'Reason', k: function (a) { return esc(a.reason || '—'); } }
+    ], rows, { id: 'tbl-audits' });
+  }
+  document.getElementById('btn-search').onclick = function () { q = { module: UI.val('f-module') }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { document.getElementById('f-module').value = ''; q = {}; render(S.load()); };
+  BO.init({ perm: 'view:audits', active: 'audits', crumb: 'Compliance / Audit Logs', render: render });
+})();
+</script>
+</body>
+</html>

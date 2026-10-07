@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>OKADA | Promotions</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page"></div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/front.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money;
+  function render(s, pl) {
+    var list = s.promos.filter(function (p) { return S.promoRunning(s, p); });
+    document.getElementById('page').innerHTML = '<div class="fr-card"><h2>Promotions</h2><p class="meta" style="color:#9e9bb0">原型:報名 Opt-In 也可由模擬控制台操作。</p>' +
+      (list.length ? list.map(function (p) {
+        var joined = pl && s.optins.some(function (o) { return o.playerId === pl.id && o.promoId === p.id; });
+        return '<div class="rw"><div><div class="rw-title">' + esc(p.name) + '</div><div class="meta">' + p.from + ' ~ ' + p.to + ' · Deposit ' + money(p.min) + ' – ' + money(p.max) + ' · ' + p.pct + '% up to ' + money(p.maxCampaign) + ' · Turnover ' + money(p.turnover) +
+          (p.tierPoints ? ' · Tier Points ' + p.tierPoints : '') + ' · ' + S.FREQ[p.freq] + ' · ' + (p.distribution === 'promo_wallet' ? 'Reward goes to Promo Wallet(經由優惠錢包)' : 'Paid directly(直接派發)') + '</div></div>' +
+          '<div style="align-self:center">' + (joined ? '<span class="chip st-claimed">Joined</span>' : '<button class="btn-claim" data-optin="' + p.id + '">Opt-In</button>') + '</div></div>';
+      }).join('') : '<div class="meta">No running promotions.</div>') + '</div>';
+  }
+  document.getElementById('page').addEventListener('click', function (e) {
+    var id = e.target.getAttribute('data-optin'); if (!id) return;
+    var s = S.load(); if (!s.frontPlayer) { FR.loginDialog(); return; }
+    try { S.mutate(function (x) { S.optIn(x, S.player(x, x.frontPlayer).id, id); }); UI.toast('Opted in successfully', 'ok'); } catch (err) { UI.toast(err.message, 'err'); }
+  });
+  FR.init({ active: 'promotions', render: render });
+})();
+</script>
+</body>
+</html>
