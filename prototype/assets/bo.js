@@ -3,7 +3,7 @@
   'use strict';
   var S = window.Store, esc = S.esc;
   var MENU = [
-    { group: 'Home', items: [{ t: 'Prototype Home(原型首頁)', to: 'index.html' }] },
+    { group: 'Home', items: [{ t: 'Prototype Home(原型首頁)', to: 'index.html' }, { t: '鏈路圖 / 系統交互圖', to: 'diagrams/promo-wallet.html', key: 'diagrams', isNew: true }] },
     { group: 'Player Management', items: [{ t: 'Player List', to: 'players/list.html', perm: 'view:players', key: 'players' }] },
     { group: 'Promotions', items: [
       { t: 'Promotion Settings', to: 'promotions/settings/list.html', perm: 'view:promotions-settings', key: 'promotions-settings' },
