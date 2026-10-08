@@ -119,8 +119,8 @@
       '<hr>' +
       '<div class="footer_content__55gvT"><div class="footer_contentLeft___cyt_"><div class="footer_footerQuickLink__5rwSj"><div class="footer_quickLinkGroupWrapper__7A_pb">' + groups + '</div></div>' +
         '<div class="footer_footerMobileQuickLink__TcmoS"><div class="px-2 w-full footer_accordion__0wPtF">' + acc + '</div></div></div>' +
-        '<div class="footer_contentRight__VcDDR"><div class="footer_rulesRegulation__LqWCV"><div class="footer_regulatoryIcon__qbu13"><span class="fr-ph">Icon</span><span class="fr-ph">Regulator logo</span></div>' +
-          '<span>T&amp;C apply. 21&amp;up. Game responsibly. Keep it fun and play within your limits. Prototype only — all footer content is placeholder text.</span></div>' +
+        '<div class="fr-vsep" aria-hidden="true"></div><div class="footer_contentRight__VcDDR"><div class="footer_rulesRegulation__LqWCV"><div class="footer_regulatoryIcon__qbu13"><span class="fr-ph">Icon</span><span class="fr-ph">Regulator logo</span></div>' +
+          '<span>T&amp;C apply. 21&amp;up. Game responsibly. Keep it fun and play within your limits. Prototype only — all footer content is placeholder text.</span></div><div class="fr-sep" aria-hidden="true"></div>' +
           '<div class="footer_contactUs__1Q5pC"><h3 class="footer_title__eJ_fP">Contact Us</h3><div class="footer_contactDetails__qUDS_">' +
             '<a class="footer_contactLink__jMiSs" href="javascript:void(0)"><span class="ic">' + I.phone + '</span>+632 8555 7777</a><a class="footer_contactLink__jMiSs" href="javascript:void(0)"><span class="ic">' + I.mail + '</span>Send a message</a></div></div></div></div>' +
       '<hr>' +
@@ -152,7 +152,7 @@
     var root = document.createElement('div'); root.id = 'fr-ann';
     root.innerHTML = '<div class="z-50 bg-overlay/50 backdrop-opacity-disabled fr-ann-mask"></div>' +
       '<div class="flex w-screen fixed fr-ann-wrap"><section class="fr-ann" role="dialog" aria-label="Announcement"><button type="button" class="appearance-none select-none end-1" aria-label="Close" id="fr-ann-close"><span>' + I.close + '</span></button>' +
-      '<div class="fr-ann-body"><div class="overflow-hidden rounded-t-lg"><div class="-ml-1 flex touch-pan-y"><div class="relative w-full min-w-0"><div class="flex h-64 items-center">Prototype announcement<br>原型公告(佔位,假資料)</div></div></div></div></div>' +
+      '<div class="fr-ann-body"><div class="overflow-hidden rounded-t-lg"><div class="-ml-1 flex touch-pan-y"><div class="relative w-full min-w-0"><div class="flex h-64 items-center"><div class="ph">Prototype announcement<br>原型公告(佔位,假資料)</div></div></div></div></div></div>' +
       '<footer class="flex flex-row gap-2"><div class="flex w-full justify-between"><button type="button" class="hover:text-plum-100 nav" aria-label="Previous">' + I.chevL + '</button>' +
       '<div class="flex flex-wrap items-center dots"><button type="button" class="flex h-3 cursor-pointer" aria-label="Slide 1"></button></div>' +
       '<button type="button" class="hover:text-plum-100 nav" aria-label="Next">' + I.chevR + '</button></div></footer></section></div>';
@@ -205,10 +205,12 @@
     if (acc) acc.onclick = function (e) { e.stopPropagation(); menu.hidden = !menu.hidden; };
     var wal = hdr.querySelector('#fr-wal'); if (!wal) return;
     var dd = hdr.querySelector('#wallet-dd');
-    // 桌機:hover 錢包區展開;離開錢包區與下拉框才收起(下拉框有 8px 上緣橋接,移入途中不收起)
+    // 桌機:hover 錢包區(a.balanceFigure)展開,hover 刷新鈕不展開;離開錢包區與下拉框才收起
+    // 下拉框以左欄定位,上緣緊貼錢包區下緣(y=58、x 與錢包區對齊),外層 8px 上內距為橋接,慢速移入途中不收起(REQ-0014 TC-04)
+    var fig = hdr.querySelector('#nav-wallet');
     var enter = function () { if (!isTouchLayout()) openDD(); };
     var leave = function () { if (!isTouchLayout()) { clearTimeout(closeTimer); closeTimer = setTimeout(closeDD, 120); } };
-    wal.addEventListener('mouseenter', enter); wal.addEventListener('mouseleave', leave);
+    fig.addEventListener('mouseenter', enter); fig.addEventListener('mouseleave', leave);
     dd.addEventListener('mouseenter', function () { clearTimeout(closeTimer); }); dd.addEventListener('mouseleave', leave);
     // 手機:點擊錢包區展開 / 再點一次收起(不跳頁);下拉框內的項目照常跳頁
     hdr.querySelector('#nav-wallet').addEventListener('click', function (e) {

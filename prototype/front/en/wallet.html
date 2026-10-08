@@ -77,7 +77,7 @@
   function depositPanel() {
     var methods = ['Debit Card', 'E-Wallet A', 'E-Wallet B', 'Bank Transfer', 'Top Up'];
     return panel('<p class="text-center text-lg font-bold fr-ptitle">Please Select Payment Method</p><div class="mx-auto flex w-full fr-paybox" id="panel-deposit"><div class="grid grid-cols-2 gap-4 fr-paygrid">' +
-      methods.map(function (m) { return '<button type="button" class="z-0 group relative fr-paycard' + (payMethod === m ? ' on' : '') + '" data-pay="' + m + '"><span class="ph">Logo</span>' + m + '</button>'; }).join('') +
+      methods.map(function (m, i) { return '<button type="button" class="z-0 group relative fr-paycard' + (payMethod === m ? ' on' : '') + '" data-pay="' + m + '"><span class="ph l' + i + '">Logo</span>' + m + '</button>'; }).join('') +
       '</div><div class="flex justify-end">' + NEXT + '</div></div>');
   }
   function withdrawalPanel() {
@@ -125,7 +125,7 @@
   function gamePanel(s, pl) {
     var allRows = gameRows(s, pl), rows = pageOf('gameHistory', allRows);
     var wl = function (r) { var v = r.pay - r.bet; return (v < 0 ? '-₱' : '₱') + money(Math.abs(v)); };
-    var tbl = '<div class="flex-col relative gap-4 fr-tblwrap fr-only-d"><table class="fr-tbl" id="tbl-game-history" aria-label="Game History" style="width:1149.6px"><colgroup><col style="width:162.7px"><col style="width:140.8px"><col style="width:483.4px"><col style="width:103.3px"><col style="width:112px"><col style="width:146.4px"></colgroup>' +
+    var tbl = '<div class="flex-col relative gap-4 fr-tblwrap fr-only-d"><table class="fr-tbl" id="tbl-game-history" aria-label="Game History" style="width:1150px"><colgroup><col style="width:162.844px"><col style="width:140.58190625px"><col style="width:483.33190625px"><col style="width:103.422px"><col style="width:112.438px"><col style="width:146.391px"></colgroup>' +
       '<thead class="[&>tr]:first:rounded-lg"><tr class="group/tr outline-none data-[focus-visible=true]:z-10"><th>Date / Time</th><th>Provider</th><th>Reference ID</th><th>Bet</th><th>Payout</th><th>Win / Loss</th></tr><tr aria-hidden="true" class="fr-spacer"></tr></thead>' +
       '<tbody class="after:block">' + rows.map(function (r) { var d = d2(r.at); return '<tr><td><div class="flex flex-col whitespace-nowrap dt"><span>' + d[0] + '</span><span class="text-xs text-gray-500">' + d[1] + '</span></div></td><td class="c"><span>' + esc(r.prov) + '</span></td><td class="c"><span>' + esc(r.ref) + '</span></td><td class="c"><span>₱' + money(r.bet) + '</span></td><td class="c"><span>₱' + money(r.pay) + '</span></td><td class="c"><span>' + wl(r) + '</span></td></tr>'; }).join('') + '</tbody></table></div>';
     var cards = '<div class="px-2 flex flex-col fr-hlist fr-only-m" id="list-game-history">' + rows.map(function (r, i) { var d = d2(r.at);
@@ -135,7 +135,7 @@
   function walletPanel(s, pl) {
     var allRows = walletRows(s, pl), rows = pageOf('walletHistory', allRows);
     var st = function (r, tag) { var c = { processing: 'text-gray-500', complete: 'text-success-500', failed: 'text-red-500' }[r.st]; return '<' + tag + ' class="capitalize ' + c + '" data-status="' + r.st + '">' + (tag === 'span' ? r.st.charAt(0).toUpperCase() + r.st.slice(1) : r.st) + '</' + tag + '>'; };
-    var tbl = '<div class="flex-col relative gap-4 fr-tblwrap fr-only-d"><table class="fr-tbl" id="tbl-wallet-history" aria-label="Wallet History" style="width:1150.3px"><colgroup><col style="width:150px"><col style="width:109.7px"><col style="width:143px"><col style="width:459px"><col style="width:150px"><col style="width:137.6px"></colgroup>' +
+    var tbl = '<div class="flex-col relative gap-4 fr-tblwrap fr-only-d"><table class="fr-tbl" id="tbl-wallet-history" aria-label="Wallet History" style="width:1150px"><colgroup><col style="width:150.266px"><col style="width:109.594px"><col style="width:142.594px"><col style="width:459.08190625px"><col style="width:149.78490625px"><col style="width:137.688px"></colgroup>' +
       '<thead class="[&>tr]:first:rounded-lg"><tr class="group/tr outline-none data-[focus-visible=true]:z-10"><th>Date / Time</th><th>Method</th><th>Description</th><th>Reference ID</th><th>Status</th><th>Amount</th></tr><tr aria-hidden="true" class="fr-spacer"></tr></thead>' +
       '<tbody class="after:block">' + rows.map(function (r) { var d = d2(r.at); return '<tr><td><div class="flex flex-col whitespace-nowrap dt tight"><span>' + d[0] + '</span><span class="text-xs text-gray-500">' + d[1] + '</span></div></td><td class="c"><span>' + esc(r.method) + '</span></td><td class="c"><span>' + esc(r.desc) + '</span></td><td class="c"><span>' + esc(r.ref) + '</span></td><td class="c">' + st(r, 'span') + '</td><td class="c"><span>₱' + money(r.amt) + '</span></td></tr>'; }).join('') + '</tbody></table></div>';
     var cards = '<div class="px-2 flex flex-col fr-hlist fr-only-m wh" id="list-wallet-history">' + rows.map(function (r, i) { var d = d2(r.at);

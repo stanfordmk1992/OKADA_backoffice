@@ -40,7 +40,7 @@ FR.init({ active: 'home', render: function (s, pl) {
       '<div class="GameTileOverlay"><div class="actions hidden"><a class="z-0 group relative fr-tilebtn y" href="javascript:void(0)">Explore</a></div></div></div>';
   };
   var rpsTile = function (i) { return '<div class="gameTile rpsTile">' + img(i + 1, 'Demo New ' + (i + 1)) + '<div class="GameTileOverlay"><div class="actions hidden"><a class="z-0 group relative fr-tilebtn y" href="javascript:void(0)">Explore</a></div></div></div>'; };
-  var tableTile = function (i) { return '<div class="gameTile liveTableTile relative">' + img(i + 2, 'Demo Table ' + (i + 1)) + '<div class="GameTileOverlay"><div class="actions hidden"><button type="button" class="z-0 group relative fr-tilebtn y">Play Now</button></div></div></div>'; };
+  var tableTile = function (i) { return '<div class="gameTile liveTableTile relative">' + img(i + 2, 'Demo Table ' + (i + 1)) + '<div class="GameTileOverlay"><div class="actions hidden">' + (i < 2 ? '<a class="z-0 group relative fr-tilebtn y" href="javascript:void(0)">Explore</a>' : '<button type="button" class="z-0 group relative fr-tilebtn y">Play Now</button>') + '</div></div></div>'; }; // 同現有前台:前 2 張 Explore(連結)、第 3 張 Play Now
   var HOT = [0, 1, 16, 20], NEW = [5, 6, 19];
   var eTile = function (i) {
     var tag = HOT.indexOf(i) >= 0 ? '<div class="GameTag_gameTag__9a8U1 GameTag_hot__hV5Vn"><span>Hot</span></div>' : NEW.indexOf(i) >= 0 ? '<div class="GameTag_gameTag__9a8U1 GameTag_new__ZibK0"><span>New</span></div>' : '';
