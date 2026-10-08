@@ -176,7 +176,8 @@ body.front {
 .footer_contactLink__jMiSs > span.ic { display: block; width: 20px; height: 20px; }
 .footer_footerBottom__HDfXI { display: flex; align-items: center; row-gap: 16px; font-size: 14px; line-height: 20px; }
 .footer_copyright__dP3SM, .footer_version__qesqk { display: block; }
-.footer_additionalLinks__q7rNE { display: flex; flex: 1 1 0%; justify-content: flex-end; gap: 8px 16px; color: rgb(242, 228, 177); }
+.footer_copyright__dP3SM { flex-grow: 1; }
+.footer_additionalLinks__q7rNE { display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 8px 16px; color: rgb(242, 228, 177); }
 .footer_additionalLinks__q7rNE > a { display: block; font-size: 14px; line-height: 20px; }
 .footer_footerMobileQuickLink__TcmoS { display: none; }
 
@@ -370,7 +371,7 @@ button.fr-tilebtn { line-height: 12px; }
 .fr-pgbtn { display: flex; align-items: center; gap: 12px; width: 80px; height: 40px; padding: 0 12px; border-radius: 12px; border: 2px solid rgb(152, 17, 109); background-color: rgb(244, 244, 245);
   box-shadow: 0 0 #0000, 0 0 #0000, 0 1px 2px 0 rgba(0, 0, 0, .05); font-size: 16px; line-height: 24px; position: relative; }
 .fr-pgbtn > .inline-flex { display: flex; gap: 6px; width: calc(100% - 24px); height: fit-content; }
-.fr-pgbtn > .inline-flex > span { display: block; font-size: 14px; line-height: 20px; color: rgb(0, 0, 0); }
+.fr-pgbtn > .inline-flex > span { display: block; flex: 1 1 0%; min-width: 0; font-size: 14px; line-height: 20px; color: rgb(0, 0, 0); }
 .fr-pgbtn > .chev { position: absolute; right: 12px; display: block; width: 16px; height: 16px; }
 .fr-pager p { display: block; font-size: 16px; line-height: 24px; }
 .fr-pgmenu { position: absolute; left: 0; top: 44px; z-index: 5; width: 80px; max-height: 200px; overflow-y: auto; padding: 4px; border-radius: 12px; background: rgb(255, 255, 255); box-shadow: 0 4px 6px rgba(0, 0, 0, .25); }
@@ -390,6 +391,7 @@ button.fr-tilebtn { line-height: 12px; }
 .fr-hcard .tx > span { display: block; }
 .fr-hcard .tx > .text-small { font-size: 14px; font-weight: 400; line-height: 20px; color: rgb(113, 113, 122); }
 .fr-hcard .subtitle > p { display: block; }
+.fr-hcard .subtitle > p.w-full { width: 100%; }
 .fr-hcard .subtitle .ml-2 { margin-left: 8px; }
 .fr-hlist.wh > .fr-hcard { margin-bottom: 16px; }
 .fr-hlist.wh > .fr-hcard p.amount { letter-spacing: .025em; }
