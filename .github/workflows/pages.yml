@@ -5,7 +5,7 @@ name: Deploy prototype
 on:
   push:
     branches: [master]
-    paths: ["prototype/**"]
+    paths: ["prototype/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,6 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ hashFiles('prototype/index.html') != '' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
