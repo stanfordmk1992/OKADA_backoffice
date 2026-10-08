@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Player Detail</title>
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><div><h1>players / view</h1><div class="muted small" id="sub"></div></div><a class="btn sec" href="list.html">Back</a></div>
+    <div class="tabs" role="tablist"><button data-tab="details" id="tab-details">Player Details</button><button data-tab="wallets" id="tab-wallets">Wallet Details</button></div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../assets/store.js"></script>
+<script src="../assets/ui.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money;
+  var tab = S.qs('tab') === 'wallets' ? 'wallets' : 'details';
+  function wallets(s, pl) {
+    var c = S.fmt(pl.createdAt), u = S.fmt(s.now);
+    var pend = s.rewards.filter(function (r) { return r.playerId === pl.id && S.isPending(r); });
+    var locked = pend.filter(function (r) { return r.status === 'locked'; }).reduce(function (a, r) { return a + r.amount; }, 0);
+    var claimable = pend.filter(function (r) { return r.status === 'claimable'; }).reduce(function (a, r) { return a + r.amount; }, 0);
+    var list = [
+      { id: pl.id * 100 + 1, name: 'OKash Balance', bal: pl.okash },
+      { id: pl.id * 100 + 2, name: 'OKASH Wallet', bal: 0 },
+      { id: pl.id * 100 + 3, name: 'Safekeeping Wallet', bal: 0 },
+      { id: pl.id * 100 + 4, name: 'iGaming Bonus Wallet', bal: pl.igBonus },
+      { id: pl.id * 100 + 5, name: 'Live Slot Bonus Wallet', bal: pl.liveSlotBonus },
+      { id: pl.id * 100 + 6, name: 'Live Table Bonus Wallet', bal: pl.liveTableBonus },
+      { id: pl.id * 100 + 7, name: 'Promo Wallet', bal: locked + claimable, promo: true }
+    ].concat(S.PROVIDERS.map(function (v, i) { return { id: pl.id * 100 + 10 + i, name: v + ' Wallet', bal: 0, provider: true }; }));
+    return '<div class="card-head" style="margin-bottom:6px"><h2 style="margin:0">Wallet Details</h2><button class="btn sec sm" id="btn-refresh">Refresh</button></div>' + UI.table([
+      { t: 'Wallet Id', k: function (w) { return w.id; } },
+      { t: 'Wallet Name', k: function (w) { return esc(w.name) + (w.promo ? ' <span class="tag-new">NEW</span>' : ''); } },
+      { t: 'Balance', k: function (w) {
+        if (!w.promo) return money(w.bal);
+        return '<b data-promo-balance>' + money(w.bal) + '</b><div class="small">Locked 鎖定中 <b data-locked>' + money(locked) + '</b> · Claimable 可領取 <b data-claimable>' + money(claimable) + '</b></div><div class="small muted">待領取獎勵,不可下注</div>';
+      }, cls: 'nowrap' },
+      { t: 'Created At', k: function () { return c; }, cls: 'nowrap' },
+      { t: 'Updated At', k: function () { return u; }, cls: 'nowrap' },
+      { t: 'Actions', k: function (w) {
+        if (w.promo) return S.can(s, 'view:promo-wallet') ? '<a id="link-promo-rewards" href="' + S.url('wallets/promo-wallet/list.html') + '?player=' + encodeURIComponent(pl.name) + '">View Rewards(獎勵明細)</a>' : '<span class="muted small">無權限</span>';
+        return w.provider ? '<button class="btn sm sec" data-transfer>Transfer</button>' : '';
+      } }
+    ], list, { id: 'tbl-wallets' });
+  }
+  function render(s) {
+    var pl = S.player(s, S.qs('id') || 1001);
+    document.getElementById('sub').textContent = pl.name;
+    document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === tab); });
+    if (tab === 'details') {
+      document.getElementById('result').innerHTML = '<dl class="kv"><dt>ID</dt><dd>' + pl.id + '</dd><dt>Player ID</dt><dd>' + esc(pl.name) + '</dd><dt>Status</dt><dd>' + pl.status + '</dd><dt>Email</dt><dd>' + esc(pl.email) + '</dd><dt>Referral Code</dt><dd>' + pl.referral + '</dd><dt>Upline</dt><dd>' + pl.upline + '</dd></dl>';
+    } else {
+      document.getElementById('result').innerHTML = wallets(s, pl);
+      document.getElementById('btn-refresh').onclick = function () { render(S.load()); UI.toast('Wallet balances refreshed'); };
+      document.querySelectorAll('[data-transfer]').forEach(function (b) { b.onclick = function () { UI.toast('原型:供應商錢包轉回不在本需求範圍(行為不變)'); }; });
+    }
+  }
+  document.querySelector('.tabs').addEventListener('click', function (e) { var t = e.target.getAttribute('data-tab'); if (t) { tab = t; render(S.load()); } });
+  BO.init({ perm: 'view:players', active: 'players', crumb: 'Player Management / Player List / View', render: render });
+})();
+</script>
+</body>
+</html>

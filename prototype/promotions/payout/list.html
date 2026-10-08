@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Promotion Payout</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><h1>Promotion Payout</h1><button class="btn sec" id="btn-csv">Download CSV</button></div>
+    <div class="filters">
+      <div class="field"><label for="f-player">Search Player ID</label><input id="f-player"></div>
+      <div class="field"><label for="f-promo">Search Promotion Name</label><input id="f-promo"></div>
+      <div class="field"><label for="f-route">Distribution <span class="tag-new">NEW</span></label><select id="f-route"><option value="">All</option><option value="direct">Direct Payout</option><option value="promo_wallet">Via Promo Wallet</option></select></div>
+      <div class="field" data-field="payout_date"><label>Payout Date (FROM) ~ Payout Date (TO) <span class="tag-new">NEW</span></label><div style="display:flex;gap:6px"><input type="date" id="f-from" aria-label="Payout Date FROM"><input type="date" id="f-to" aria-label="Payout Date TO"></div><div class="err-msg" id="err-date"></div></div>
+      <div class="field" style="min-width:110px"><label for="f-per">Items per page</label><select id="f-per"><option>5</option><option selected>10</option><option>20</option><option>25</option><option>50</option></select></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div class="small muted" id="date-note">Payout Date 以 UTC+8 自然日計算,包含起迄當日 00:00:00 ~ 23:59:59(與 Promo Wallet Report 同一日界)</div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money, q = {};
+  var onlyId = S.qs('id'); // REQ-0011 追溯鏈跳轉:只顯示該派彩紀錄
+  var sort = { key: 'id', dir: 'desc' }, pageNo = 1, per = 10;
+  var SORT = {
+    id: function (s, x) { return x.id; },
+    player: function (s, x) { return S.player(s, x.playerId).name; },
+    promo: function (s, x) { return S.promo(s, x.promoId).name; },
+    amount: function (s, x) { return x.amount; },
+    method: function (s, x) { return S.PAYOUT[x.method].payoutListName; },
+    date: function (s, x) { return x.date; },
+    status: function (s, x) { return x.status; }
+  };
+  /** 篩選 + 排序後的全部結果(頁尾合計與 CSV 都用這份) */
+  function rows(s) {
+    var a = q.from ? S.dayStart(q.from) : -Infinity, b = q.to ? S.dayEnd(q.to) : Infinity; // REQ-0013:UTC+8 自然日,含起迄當日
+    var f = SORT[sort.key], d = sort.dir === 'asc' ? 1 : -1;
+    return s.payouts.filter(function (x) {
+      return (!onlyId || x.id === Number(onlyId)) && (!q.player || S.player(s, x.playerId).name.indexOf(q.player) >= 0) &&
+        (!q.promo || S.promo(s, x.promoId).name.toLowerCase().indexOf(q.promo.toLowerCase()) >= 0) && (!q.route || x.route === q.route) &&
+        x.date >= a && x.date <= b;
+    }).sort(function (x, y) { var u = f(s, x), v = f(s, y); return (u < v ? -1 : u > v ? 1 : 0) * d || (y.id - x.id); });
+  }
+  function th(label, key, extra) {
+    var on = sort.key === key;
+    return '<th class="sortable' + (extra || '') + '" data-sort="' + key + '" aria-sort="' + (on ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none') + '">' + esc(label) + ' <span class="sort-ind">' + (on ? (sort.dir === 'asc' ? '▲' : '▼') : '↕') + '</span></th>';
+  }
+  function render(s) {
+    var all = rows(s);
+    var pages = Math.max(1, Math.ceil(all.length / per)); if (pageNo > pages) pageNo = pages;
+    var rs = all.slice((pageNo - 1) * per, pageNo * per);
+    var total = all.reduce(function (a, x) { return a + x.amount; }, 0);
+    var pwSum = all.filter(function (x) { return x.route === 'promo_wallet'; }).reduce(function (a, x) { return a + x.amount; }, 0);
+    var h = '<div class="tbl-wrap"><table class="tbl" id="tbl-payout"><thead><tr>' +
+      th('ID', 'id') + th('Player ID', 'player') + th('Promotion Name', 'promo') + th('Payout Amount', 'amount') + th('Payout Method', 'method') + th('Payout Date', 'date') + th('Status', 'status') +
+      '<th class="new-col">Distribution <span class="tag-new">NEW</span></th><th class="new-col">Reward ID <span class="tag-new">NEW</span></th><th>Actions</th></tr></thead><tbody>';
+    if (!rs.length) h += '<tr><td class="empty" colspan="10">No data available</td></tr>';
+    rs.forEach(function (x) {
+      h += '<tr data-payout="' + x.id + '"><td>' + x.id + '</td><td>' + esc(S.player(s, x.playerId).name) + '</td><td>' + esc(S.promo(s, x.promoId).name) + '</td><td class="right">' + money(x.amount) + '</td><td>' + S.PAYOUT[x.method].payoutListName +
+        '</td><td class="nowrap">' + S.fmt(x.date) + '</td><td><span class="chip st-paid">' + x.status + '</span></td><td>' + S.DIST[x.route] + '</td><td class="nowrap">' + rewardLink(s, x) + '</td>' +
+        '<td><button class="btn link" data-view="' + x.id + '">View</button></td></tr>';
+    });
+    h += '</tbody></table></div>';
+    var from = all.length ? (pageNo - 1) * per + 1 : 0, to = Math.min(pageNo * per, all.length);
+    h += '<div class="pager"><span class="count" id="page-info">Showing ' + from + '–' + to + ' of <b id="payout-count">' + all.length + '</b> record(s)</span>' +
+      '<span><button class="btn sec sm" id="pg-prev"' + (pageNo <= 1 ? ' disabled' : '') + '>‹ Prev</button> <span class="small">Page <b id="pg-no">' + pageNo + '</b> / ' + pages + '</span> <button class="btn sec sm" id="pg-next"' + (pageNo >= pages ? ' disabled' : '') + '>Next ›</button></span></div>';
+    h += (onlyId ? '<div class="count">只顯示 Payout ID ' + esc(onlyId) + ' · <a href="list.html">顯示全部</a></div>' : '') +
+      '<div class="count" id="payout-foot">篩選結果合計(全部頁):Payout Amount <b id="payout-sum">' + money(total) + '</b> · 其中經由優惠錢包的派彩合計 <b id="pw-payout-sum">' + money(pwSum) + '</b>' +
+      (q.from || q.to ? ' · Payout Date ' + esc(q.from || '…') + ' ~ ' + esc(q.to || '…') + '(UTC+8)' : '') + '</div>';
+    document.getElementById('result').innerHTML = h;
+  }
+  /** REQ-0011:經由優惠錢包的派彩顯示獎勵編號,點擊回到獎勵詳情;直接派發不顯示 */
+  function rewardLink(s, x) {
+    if (!x.rewardId) return '';
+    return S.can(s, 'view:promo-wallet') ? '<a class="mono" data-reward-link href="' + S.url('wallets/promo-wallet/list.html') + '?reward=' + x.rewardId + '&detail=1">' + x.rewardId + '</a>' : '<span class="mono">' + x.rewardId + '</span>';
+  }
+  function viewDialog(id) {
+    var s = S.load(), x = s.payouts.find(function (p) { return p.id === Number(id); });
+    var kv = function (k, v) { return '<dt>' + k + '</dt><dd>' + v + '</dd>'; };
+    UI.dialog({ title: 'Promotion Payout #' + x.id, body: '<dl class="kv">' + kv('ID', x.id) + kv('Player ID', esc(S.player(s, x.playerId).name)) + kv('Promotion Name', esc(S.promo(s, x.promoId).name)) +
+      kv('Payout Amount', money(x.amount)) + kv('Payout Method', S.PAYOUT[x.method].payoutListName) + kv('Payout Date', S.fmt(x.date)) + kv('Status', x.status) +
+      kv('Distribution', S.DIST[x.route]) + kv('Reward ID', rewardLink(s, x) || '—') + '</dl>' });
+  }
+  function clearErr() { document.getElementById('err-date').textContent = ''; ['f-from', 'f-to'].forEach(function (i) { document.getElementById(i).classList.remove('err-input'); }); }
+  document.getElementById('btn-search').onclick = function () {
+    var from = UI.val('f-from'), to = UI.val('f-to');
+    clearErr();
+    if (from && to && from > to) { // REQ-0013:起日晚於迄日不能查詢
+      var m = 'Payout Date (FROM) cannot be later than Payout Date (TO).(日期區間錯誤:起日不可晚於迄日)';
+      document.getElementById('err-date').textContent = m; ['f-from', 'f-to'].forEach(function (i) { document.getElementById(i).classList.add('err-input'); });
+      UI.toast(m, 'err'); return;
+    }
+    q = { player: UI.val('f-player'), promo: UI.val('f-promo'), route: UI.val('f-route'), from: from, to: to }; pageNo = 1; render(S.load());
+  };
+  document.getElementById('btn-clear').onclick = function () {
+    ['f-player', 'f-promo', 'f-route', 'f-from', 'f-to'].forEach(function (i) { document.getElementById(i).value = ''; });
+    clearErr(); q = {}; onlyId = null; pageNo = 1; render(S.load());
+  };
+  document.getElementById('f-per').onchange = function (e) { per = Number(e.target.value); pageNo = 1; render(S.load()); };
+  document.getElementById('result').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-sort]');
+    if (t) { var k = t.getAttribute('data-sort'); sort = { key: k, dir: sort.key === k && sort.dir === 'asc' ? 'desc' : 'asc' }; render(S.load()); return; }
+    if (e.target.id === 'pg-prev') { pageNo--; render(S.load()); return; }
+    if (e.target.id === 'pg-next') { pageNo++; render(S.load()); return; }
+    var v = e.target.getAttribute('data-view'); if (v) viewDialog(v);
+  });
+  document.getElementById('btn-csv').onclick = function () {
+    var s = S.load(); // REQ-0013:CSV 依目前篩選結果(全部頁)
+    UI.csv('promotion-payout' + (q.from || q.to ? '_' + (q.from || '') + '_' + (q.to || '') : '') + '.csv', ['ID', 'Player ID', 'Promotion Name', 'Payout Amount', 'Payout Method', 'Payout Date', 'Status', 'Distribution', 'Reward ID'],
+      rows(s).map(function (x) { return [x.id, S.player(s, x.playerId).name, S.promo(s, x.promoId).name, x.amount.toFixed(2), S.PAYOUT[x.method].payoutListName, S.fmt(x.date), x.status, S.DIST[x.route], x.rewardId || '']; }));
+  };
+  BO.init({ perm: 'view:promotions-payout', active: 'promotions-payout', crumb: 'Promotions / Promotion Payout', render: render });
+})();
+</script>
+</body>
+</html>

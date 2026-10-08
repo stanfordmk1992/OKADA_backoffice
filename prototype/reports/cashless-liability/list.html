@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Cashless Liability Report</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><div><h1>Cashless Liability Report</h1><div class="muted small">每個 Gaming Date 取當日 23:59:59(當日則取目前模擬時間)的餘額;Promo Wallet = 鎖定中 + 可領取的待領取獎勵</div></div><button class="btn sec" id="btn-csv">Download CSV</button></div>
+    <div class="filters">
+      <div class="field"><label>Cashless Liability Report</label><div style="display:flex;gap:6px"><input type="date" id="f-from" aria-label="Date From"><input type="date" id="f-to" aria-label="Date To"></div></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, money = S.money, q = {};
+  function rows(s) {
+    var to = q.to || S.fmtDate(s.now), from = q.from || s.seedStart;
+    return S.dateList(from, to).reverse().filter(function (d) { return S.dayStart(d) <= s.now; }).map(function (d) {
+      var t = Math.min(S.dayEnd(d), s.now);
+      var ig = S.round2(s.players.reduce(function (a, p) { return a + S.okashAt(s, p.id, t); }, 0));
+      var bonus = S.round2(s.players.reduce(function (a, p) { return a + p.igBonus; }, 0));
+      var pw = S.pendingAt(s, t);
+      var prov = 0;
+      return { date: d, at: t, ig: ig, bonus: bonus, pw: pw, prov: prov, total: S.round2(ig + bonus + pw + prov) };
+    });
+  }
+  function render(s) {
+    document.getElementById('result').innerHTML = UI.table([
+      { t: 'Gaming Date', k: function (r) { return r.date; }, cls: 'nowrap' },
+      { t: 'Total Wallets', k: function (r) { return money(r.total); }, cls: 'right' },
+      { t: 'iGaming Wallet', k: function (r) { return money(r.ig); }, cls: 'right' },
+      { t: 'iGaming Bonus Wallet', k: function (r) { return money(r.bonus); }, cls: 'right' },
+      { t: 'Promo Wallet', newCol: true, k: function (r) { return '<span data-pw-date="' + r.date + '">' + money(r.pw) + '</span>'; }, cls: 'right' },
+      { t: 'Total Provider Wallet', k: function (r) { return money(r.prov); }, cls: 'right' },
+      { t: 'Actions', k: function (r) { return '<a href="view.html?date=' + r.date + '">View</a>'; } }
+    ], rows(s), { id: 'tbl-cashless' });
+  }
+  document.getElementById('btn-search').onclick = function () { q = { from: UI.val('f-from'), to: UI.val('f-to') }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { document.getElementById('f-from').value = ''; document.getElementById('f-to').value = ''; q = {}; render(S.load()); };
+  document.getElementById('btn-csv').onclick = function () {
+    UI.csv('cashless-liability.csv', ['Gaming Date', 'Total Wallets', 'iGaming Wallet', 'iGaming Bonus Wallet', 'Promo Wallet', 'Total Provider Wallet'],
+      rows(S.load()).map(function (r) { return [r.date, r.total.toFixed(2), r.ig.toFixed(2), r.bonus.toFixed(2), r.pw.toFixed(2), r.prov.toFixed(2)]; }));
+  };
+  BO.init({ perm: 'view:cashless-liability-report', active: 'cashless', crumb: 'Reports / Cashless Liability Report', render: render });
+})();
+</script>
+</body>
+</html>

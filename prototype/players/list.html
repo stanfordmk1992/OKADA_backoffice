@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Player List</title>
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <div class="card-head"><h1>Player List</h1></div>
+    <div class="filters">
+      <div class="field"><label for="f-player">Player ID</label><input id="f-player"></div>
+      <div class="field"><label for="f-email">Email</label><input id="f-email"></div>
+      <button class="btn" id="btn-search">Search</button><button class="btn sec" id="btn-clear">Clear</button>
+    </div>
+    <div id="result"></div>
+  </div>
+</div>
+<script src="../assets/store.js"></script>
+<script src="../assets/ui.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, q = {};
+  function render(s) {
+    var rows = s.players.filter(function (p) { return (!q.player || p.name.indexOf(q.player) >= 0) && (!q.email || p.email.indexOf(q.email) >= 0); });
+    document.getElementById('result').innerHTML = UI.table([
+      { t: 'ID', k: function (p) { return p.id; } },
+      { t: 'Player ID', k: function (p) { return esc(p.name); } },
+      { t: 'Email', k: function (p) { return esc(p.email); } },
+      { t: 'Status', k: function (p) { return '<span class="chip st-claimable">' + p.status + '</span>'; } },
+      { t: 'Referral Code', k: function (p) { return p.referral; } },
+      { t: 'Upline', k: function (p) { return p.upline; } },
+      { t: 'Actions', k: function (p) { return '<a href="view.html?id=' + p.id + '">View</a>'; } }
+    ], rows, { id: 'tbl-players' });
+  }
+  document.getElementById('btn-search').onclick = function () { q = { player: UI.val('f-player'), email: UI.val('f-email') }; render(S.load()); };
+  document.getElementById('btn-clear').onclick = function () { document.getElementById('f-player').value = ''; document.getElementById('f-email').value = ''; q = {}; render(S.load()); };
+  BO.init({ perm: 'view:players', active: 'players', crumb: 'Player Management / Player List', render: render });
+})();
+</script>
+</body>
+</html>

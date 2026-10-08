@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-root="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Not Authorized</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<div id="page">
+  <div class="card" style="text-align:center;padding:48px 20px" id="na">
+    <div style="font-size:64px;font-weight:800;color:var(--primary)">401</div>
+    <h1>You are not authorized!</h1>
+    <p class="muted">You don't have permission to access this page. Go Home!</p>
+    <p class="small muted" id="detail"></p>
+    <a class="btn" href="index.html">Back to Home</a>
+  </div>
+</div>
+<script src="assets/store.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/sim.js"></script>
+<script src="assets/bo.js"></script>
+<script>
+(function () {
+  var perm = Store.qs('perm');
+  if (perm) document.getElementById('detail').textContent = '(原型說明:目前後台角色缺少權限 ' + perm + ')';
+  BO.init({ crumb: '/not-authorized' });
+})();
+</script>
+</body>
+</html>

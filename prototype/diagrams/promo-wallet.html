@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Promo Wallet Diagrams</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .dg-nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 0; }
+  .dg-nav a { background: var(--primary-soft); border-radius: 14px; padding: 3px 12px; font-size: 13px; }
+  .dg-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fcfcfe; }
+  .dg-box svg { display: block; margin: 0 auto; }
+  .dg-box .mermaid:not([data-processed]) { white-space: pre; font-family: Consolas, monospace; font-size: 12px; color: var(--muted); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; margin: 10px 0 0; }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid; vertical-align: -3px; margin-right: 5px; }
+  details.src { margin-top: 10px; }
+  details.src summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  details.src pre { background: #f6f6f9; border-radius: 6px; padding: 10px; font-size: 12px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<div id="page">
+  <div class="card">
+    <h1>Promo Wallet 鏈路圖 / 系統交互圖 <span class="tag-new">NEW</span></h1>
+    <div class="muted small">原型說明頁(不是後台既有頁面)。依 REQ-0008 已定稿的「優惠錢包邏輯 / 資金流 / 對帳」繪製;後端計算與派發由後端團隊實作,圖中的「促銷引擎」「優惠錢包帳本」是邏輯角色,不代表實際服務切分。點流程圖的節點可前往對應的原型頁面。</div>
+    <div class="dg-nav"><a href="#chain">1. 鏈路圖</a><a href="#states">2. 獎勵狀態流轉</a><a href="#seq">3. 系統交互圖</a><a href="#records">4. 各環節寫入的紀錄</a></div>
+  </div>
+
+  <div class="card" id="chain">
+    <h2>1. 鏈路圖 — 從活動配置到派發</h2>
+    <div class="dg-box"><div class="mermaid" id="dg-chain"></div></div>
+    <div class="legend" id="legend"></div>
+    <details class="src"><summary>Mermaid 原始碼</summary><pre id="src-chain"></pre></details>
+  </div>
+
+  <div class="card" id="states">
+    <h2>2. 獎勵狀態流轉</h2>
+    <p class="muted small" style="margin-top:0">鎖定中、可領取 = 待領取(計入無現金負債報表 Promo Wallet 欄,不能下注);已領取、已作廢、已取消為終態。</p>
+    <div class="dg-box"><div class="mermaid" id="dg-states"></div></div>
+    <details class="src"><summary>Mermaid 原始碼</summary><pre id="src-states"></pre></details>
+  </div>
+
+  <div class="card" id="seq">
+    <h2>3. 系統交互圖 — 各系統之間的呼叫順序</h2>
+    <div class="dg-box"><div class="mermaid" id="dg-seq"></div></div>
+    <details class="src"><summary>Mermaid 原始碼</summary><pre id="src-seq"></pre></details>
+  </div>
+
+  <div class="card" id="records">
+    <h2>4. 各環節寫入的紀錄</h2>
+    <div id="rec-table"></div>
+    <p class="small muted">對帳:期末待領取 = 期初 + 產生 − 領取 − 作廢 − 取消;每日期末待領取 = 無現金負債報表 Promo Wallet 欄;領取金額 = 同期派彩紀錄中經由優惠錢包的派彩金額,其中派到 OKash Balance 的部分 = 資金交易報表 Bonus Payout(From Promo Wallet)。</p>
+  </div>
+</div>
+<script src="../assets/store.js"></script>
+<script src="../assets/ui.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/bo.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, u = S.url;
+
+  var CLASSES = [
+    ['bo', '後台(運營操作)', '#eeedfd', '#7367f0'],
+    ['fr', '前台(玩家操作)', '#fff4e5', '#ff9f43'],
+    ['pw', '促銷引擎 / 優惠錢包', '#ddf6e8', '#28c76f'],
+    ['wal', '派發錢包(後台記帳)', '#d6f7fa', '#00bad1'],
+    ['ext', '外部系統 HALO', '#f3e8ff', '#9c5bd8'],
+    ['rec', '紀錄 / 報表', '#f6f6f9', '#6f6b7d'],
+    ['stop', '不產生 / 不入帳', '#fce4e4', '#ea5455']
+  ];
+  document.getElementById('legend').innerHTML = CLASSES.map(function (c) {
+    return '<span><i style="background:' + c[2] + ';border-color:' + c[3] + '"></i>' + esc(c[1]) + '</span>';
+  }).join('') + '<span class="muted">實線 = 主流程;虛線 = 例外終止</span>';
+
+  var chain = [
+    'flowchart TB',
+    '  A["後台 · 促銷設定<br/>派發錢包三選一(REQ-0016)<br/>Promo Wallet 才設領取期(天)"]:::bo',
+    '  A --> W{"派發錢包"}',
+    '  W -->|"Free Play (HALO)<br/>直接派發"| J2["達標後直接派彩到外部系統 HALO<br/>前台 Points 的 Free Play 增加"]:::ext',
+    '  W -->|"OKash Balance<br/>直接派發(現行)"| X1["達標後直接派彩<br/>不進優惠錢包"]:::rec',
+    '  W -->|"Promo Wallet<br/>經由優惠錢包"| B["前台 · 玩家報名<br/>Opt-In"]:::fr',
+    '  B --> C["報名後<br/>第一筆存款"]:::fr',
+    '  C --> D1{"金額在<br/>最低~最高存款?"}',
+    '  D1 -->|"否"| X2["不算參加<br/>之後的存款也不產生"]:::stop',
+    '  D1 -->|"是"| E["產生獎勵<br/>存款 × % (不超過上限)<br/>狀態:鎖定中"]:::pw',
+    '  E --> F["任務進度<br/>存款 / 流水 / 等級點數"]:::pw',
+    '  F --> D2{"任務<br/>全部完成?"}',
+    '  D2 -->|"Instant:完成當下"| G["狀態:可領取<br/>前台顯示 Claim<br/>與領取截止時間"]:::pw',
+    '  D2 -->|"End of Promotion:<br/>活動結束時判定"| G',
+    '  G --> H["前台 · 玩家點 Claim"]:::fr',
+    '  H --> I["狀態:已領取<br/>(只領一次)"]:::pw',
+    '  I --> J1["OKash Balance 入帳<br/>Bonus Payout 流水<br/>(經由優惠錢包只派發 OKash Balance)"]:::wal',
+    '  J1 --> K["派彩紀錄 Paid"]:::rec',
+    '  J2 --> K',
+    '  E -.->|"活動結束 + 領取期過"| Z1["已作廢<br/>不入帳 · 留交易紀錄"]:::stop',
+    '  G -.->|"領取期過未領"| Z1',
+    '  E -.->|"後台人工取消"| Z2["已取消<br/>必填原因 · 寫稽核紀錄<br/>不入帳"]:::stop',
+    '  G -.->|"後台人工取消"| Z2'
+  ];
+  CLASSES.forEach(function (c) { chain.push('  classDef ' + c[0] + ' fill:' + c[2] + ',stroke:' + c[3] + ',color:#2f2b3d'); });
+  [['A', 'promotions/settings/add.html'], ['B', 'front/en/promotions.html'], ['E', 'wallets/promo-wallet/list.html'],
+   ['F', 'promotions/opt-in/list.html'], ['G', 'front/en/wallet.html'], ['H', 'front/en/wallet.html'],
+   ['J1', 'reports/fund-transaction/list.html'], ['J2', 'front/en/points.html'], ['K', 'promotions/payout/list.html'],
+   ['Z1', 'wallets/promo-wallet/list.html?status=expired'], ['Z2', 'audits/list.html'], ['X1', 'promotions/payout/list.html']
+  ].forEach(function (l) { chain.push('  click ' + l[0] + ' href "' + u(l[1]) + '"'); });
+
+  var states = [
+    'stateDiagram-v2',
+    '  direction LR',
+    '  [*] --> Locked: 報名後第一筆符合存款<br/>Reward Issued',
+    '  Locked: 鎖定中 Locked',
+    '  Claimable: 可領取 Claimable',
+    '  Claimed: 已領取 Claimed',
+    '  Expired: 已作廢 Expired',
+    '  Cancelled: 已取消 Cancelled',
+    '  Locked --> Claimable: 任務全部完成<br/>Instant 當下 / EoP 活動結束時',
+    '  Claimable --> Claimed: 玩家 Claim(領取期內)<br/>派發到派發錢包',
+    '  Locked --> Expired: 活動結束 + 領取期過(系統)',
+    '  Claimable --> Expired: 領取期過未領(系統)',
+    '  Locked --> Cancelled: 後台取消(必填原因)',
+    '  Claimable --> Cancelled: 後台取消(必填原因)',
+    '  Claimed --> [*]',
+    '  Expired --> [*]',
+    '  Cancelled --> [*]'
+  ];
+
+  var seq = [
+    'sequenceDiagram',
+    '  autonumber',
+    '  actor OP as 後台運營',
+    '  participant BO as 後台 Backoffice',
+    '  actor PL as 玩家',
+    '  participant FE as 前台 /en/wallet',
+    '  participant PE as 促銷引擎(後端)',
+    '  participant PW as 優惠錢包帳本',
+    '  participant WS as 錢包服務 OKash Balance',
+        '  participant RP as 交易紀錄 / 報表',
+    '  rect rgba(115,103,240,0.07)',
+    '  Note over OP,PE: 活動配置',
+    '  OP->>BO: 促銷設定<br/>派發錢包(OKash Balance / Free Play (HALO) / Promo Wallet)、領取期',
+    '  BO->>BO: Promo Wallet 才顯示領取期<br/>驗證 EoP 領取期 ≥ 1 天;有未結束獎勵時派發錢包唯讀',
+    '  BO->>PE: 儲存活動設定',
+    '  PE->>PE: 後端檢查(REQ-0016):派發錢包只收三種值、<br/>領取期只限 Promo Wallet、有未結束獎勵不可改派發錢包<br/>→ 不符一律拒絕儲存',
+    '  end',
+    '  rect rgba(255,159,67,0.08)',
+    '  Note over PL,RP: 參加與產生獎勵',
+    '  PL->>FE: 報名活動',
+    '  FE->>PE: Opt-In',
+    '  PE->>PE: 已有進行中的存款活動?<br/>是 → 擋下報名(REQ-0012)',
+    '  PL->>WS: 存款',
+    '  WS->>PE: 存款事件(玩家、金額)',
+    '  PE->>PE: 報名後第一筆?<br/>在最低~最高存款範圍?',
+    '  alt 在範圍內',
+    '    PE->>PW: 產生獎勵 = 存款 × %<br/>(不超過上限),鎖定中',
+    '    PW->>RP: Reward Issued(待領取 +)',
+    '  else 不在範圍',
+    '    PE->>PE: 標記不算參加<br/>之後存款不再產生',
+    '  end',
+    '  end',
+    '  rect rgba(40,199,111,0.07)',
+    '  Note over PL,PW: 任務與解鎖',
+    '  loop 活動期間',
+    '    PL->>WS: 下注<br/>(只能用 OKash Balance,獎勵不能下注)',
+    '    WS->>PE: 流水 / 等級點數事件',
+    '    PE->>PW: 更新任務進度',
+    '  end',
+    '  alt Instant',
+    '    PE->>PW: 任務完成當下 → 可領取',
+    '  else End of Promotion',
+    '    PE->>PW: 活動結束排程<br/>判定任務 → 可領取',
+    '  end',
+    '  end',
+    '  rect rgba(0,186,209,0.07)',
+    '  Note over PL,RP: 領取 Claim',
+    '  PL->>FE: 打開頂部導航錢包',
+    '  FE->>PW: 查詢獎勵列表',
+    '  PW-->>FE: 獎勵、任務進度<br/>活動結束與領取截止時間',
+    '  PL->>FE: 點 Claim',
+    '  FE->>PE: Claim(rewardId)',
+    '  PE->>PW: 鎖定該筆並檢查<br/>可領取、未過截止(防重複領取)',
+    '  PW->>RP: Reward Claimed(待領取 −)<br/>不論派發錢包都寫(REQ-0011)',
+    '  PE->>WS: 入帳 OKash Balance<br/>(經由優惠錢包只派發 OKash Balance,REQ-0015)',
+    '  WS->>RP: Bonus Payout<br/>Promo Wallet → OKash Balance<br/>(同一 Reward ID,REQ-0011)',
+    '  PE->>RP: 派彩紀錄 Paid(Via Promo Wallet)',
+    '  PE-->>FE: 領取成功',
+    '  FE-->>PL: 成功提示<br/>狀態改為已領取',
+    '  Note over FE,PE: 再次 Claim 或另一分頁同時 Claim<br/>→ 回覆已領取,不重複入帳',
+    '  end',
+    '  rect rgba(234,84,85,0.06)',
+    '  Note over OP,RP: 作廢與取消(不入帳)',
+    '  PE->>PW: 排程:活動結束 + 領取期過<br/>鎖定中 / 可領取 → 已作廢',
+    '  PW->>RP: Reward Expired',
+    '  OP->>BO: 取消獎勵(必填原因)',
+    '  BO->>PE: Cancel(rewardId, 原因)',
+    '  PE->>PW: 鎖定中 / 可領取 → 已取消',
+    '  PW->>RP: Reward Cancelled',
+    '  BO->>RP: 稽核紀錄 Audit Log<br/>(操作人、時間、原因)',
+    '  end',
+    '  rect rgba(111,107,125,0.07)',
+    '  Note over RP: 對帳:期末待領取 = 期初 + 產生 − 領取 − 作廢 − 取消<br/>對上無現金負債報表 Promo Wallet 欄',
+    '  end'
+  ];
+
+  [['chain', chain], ['states', states], ['seq', seq]].forEach(function (d) {
+    var txt = d[1].join('\n');
+    document.getElementById('dg-' + d[0]).textContent = txt;
+    document.getElementById('src-' + d[0]).textContent = txt;
+  });
+
+  var REC = [
+    ['產生獎勵', '系統', 'Promo Wallet - Reward Issued(Promotion → Promo Wallet)', '待領取 +', 'wallets/promo-wallet/list.html', 'Promo Wallet 總覽'],
+    ['解鎖', '系統', '獎勵 audit:Unlocked(不寫資金交易)', '不變', 'wallets/promo-wallet/list.html?status=claimable', 'Promo Wallet 總覽'],
+    ['領取 → OKash Balance(唯一派發錢包)', '玩家', 'Promo Wallet - Reward Claimed + Bonus Payout(Promo Wallet → OKash Balance,同一 Reward ID)+ 派彩紀錄 Paid', '待領取 −;OKash +', 'reports/fund-transaction/list.html', 'Fund Transaction Report'],
+    ['作廢', '系統', 'Promo Wallet - Reward Expired', '待領取 −(不入帳)', 'reports/promo-wallet/list.html', 'Promo Wallet Report'],
+    ['取消', '後台運營', 'Promo Wallet - Reward Cancelled + Audit Log', '待領取 −(不入帳)', 'audits/list.html', 'Audit Logs'],
+    ['每日彙總', '報表', '期末待領取 → 無現金負債 Promo Wallet 欄', '對帳', 'reports/cashless-liability/list.html', 'Cashless Liability Report']
+  ];
+  document.getElementById('rec-table').innerHTML = UI.table([
+    { t: '環節', k: function (r) { return '<b>' + esc(r[0]) + '</b>'; }, cls: 'nowrap' },
+    { t: '觸發者', k: function (r) { return esc(r[1]); }, cls: 'nowrap' },
+    { t: '寫入紀錄', k: function (r) { return esc(r[2]); } },
+    { t: '待領取餘額', k: function (r) { return esc(r[3]); }, cls: 'nowrap' },
+    { t: '原型頁面', k: function (r) { return '<a href="' + u(r[4]) + '">' + esc(r[5]) + '</a>'; }, cls: 'nowrap' }], REC, { count: false });
+
+  BO.init({ active: 'diagrams', crumb: 'Prototype / Promo Wallet 鏈路圖・系統交互圖' });
+
+  var s = document.createElement('script');
+  s.type = 'module';
+  s.textContent = [
+    "import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';",
+    "mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', theme: 'base',",
+    "  themeVariables: { primaryColor: '#eeedfd', primaryBorderColor: '#7367f0', primaryTextColor: '#2f2b3d', lineColor: '#6f6b7d', fontFamily: 'Segoe UI, Microsoft JhengHei, sans-serif', fontSize: '14px', actorBkg: '#eeedfd', actorBorder: '#7367f0', noteBkgColor: '#fff4e5', noteBorderColor: '#ff9f43' },",
+    "  flowchart: { useMaxWidth: false, htmlLabels: true }, sequence: { useMaxWidth: false, wrap: false, width: 130, actorMargin: 40 }, state: { useMaxWidth: false } });",
+    "mermaid.run({ querySelector: '.mermaid' }).catch(function (e) { console.error(e); });"
+  ].join('\n');
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>OKADA | Promotions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/front.css">
+</head>
+<body>
+<main id="page" class="mx-auto w-[calc(100vw-218px)] max-w-main-content fr-main"></main>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/front.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money;
+  /* REQ-0020:現有前台 /en/promotions 為 Page not found;原型保留 REQ-0012 報名列表(新元件 data-new):
+   * 標題比照該頁 h1(24px/700 #580A3F)、卡片比照錢包頁內容卡、Opt-In 比照主按鈕(金色漸層,同 Back to home)、不可報名原因比照現有前台提示文字 */
+  function render(s, pl) {
+    var list = s.promos.filter(function (p) { return S.promoRunning(s, p); });
+    document.getElementById('page').innerHTML = '<div class="fr-promos" data-new="promotions-list"><h1 class="text-2xl font-bold capitalize fr-promo-h">Promotions</h1>' +
+      '<div class="fr-card"><p class="meta" style="margin-bottom:12px">原型:報名 Opt-In 也可由模擬控制台操作。存款任務活動同一時間只能參加一個。</p>' +
+      (list.length ? list.map(function (p) {
+        var joined = pl && s.optins.some(function (o) { return o.playerId === pl.id && o.promoId === p.id; });
+        // REQ-0012:已有進行中的存款活動 → 報名按鈕不可用並顯示原因(後端 Store.optIn 同樣檢查)
+        var block = pl && !joined ? S.depositTaskBlock(s, pl.id, p.id) : null;
+        var action = joined ? '<span class="chip st-claimed">Joined</span>'
+          : block ? '<button type="button" class="z-0 group relative fr-gold md btn-claim" data-optin="' + p.id + '" disabled title="' + esc(S.depositTaskBlockMsg(block)) + '">Opt-In</button><div class="meta optin-blocked" data-blocked="' + p.id + '" style="max-width:240px;margin-top:6px">' + esc(S.depositTaskBlockMsg(block)) + '</div>'
+          : '<button type="button" class="z-0 group relative fr-gold md btn-claim" data-optin="' + p.id + '">Opt-In</button>';
+        return '<div class="rw"><div><div class="rw-title">' + esc(p.name) + '</div><div class="meta">' + p.from + ' ~ ' + p.to + ' · ' + (S.isDepositTask(p) ? 'Deposit ' + money(p.min) + ' – ' + money(p.max) + '(存款任務)' : 'No deposit requirement(無存款條件)') + ' · ' + p.pct + '% up to ' + money(p.maxCampaign) + ' · Turnover ' + money(p.turnover) +
+          (p.tierPoints ? ' · Tier Points ' + p.tierPoints : '') + ' · ' + S.FREQ[p.freq] + ' · ' + (p.distribution === 'promo_wallet' ? 'Reward goes to Promo Wallet(經由優惠錢包)' : 'Paid directly(直接派發)') + '</div></div>' +
+          '<div style="align-self:center;text-align:right">' + action + '</div></div>';
+      }).join('') : '<div class="meta">No running promotions.</div>') + '</div></div>';
+  }
+  document.getElementById('page').addEventListener('click', function (e) {
+    var id = e.target.getAttribute('data-optin'); if (!id) return;
+    var s = S.load(); if (!s.frontPlayer) { FR.loginDialog(); return; }
+    try { S.mutate(function (x) { S.optIn(x, S.player(x, x.frontPlayer).id, id); }); UI.toast('Opted in successfully', 'ok'); } catch (err) { UI.toast(err.message, 'err'); }
+  });
+  FR.init({ active: 'promotions', render: render });
+})();
+</script>
+</body>
+</html>

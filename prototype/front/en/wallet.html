@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Wallet | OKADA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/front.css">
+</head>
+<body>
+<main id="page" class="mx-auto w-[calc(100vw-218px)] max-w-main-content fr-main"></main>
+<script src="../../assets/store.js"></script>
+<script src="../../assets/ui.js"></script>
+<script src="../../assets/sim.js"></script>
+<script src="../../assets/front.js"></script>
+<script>
+(function () {
+  var S = Store, esc = S.esc, money = S.money, I = FR.icons;
+  /* REQ-0020:頁籤與內容比照現有前台 /en/wallet(oocTabListWrapper、淺灰內容卡、Deposit 付款方式深色方塊卡、Withdrawal 銀行帳戶、Game / Wallet History 表格與分頁;手機版為卡片列表)
+   * REQ-0014:頁籤 Deposit / Withdrawal / Game History / Wallet History / Promo Wallet(新元件);?tab=promo 直接開到 Promo Wallet;上方 OKash / Promo Wallet 卡片(新元件,比照 /en/points 錢包卡片)
+   * 新元件加 data-new(比對腳本比對既有元件位置時暫時隱藏) */
+  var TABS = [['deposit', 'Deposit'], ['withdrawal', 'Withdrawal'], ['gameHistory', 'Game History'], ['walletHistory', 'Wallet History'], ['promo', 'Promo Wallet']];
+  var ALIAS = { 'game-history': 'gameHistory', 'wallet-history': 'walletHistory' };
+  var tab = (function () { var q = S.qs('tab'); q = ALIAS[q] || q; return TABS.some(function (t) { return t[0] === q; }) ? q : 'deposit'; })();
+  var view = 'active';
+  var busy = {};
+  var payMethod = '';
+  var pg = { gameHistory: 1, walletHistory: 1 };
+  var openCard = {};
+  var PER = 10;
+  function rerender() { var s = S.load(); render(s, S.player(s, s.frontPlayer)); }
+  function setTab(t) {
+    tab = t;
+    var u = new URL(location.href); if (t === 'deposit') u.searchParams.delete('tab'); else u.searchParams.set('tab', t);
+    history.replaceState(null, '', u.pathname + u.search + u.hash);
+    rerender();
+  }
+  function bar(label, t, pts) {
+    if (!t) return '';
+    var pct = t.target > 0 ? Math.min(100, t.cur / t.target * 100) : 100;
+    return '<div class="meta">' + label + ' ' + (pts ? t.cur : money(t.cur)) + ' / ' + (pts ? t.target : money(t.target)) + (t.done ? ' ✓' : '') + '</div><div class="bar' + (t.done ? ' full' : '') + '"><i style="width:' + pct + '%"></i></div>';
+  }
+  function card(s, r) {
+    var p = S.promo(s, r.promoId), t = S.tasks(s, r);
+    var lines = ['Promotion ends 活動結束:' + S.fmt(S.promoEnd(p))];
+    if (S.isPending(r)) lines.push('Claim deadline 領取截止:' + S.fmt(r.claimDeadline));
+    if (r.status === 'locked' && p.freq === 'end_of_promotion' && t.all) lines.push('Tasks completed — unlocks when the promotion ends(任務已完成,活動結束時解鎖)');
+    if (r.unlockedAt) lines.push('Unlocked 解鎖:' + S.fmt(r.unlockedAt));
+    if (r.claimedAt) lines.push('Claimed 領取:' + S.fmt(r.claimedAt) + ' → ' + S.PAYOUT[r.payout].name);
+    if (r.expiredAt) lines.push('Expired 作廢:' + S.fmt(r.expiredAt) + '(領取期已結束,未入帳)');
+    if (r.cancelledAt) lines.push('Cancelled 取消:' + S.fmt(r.cancelledAt) + '(未入帳)');
+    // Claim:比照現有前台主按鈕(金色漸層)
+    var action = r.status === 'claimable'
+      ? '<button type="button" class="z-0 group relative fr-gold md btn-claim" data-claim="' + r.id + '"' + (busy[r.id] ? ' disabled' : '') + '>' + (busy[r.id] ? 'Claiming…' : 'Claim') + '</button>'
+      : '';
+    return '<div class="rw" data-reward="' + r.id + '"><div><div class="rw-title">' + esc(p.name) + '</div><div class="meta">' + r.id + ' · Payout to ' + S.PAYOUT[r.payout].name + ' · ' + S.FREQ[p.freq] + '</div></div>' +
+      '<div class="rw-amt">₱ ' + money(r.amount) + '<div>' + UI.statusChip(r.status) + '</div></div>' +
+      '<div>' + bar('Deposit 存款', t.deposit) + bar('Turnover 流水', t.turnover) + bar('Tier Points 等級點數', t.tier, true) + lines.map(function (l) { return '<div class="meta">' + l + '</div>'; }).join('') + '</div>' +
+      '<div style="align-self:end;text-align:right">' + action + '</div></div>';
+  }
+  function promoPanel(s, mine, pw) {
+    var list = mine.filter(function (r) { return view === 'active' ? S.isPending(r) : !S.isPending(r); });
+    return '<div class="fr-pw" id="promo-wallet"><p class="fr-pw-h">Promo Wallet 優惠錢包</p>' +
+      '<div class="notice">Rewards in the Promo Wallet are pending and <b>cannot be used for betting</b>. Complete all tasks to unlock, then press Claim before the claim deadline. Unclaimed rewards expire after the claim deadline.<br>優惠錢包內的獎勵為待領取,不能用來下注;完成任務後在領取截止前按 Claim,獎勵才會派發到活動的派發錢包。</div>' +
+      '<div class="fr-subtabs fr-tabs"><button type="button" data-view="active" class="' + (view === 'active' ? 'on' : '') + '">Active 進行中 (' + (pw.lockedN + pw.claimableN) + ')</button><button type="button" data-view="history" class="' + (view === 'history' ? 'on' : '') + '">History 紀錄 (' + (mine.length - pw.lockedN - pw.claimableN) + ')</button></div>' +
+      '<div id="reward-list">' + (list.length ? list.map(function (r) { return card(s, r); }).join('') : '<div class="meta" id="no-rewards">No rewards yet.(目前沒有獎勵)</div>') + '</div>' +
+      '</div>';
+  }
+  function panel(inner, cls) {
+    return '<div class="flex flex-col relative fr-panel"><div class="relative flex w-full"><div class="flex h-full w-full fr-panel-in' + (cls || '') + '">' + inner + '</div></div></div>';
+  }
+  var NEXT = '<button type="button" class="z-0 group relative fr-gold lg" disabled title="原型示意:存提款流程不在本需求範圍">Next</button>';
+  function depositPanel() {
+    var methods = ['Debit Card', 'E-Wallet A', 'E-Wallet B', 'Bank Transfer', 'Top Up'];
+    return panel('<p class="text-center text-lg font-bold fr-ptitle">Please Select Payment Method</p><div class="mx-auto flex w-full fr-paybox" id="panel-deposit"><div class="grid grid-cols-2 gap-4 fr-paygrid">' +
+      methods.map(function (m, i) { return '<button type="button" class="z-0 group relative fr-paycard' + (payMethod === m ? ' on' : '') + '" data-pay="' + m + '"><span class="ph l' + i + '">Logo</span>' + m + '</button>'; }).join('') +
+      '</div><div class="flex justify-end">' + NEXT + '</div></div>');
+  }
+  function withdrawalPanel() {
+    return panel('<p class="flex justify-center text-lg fr-ptitle">Please Select Bank Account</p><div class="mx-auto flex w-full fr-paybox" id="panel-withdrawal"><div class="px-2 flex flex-col fr-acc-list"><div class="px-4 shadow-medium rounded-medium fr-acc-item">' +
+      '<h2><button type="button" id="acc-bank" aria-expanded="true"><div class="flex-1 flex flex-col"><span class="font-bold text-base lg:text-lg acc-title">Bank Account</span></div></button></h2>' +
+      '<section><div id="acc-bank-panel"><div class="flex justify-center"><button type="button" class="z-0 group relative fr-grey" title="原型示意:提款帳戶不在本需求範圍">Add Account</button></div></div></section></div></div>' +
+      '<div class="mt-auto flex justify-end">' + NEXT + '</div></div>');
+  }
+  /* 歷史資料:玩家自己的交易(原型模擬)在前,其後以固定假資料補足,每頁 10 筆 */
+  function d2(ms) { var f = S.fmt(ms); return [f.slice(0, 10).replace(/-/g, '/'), f.slice(11, 19)]; }
+  function fakeAt(i) { return Date.UTC(2026, 8, 28, 12, 0, 0) - 8 * 3600e3 - i * 5 * 3600e3 - i * 137e3; }
+  function walletRows(s, pl) {
+    var own = s.ftx.filter(function (x) { return x.playerId === pl.id && x.okash && x.type !== S.TX.BET; }).sort(function (a, b) { return b.at - a.at || b.id - a.id; })
+      .map(function (x) { return { at: x.at, method: x.type === S.TX.DEPOSIT ? 'Top Up' : 'Promo', desc: x.type === S.TX.DEPOSIT ? 'Deposit' : x.type === S.TX.PW_CLAIM ? 'Promo Claim' : 'Bonus', ref: x.ref || '—', st: 'complete', amt: x.amount }; });
+    var ST = ['processing', 'complete', 'complete', 'processing', 'processing', 'processing', 'failed', 'failed', 'failed', 'failed', 'complete', 'complete'];
+    var fake = []; for (var i = 0; i < 24; i++) fake.push({ at: fakeAt(i), method: i % 3 === 1 ? 'Bank Transfer' : 'Top Up', desc: i % 4 === 3 ? 'Withdrawal' : 'Deposit', ref: 'PROTO-' + String(900000 + i * 7919).slice(-6) + '-FAKE-' + String(1000 + i), st: ST[i % ST.length], amt: [1000, 500, 2000, 300, 1500][i % 5] });
+    return own.concat(fake);
+  }
+  function gameRows(s, pl) {
+    var own = s.ftx.filter(function (x) { return x.playerId === pl.id && x.type === S.TX.BET; }).sort(function (a, b) { return b.at - a.at || b.id - a.id; })
+      .map(function (x) { return { at: x.at, prov: 'Demo Provider', ref: x.ref || '—', bet: x.amount, pay: 0 }; });
+    var PROV = ['Playtech', 'Jili', 'Pragmatic Play', 'Habanero'];
+    var fake = []; for (var i = 0; i < 1000; i++) fake.push({ at: fakeAt(i) + 3600e3, prov: PROV[i % 4], ref: 'PROTO-BET-' + String(100000 + i * 3571).slice(-6), bet: 10, pay: i % 5 === 2 ? 25 : 0 });
+    return own.concat(fake);
+  }
+  function pager(key, total) {
+    var pages = Math.max(1, Math.ceil(total / PER)), cur = Math.min(pg[key], pages);
+    var opts = ''; for (var i = 1; i <= pages; i++) opts += '<option value="' + i + '"' + (i === cur ? ' selected' : '') + '>' + i + '</option>';
+    var items = ''; for (i = 1; i <= pages; i++) items += '<button type="button" data-pg="' + key + '" data-to="' + i + '">' + i + '</button>';
+    var ic = function (to, svg, dis, lbl) { return '<span class="pg-ic" role="button" tabindex="0" aria-label="' + lbl + '" data-pg="' + key + '" data-to="' + to + '"' + (dis ? ' aria-disabled="true"' : '') + '>' + svg + '</span>'; };
+    return '<div class="mt-auto flex justify-center fr-pager"><div class="flex flex-row items-center">' + ic(1, I.dbl, cur === 1, 'First page') + ic(cur - 1, I.chevL, cur === 1, 'Previous page') +
+      '<div class="group flex flex-col"><div class="hsel" aria-hidden="true"><label><select tabindex="-1" data-pgsel="' + key + '">' + opts + '</select></label></div>' +
+      '<div class="w-full flex flex-col"><button type="button" class="fr-pgbtn" data-pgbtn="' + key + '" aria-haspopup="listbox"><div class="inline-flex h-fit w-[calc(100%_-_theme(spacing.6))]"><span>' + cur + '</span></div><span class="chev">' + I.chevD + '</span></button>' +
+      '<div class="fr-pgmenu" hidden data-pgmenu="' + key + '">' + items + '</div></div></div>' +
+      '<p>of</p><p>' + pages + '</p>' + ic(cur + 1, I.chevR, cur === pages, 'Next page') + ic(pages, I.dblR, cur === pages, 'Last page') + '</div></div>';
+  }
+  function pageOf(key, rows) { var pages = Math.max(1, Math.ceil(rows.length / PER)); if (pg[key] > pages) pg[key] = pages; return rows.slice((pg[key] - 1) * PER, pg[key] * PER); }
+  var CHEV = '<span class="text-default-400 transition-transform rotate-0 chev">' + I.chevD + '</span>';
+  function hcard(key, i, titleL, titleR, sub, stHtml, detail) {
+    var id = key + '-' + i, open = !!openCard[id];
+    return '<div class="px-4 bg-content1 shadow-medium fr-hcard"><h2><button type="button" data-hcard="' + id + '" aria-expanded="' + open + '"><div class="flex-1 flex flex-col tx"><span class="text-foreground text-medium"><div class="title">' + titleL + titleR + '</div></span>' +
+      '<span class="text-small text-foreground-500 font-normal"><div class="subtitle"><p class="w-full"><span>' + sub[0] + '</span><span class="ml-2">' + sub[1] + '</span></p>' + (stHtml || '') + '</div></span></div>' + CHEV + '</button></h2>' +
+      '<section' + (open ? '' : ' hidden') + '><div><dl>' + detail.map(function (d) { return '<dt>' + d[0] + '</dt><dd>' + d[1] + '</dd>'; }).join('') + '</dl></div></section></div>';
+  }
+  function gamePanel(s, pl) {
+    var allRows = gameRows(s, pl), rows = pageOf('gameHistory', allRows);
+    var wl = function (r) { var v = r.pay - r.bet; return (v < 0 ? '-₱' : '₱') + money(Math.abs(v)); };
+    var tbl = '<div class="flex-col relative gap-4 fr-tblwrap fr-only-d"><table class="fr-tbl" id="tbl-game-history" aria-label="Game History" style="width:1150px"><colgroup><col style="width:162.844px"><col style="width:140.58190625px"><col style="width:483.33190625px"><col style="width:103.422px"><col style="width:112.438px"><col style="width:146.391px"></colgroup>' +
+      '<thead class="[&>tr]:first:rounded-lg"><tr class="group/tr outline-none data-[focus-visible=true]:z-10"><th>Date / Time</th><th>Provider</th><th>Reference ID</th><th>Bet</th><th>Payout</th><th>Win / Loss</th></tr><tr aria-hidden="true" class="fr-spacer"></tr></thead>' +
+      '<tbody class="after:block">' + rows.map(function (r) { var d = d2(r.at); return '<tr><td><div class="flex flex-col whitespace-nowrap dt"><span>' + d[0] + '</span><span class="text-xs text-gray-500">' + d[1] + '</span></div></td><td class="c"><span>' + esc(r.prov) + '</span></td><td class="c"><span>' + esc(r.ref) + '</span></td><td class="c"><span>₱' + money(r.bet) + '</span></td><td class="c"><span>₱' + money(r.pay) + '</span></td><td class="c"><span>' + wl(r) + '</span></td></tr>'; }).join('') + '</tbody></table></div>';
+    var cards = '<div class="px-2 flex flex-col fr-hlist fr-only-m" id="list-game-history">' + rows.map(function (r, i) { var d = d2(r.at);
+      return hcard('g' + pg.gameHistory, i, '<span>' + esc(r.prov) + '</span>', '<span class="amount">' + wl(r) + '</span>', d, '', [['Reference ID', esc(r.ref)], ['Bet', '₱' + money(r.bet)], ['Payout', '₱' + money(r.pay)]]); }).join('') + '</div>';
+    return panel(tbl + cards + pager('gameHistory', allRows.length), ' g0 fr-hist');
+  }
+  function walletPanel(s, pl) {
+    var allRows = walletRows(s, pl), rows = pageOf('walletHistory', allRows);
+    var st = function (r, tag) { var c = { processing: 'text-gray-500', complete: 'text-success-500', failed: 'text-red-500' }[r.st]; return '<' + tag + ' class="capitalize ' + c + '" data-status="' + r.st + '">' + (tag === 'span' ? r.st.charAt(0).toUpperCase() + r.st.slice(1) : r.st) + '</' + tag + '>'; };
+    var tbl = '<div class="flex-col relative gap-4 fr-tblwrap fr-only-d"><table class="fr-tbl" id="tbl-wallet-history" aria-label="Wallet History" style="width:1150px"><colgroup><col style="width:150.266px"><col style="width:109.594px"><col style="width:142.594px"><col style="width:459.08190625px"><col style="width:149.78490625px"><col style="width:137.688px"></colgroup>' +
+      '<thead class="[&>tr]:first:rounded-lg"><tr class="group/tr outline-none data-[focus-visible=true]:z-10"><th>Date / Time</th><th>Method</th><th>Description</th><th>Reference ID</th><th>Status</th><th>Amount</th></tr><tr aria-hidden="true" class="fr-spacer"></tr></thead>' +
+      '<tbody class="after:block">' + rows.map(function (r) { var d = d2(r.at); return '<tr><td><div class="flex flex-col whitespace-nowrap dt tight"><span>' + d[0] + '</span><span class="text-xs text-gray-500">' + d[1] + '</span></div></td><td class="c"><span>' + esc(r.method) + '</span></td><td class="c"><span>' + esc(r.desc) + '</span></td><td class="c"><span>' + esc(r.ref) + '</span></td><td class="c">' + st(r, 'span') + '</td><td class="c"><span>₱' + money(r.amt) + '</span></td></tr>'; }).join('') + '</tbody></table></div>';
+    var cards = '<div class="px-2 flex flex-col fr-hlist fr-only-m wh" id="list-wallet-history">' + rows.map(function (r, i) { var d = d2(r.at);
+      return hcard('w' + pg.walletHistory, i, '<p>' + esc(r.desc) + '</p>', '<p class="amount">₱' + money(r.amt) + '</p>', d, st(r, 'p'), [['Method', esc(r.method)], ['Reference ID', esc(r.ref)]]); }).join('') + '</div>';
+    return panel(tbl + cards + pager('walletHistory', allRows.length), ' g0 fr-hist fr-wh');
+  }
+  function render(s, pl) {
+    var mine = s.rewards.filter(function (r) { return r.playerId === pl.id; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var pw = S.promoSums(s, pl.id);
+    var content = tab === 'deposit' ? depositPanel() : tab === 'withdrawal' ? withdrawalPanel() : tab === 'gameHistory' ? gamePanel(s, pl) : tab === 'walletHistory' ? walletPanel(s, pl) : panel(promoPanel(s, mine, pw));
+    document.getElementById('page').innerHTML =
+      // 新元件:OKash / Promo Wallet 卡片(比照 /en/points 錢包卡片)
+      '<div class="grid w-full gap-2 fr-wcards" id="wallet-summary" data-new="wallet-cards">' +
+        '<div id="okash-card"><div class="flex flex-col justify-between fr-pcard"><p class="nm">OKash Balance <span class="fr-tag">Available to bet 可下注</span></p><p class="val" id="fr-okash">₱ ' + money(pl.okash) + '</p></div></div>' +
+        '<div id="promo-card" class="span2"><div class="flex flex-col justify-between fr-pcard"><p class="nm">Promo Wallet 優惠錢包 <span class="fr-tag">Not for betting 不可下注</span></p>' +
+          '<div class="pw2"><p class="val">Locked 鎖定 <span id="fr-locked">₱ ' + money(pw.locked) + '</span> <span class="sub">' + pw.lockedN + ' reward(s)</span></p>' +
+          '<p class="val">Claimable 可領取 <span id="fr-claimable">₱ ' + money(pw.claimable) + '</span> <span class="sub">' + pw.claimableN + ' reward(s)</span></p></div>' +
+          '<button type="button" class="go" data-tab="promo" id="go-promo">View rewards 查看獎勵 →</button></div></div>' +
+      '</div>' +
+      '<div class="flex w-full flex-grow fr-tabsec"><div class="inline-flex oocTabListWrapper pb-3"><div class="fr-tablist fr-tabbar" role="tablist" aria-label="Options" id="wallet-tabs">' + TABS.map(function (t) {
+        return '<button type="button" role="tab" class="fr-tab" data-tab="' + t[0] + '" id="tab-' + t[0] + '" aria-selected="' + (tab === t[0]) + '"' + (t[0] === 'promo' ? ' data-new="promo-tab"' : '') + '>' + (tab === t[0] ? '<span class="absolute z-0 inset-0"></span>' : '') + '<div class="relative z-10 whitespace-nowrap">' + t[1] + '</div></button>';
+      }).join('') + '</div></div>' +
+      '<div class="fr-tabpanel" role="tabpanel" id="tabpanel-' + tab + '" aria-labelledby="tab-' + tab + '"' + (tab === 'promo' ? ' data-new="promo-panel"' : '') + '>' + content + '</div></div>';
+    scrollTab();
+  }
+  /** 頁籤列可橫向捲動(手機):選中的頁籤捲到可見範圍(同現有前台) */
+  function scrollTab() { var l = document.getElementById('wallet-tabs'), b = l && l.querySelector('[aria-selected=true]'); if (!b) return; var lr = l.getBoundingClientRect(), br = b.getBoundingClientRect(); if (br.right > lr.right) l.scrollLeft += br.right - lr.right; else if (br.left < lr.left) l.scrollLeft -= lr.left - br.left; }
+  document.getElementById('page').addEventListener('change', function (e) { var k = e.target.getAttribute('data-pgsel'); if (k) { pg[k] = Number(e.target.value); rerender(); } });
+  document.getElementById('page').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-tab]'); if (t) { setTab(t.getAttribute('data-tab')); return; }
+    var pm = e.target.closest('[data-pay]'); if (pm) { payMethod = pm.getAttribute('data-pay'); rerender(); return; }
+    var hc = e.target.closest('[data-hcard]'); if (hc) { var hid = hc.getAttribute('data-hcard'); openCard[hid] = !openCard[hid]; rerender(); return; }
+    var pb = e.target.closest('[data-pgbtn]'); if (pb) { var mn = pb.parentNode.querySelector('[data-pgmenu]'); mn.hidden = !mn.hidden; return; }
+    var pgo = e.target.closest('[data-pg]'); if (pgo) { if (pgo.getAttribute('aria-disabled') === 'true') return; pg[pgo.getAttribute('data-pg')] = Number(pgo.getAttribute('data-to')); rerender(); return; }
+    var vb = e.target.closest('[data-view]'); if (vb) { view = vb.getAttribute('data-view'); rerender(); return; }
+    var cb = e.target.closest('[data-claim]'); if (!cb) return;
+    var id = cb.getAttribute('data-claim');
+    if (busy[id]) return; // 前端防連點
+    busy[id] = true; cb.disabled = true; cb.textContent = 'Claiming…';
+    var s = S.load();
+    var claimed = false;
+    Sim.claimSafe(id, s.frontPlayer).then(function (r) {
+      claimed = true;
+      UI.toast('Claimed ₱ ' + money(r.amount) + ' to ' + S.PAYOUT[r.payout].name + ' successfully!(領取成功)', 'ok');
+    }, function (err) { UI.toast(err.message, 'err'); }).then(function () {
+      delete busy[id]; var st = S.load(); if (st.frontPlayer) render(st, S.player(st, st.frontPlayer));
+      if (claimed) FR.onClaimSuccess(); // REQ-0017:本頁 Claim 成功後頂部 ₱ 與下拉框自動更新一次(失敗不更新)
+    });
+  });
+  FR.init({ active: 'wallet', needLogin: true, render: render });
+})();
+</script>
+</body>
+</html>
