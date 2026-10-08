@@ -1,5 +1,6 @@
 # master 有新的驗收合併時,把 prototype/ 部署到 GitHub Pages。
 # 只有 master 會部署,所以線上只會出現已驗收的原型。
+# Pages 的 Source 必須設為「GitHub Actions」(設成 branch 會改成部署 /docs)。
 name: Deploy prototype
 
 on:
