@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>第 3 階段 · OKADA 本期需求規劃</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">OKADA 後台 · 本期需求規劃 · 11/02 開工 · 每週五發版</div>
+  <h1>第 3 階段：儀表盤與收尾</h1>
+  <nav class="tabs" aria-label="規劃頁面"><a href="./">總覽</a><a href="impact.html">平台提升</a><a href="phase1.html">第 1 階段</a><a href="phase2.html">第 2 階段</a><a href="phase3.html" aria-current="page">第 3 階段</a></nav>
+</header>
+<ul class="kv">
+  <li><span>期間</span><b>11/23–12/11</b></li>
+  <li><span>需時</span><b>3 週（含 1 週定稿、1 週緩衝）</b></li>
+  <li><span>預計完成</span><b>12/11</b></li>
+  <li><span>發版</span><b>R5 12/04、R6 12/11</b></li>
+  <li><span>總工時</span><b>57 小時</b></li>
+</ul>
+<section>
+  <h2>主要目標</h2>
+  <ol class="goals"><li>主管一打開後台就看到當日營運狀況與較昨日增減</li><li>待處理的提款與資料修改申請不會遺漏</li><li>修完本期缺陷、完成全站回歸，本期需求全部上線</li></ol>
+</section>
+<section>
+  <h2>需求範圍與工時</h2>
+  <p class="assume">工時為真實開發工程師的預估（小時），未含需求溝通與發版作業；1 人天＝8 小時。後台與後端沒有原始碼可查，跨供應商注單（REQ-0022、0025）與狀態紀錄（REQ-0026）取決於現有資料結構，誤差可能到 ±30%，開發前需後端確認。</p>
+<article class="req">
+  <div class="req-head"><span class="id">REQ-0024</span><h3>後台儀表盤</h3><span class="rel">R5 12/04</span></div>
+  <div class="req-meta"><span>功能點 <b>10</b></span><span>工時 <b>57 小時</b>（約 7.1 人天）</span><span>不做：不做自動刷新、不做自訂卡片排列</span></div>
+  <div class="frame"><table class="imp"><thead><tr><th>指標</th><th>現況</th><th>完成後</th><th>提升幅度</th><th>依據</th></tr></thead><tbody>
+<tr><td>登入後掌握當日營運的效率（要開的報表）</td><td>4 份</td><td>0 份（首頁即看到）</td><td class="chg">+100%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>首頁可見的待辦類別（提款、資料修改申請）</td><td>0／2</td><td>2／2</td><td class="chg">+100%</td><td><span class="tag">依現況計算</span></td></tr>
+  </tbody></table></div>
+  <div class="frame"><table class="fp">
+    <thead><tr><th>功能點</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">小計</th></tr></thead>
+    <tbody>
+<tr><td>今日 8 項指標與較昨日增減 API</td><td class="n z">—</td><td class="n">8</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>7／30 天趨勢 API</td><td class="n z">—</td><td class="n">3</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>今日 GGR 前 5 名供應商 API</td><td class="n z">—</td><td class="n">3</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>待辦統計 API：待處理提款、資料修改申請</td><td class="n z">—</td><td class="n">3</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>指標卡 8 張與增減標示</td><td class="n">8</td><td class="n z">—</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>趨勢圖（7／30 天切換）</td><td class="n">8</td><td class="n z">—</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>供應商排行與待辦區塊、點擊跳轉</td><td class="n">6</td><td class="n z">—</td><td class="n z">—</td><td class="n">6</td></tr>
+<tr><td>依權限顯示卡片</td><td class="n">3</td><td class="n">2</td><td class="n z">—</td><td class="n">5</td></tr>
+<tr><td>桌機與手機版面</td><td class="n">3</td><td class="n z">—</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>功能與回歸測試（9 條用例）</td><td class="n z">—</td><td class="n z">—</td><td class="n">10</td><td class="n">10</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（小時）</td><td class="n">28</td><td class="n">19</td><td class="n">10</td><td class="n">57</td></tr></tfoot>
+  </table></div>
+</article>
+<article class="req"><div class="req-head"><span class="id">緩衝</span><h3>修復與回歸</h3><span class="rel">R6 12/11</span></div><div class="req-meta"><span>前幾版的缺陷修復、順延項目、全站回歸；不新增需求</span></div></article>
+</section>
+<section>
+  <h2>本階段開工前要決定</h2>
+  <div class="decide"><div><b>儀表盤指標清單、是否加 GA 流量區塊</b><p>11/27 前</p></div></div>
+</section>
+</div>
+</body>
+</html>

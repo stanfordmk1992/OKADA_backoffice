@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>第 2 階段 · OKADA 本期需求規劃</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">OKADA 後台 · 本期需求規劃 · 11/02 開工 · 每週五發版</div>
+  <h1>第 2 階段：查詢與分析</h1>
+  <nav class="tabs" aria-label="規劃頁面"><a href="./">總覽</a><a href="impact.html">平台提升</a><a href="phase1.html">第 1 階段</a><a href="phase2.html" aria-current="page">第 2 階段</a><a href="phase3.html">第 3 階段</a></nav>
+</header>
+<ul class="kv">
+  <li><span>期間</span><b>11/09–11/27</b></li>
+  <li><span>需時</span><b>3 週（含 1 週定稿）</b></li>
+  <li><span>預計完成</span><b>11/27</b></li>
+  <li><span>發版</span><b>R3 11/20、R4 11/27</b></li>
+  <li><span>總工時</span><b>246 小時</b></li>
+</ul>
+<section>
+  <h2>主要目標</h2>
+  <ol class="goals"><li>客服在一個畫面查到任一玩家的注單與存提款，不必逐家供應商、分頁查</li><li>營運能比較供應商與遊戲的投注、GGR、RTP 表現</li><li>財務每天掌握現金流，及早發現成功率下降的支付渠道</li></ol>
+</section>
+<section>
+  <h2>需求範圍與工時</h2>
+  <p class="assume">工時為真實開發工程師的預估（小時），未含需求溝通與發版作業；1 人天＝8 小時。後台與後端沒有原始碼可查，跨供應商注單（REQ-0022、0025）與狀態紀錄（REQ-0026）取決於現有資料結構，誤差可能到 ±30%，開發前需後端確認。</p>
+<article class="req">
+  <div class="req-head"><span class="id">REQ-0025</span><h3>投注紀錄</h3><span class="rel">R3 11/20</span></div>
+  <div class="req-meta"><span>功能點 <b>8</b></span><span>工時 <b>71 小時</b>（約 8.9 人天）</span><span>不做：不改 Game Report、不新增供應商串接</span></div>
+  <div class="frame"><table class="imp"><thead><tr><th>指標</th><th>現況</th><th>完成後</th><th>提升幅度</th><th>依據</th></tr></thead><tbody>
+<tr><td>查一位玩家全部注單的效率（查詢次數）</td><td>最多 14 次</td><td>1 次</td><td class="chg">+93%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>客服處理投注爭議的效率</td><td>上線前量測</td><td>處理時間減半</td><td class="chg">+50%</td><td><span class="tag new">目標值</span></td></tr>
+  </tbody></table></div>
+  <div class="frame"><table class="fp">
+    <thead><tr><th>功能點</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">小計</th></tr></thead>
+    <tbody>
+<tr><td>跨 14 家供應商注單統一查詢（資料整合與索引）</td><td class="n z">—</td><td class="n">24</td><td class="n z">—</td><td class="n">24</td></tr>
+<tr><td>篩選、分頁、查詢區間上限</td><td class="n z">—</td><td class="n">4</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>注單詳情 API：前後餘額、扣款錢包</td><td class="n z">—</td><td class="n">6</td><td class="n z">—</td><td class="n">6</td></tr>
+<tr><td>CSV 非同步匯出</td><td class="n z">—</td><td class="n">3</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>列表頁：5 種篩選、表格、合計</td><td class="n">12</td><td class="n z">—</td><td class="n z">—</td><td class="n">12</td></tr>
+<tr><td>詳情頁</td><td class="n">8</td><td class="n z">—</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>權限與選單</td><td class="n">1</td><td class="n">1</td><td class="n z">—</td><td class="n">2</td></tr>
+<tr><td>功能與回歸測試（10 條用例）</td><td class="n z">—</td><td class="n z">—</td><td class="n">12</td><td class="n">12</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（小時）</td><td class="n">21</td><td class="n">38</td><td class="n">12</td><td class="n">71</td></tr></tfoot>
+  </table></div>
+</article>
+<article class="req">
+  <div class="req-head"><span class="id">REQ-0026</span><h3>存取款紀錄</h3><span class="rel">R3 11/20</span></div>
+  <div class="req-meta"><span>功能點 <b>8</b></span><span>工時 <b>55 小時</b>（約 6.9 人天）</span><span>不做：只讀，不做審核或改狀態</span></div>
+  <div class="frame"><table class="imp"><thead><tr><th>指標</th><th>現況</th><th>完成後</th><th>提升幅度</th><th>依據</th></tr></thead><tbody>
+<tr><td>查玩家資金往來的效率（要開的頁面）</td><td>2 頁</td><td>1 頁</td><td class="chg">+50%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>追查卡單的效率</td><td>上線前量測</td><td>處理時間縮短 40%</td><td class="chg">+40%</td><td><span class="tag new">目標值</span></td></tr>
+  </tbody></table></div>
+  <div class="frame"><table class="fp">
+    <thead><tr><th>功能點</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">小計</th></tr></thead>
+    <tbody>
+<tr><td>存款與提款合併查詢 API</td><td class="n z">—</td><td class="n">8</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>狀態變更紀錄（時間軸資料；現有資料不足時需補記錄）</td><td class="n z">—</td><td class="n">10</td><td class="n z">—</td><td class="n">10</td></tr>
+<tr><td>詳情 API：狀態時間軸、處理人</td><td class="n z">—</td><td class="n">4</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>CSV 非同步匯出</td><td class="n z">—</td><td class="n">3</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>列表頁：篩選、表格、存提款合計</td><td class="n">10</td><td class="n z">—</td><td class="n z">—</td><td class="n">10</td></tr>
+<tr><td>詳情頁：狀態時間軸</td><td class="n">8</td><td class="n z">—</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>權限與選單</td><td class="n">1</td><td class="n">1</td><td class="n z">—</td><td class="n">2</td></tr>
+<tr><td>功能與回歸測試（9 條用例）</td><td class="n z">—</td><td class="n z">—</td><td class="n">10</td><td class="n">10</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（小時）</td><td class="n">19</td><td class="n">26</td><td class="n">10</td><td class="n">55</td></tr></tfoot>
+  </table></div>
+</article>
+<article class="req">
+  <div class="req-head"><span class="id">REQ-0022</span><h3>投注報表</h3><span class="rel">R4 11/27</span></div>
+  <div class="req-meta"><span>功能點 <b>8</b></span><span>工時 <b>66 小時</b>（約 8.3 人天）</span><span>不做：不改 Game Report</span></div>
+  <div class="frame"><table class="imp"><thead><tr><th>指標</th><th>現況</th><th>完成後</th><th>提升幅度</th><th>依據</th></tr></thead><tbody>
+<tr><td>比較全部供應商投注表現的效率（查詢次數）</td><td>14 次</td><td>1 次</td><td class="chg">+93%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>投注統計維度覆蓋（供應商、遊戲、玩家、日期）</td><td>0／4 種</td><td>4／4 種</td><td class="chg">+100%</td><td><span class="tag">依現況計算</span></td></tr>
+  </tbody></table></div>
+  <div class="frame"><table class="fp">
+    <thead><tr><th>功能點</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">小計</th></tr></thead>
+    <tbody>
+<tr><td>跨供應商投注彙總：依供應商、遊戲、玩家、日期</td><td class="n z">—</td><td class="n">20</td><td class="n z">—</td><td class="n">20</td></tr>
+<tr><td>有效投注與 RTP 計算</td><td class="n z">—</td><td class="n">4</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>查詢 API：供應商多選、下注／結算時間切換</td><td class="n z">—</td><td class="n">8</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>CSV 非同步匯出</td><td class="n z">—</td><td class="n">3</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>報表頁面：維度切換、篩選、表格、合計</td><td class="n">14</td><td class="n z">—</td><td class="n z">—</td><td class="n">14</td></tr>
+<tr><td>點一列跳到投注紀錄並帶入條件</td><td class="n">3</td><td class="n z">—</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>權限與選單</td><td class="n">1</td><td class="n">1</td><td class="n z">—</td><td class="n">2</td></tr>
+<tr><td>功能與回歸測試（10 條用例）</td><td class="n z">—</td><td class="n z">—</td><td class="n">12</td><td class="n">12</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（小時）</td><td class="n">18</td><td class="n">36</td><td class="n">12</td><td class="n">66</td></tr></tfoot>
+  </table></div>
+</article>
+<article class="req">
+  <div class="req-head"><span class="id">REQ-0023</span><h3>存取款報表</h3><span class="rel">R4 11/27</span></div>
+  <div class="req-meta"><span>功能點 <b>8</b></span><span>工時 <b>54 小時</b>（約 6.8 人天）</span><span>不做：不串接 PSP</span></div>
+  <div class="frame"><table class="imp"><thead><tr><th>指標</th><th>現況</th><th>完成後</th><th>提升幅度</th><th>依據</th></tr></thead><tbody>
+<tr><td>同時看存款與提款統計的效率（要開的頁面）</td><td>2 頁</td><td>1 頁</td><td class="chg">+50%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>每天可看到成功率的支付渠道</td><td>0%</td><td>100%</td><td class="chg">+100%</td><td><span class="tag">依現況計算</span></td></tr>
+  </tbody></table></div>
+  <div class="frame"><table class="fp">
+    <thead><tr><th>功能點</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">小計</th></tr></thead>
+    <tbody>
+<tr><td>依日期、支付渠道彙總筆數、金額、人數、成功率</td><td class="n z">—</td><td class="n">12</td><td class="n z">—</td><td class="n">12</td></tr>
+<tr><td>平均處理時間計算</td><td class="n z">—</td><td class="n">4</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>查詢 API</td><td class="n z">—</td><td class="n">6</td><td class="n z">—</td><td class="n">6</td></tr>
+<tr><td>CSV 非同步匯出</td><td class="n z">—</td><td class="n">3</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>報表頁面：維度切換、篩選、表格、合計</td><td class="n">12</td><td class="n z">—</td><td class="n z">—</td><td class="n">12</td></tr>
+<tr><td>點一列跳到存取款紀錄並帶入條件</td><td class="n">3</td><td class="n z">—</td><td class="n z">—</td><td class="n">3</td></tr>
+<tr><td>權限與選單</td><td class="n">1</td><td class="n">1</td><td class="n z">—</td><td class="n">2</td></tr>
+<tr><td>功能與回歸測試（10 條用例）</td><td class="n z">—</td><td class="n z">—</td><td class="n">12</td><td class="n">12</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（小時）</td><td class="n">16</td><td class="n">26</td><td class="n">12</td><td class="n">54</td></tr></tfoot>
+  </table></div>
+</article>
+
+</section>
+<section>
+  <h2>本階段開工前要決定</h2>
+  <div class="decide"><div><b>投注紀錄、存取款紀錄做前台還是後台</b><p>11/13 前</p></div><div><b>有效投注的定義</b><p>11/20 前</p></div><div><b>渠道用 Bank 還是 PSP、哪些狀態算成功</b><p>11/20 前</p></div></div>
+</section>
+</div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>OKADA 本期需求規劃</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">OKADA 後台 · 本期需求規劃 · 11/02 開工 · 每週五發版</div>
+  <h1>本期規劃：3 個階段、6 週完成</h1>
+  <nav class="tabs" aria-label="規劃頁面"><a href="./" aria-current="page">總覽</a><a href="impact.html">平台提升</a><a href="phase1.html">第 1 階段</a><a href="phase2.html">第 2 階段</a><a href="phase3.html">第 3 階段</a></nav>
+</header>
+<ul class="kv">
+  <li><span>需求</span><b>8 項</b></li>
+  <li><span>期間</span><b>11/02–12/11</b></li>
+  <li><span>發版</span><b>每週五，共 6 次</b></li>
+  <li><span>總工時</span><b>467 小時</b></li>
+  <li><span>建議人力</span><b>前端 2、後端 2、測試 2</b></li>
+</ul>
+<section>
+  <h2>三個階段</h2>
+  <div class="cards">
+<a class="card" href="phase1.html">
+  <span class="ph">第 1 階段</span>
+  <h3>建立口徑與數據基礎</h3>
+  <p>統一營運指標口徑，建立前台轉換追蹤，並取得進遊戲的效能基準。</p>
+  <dl><dt>期間</dt><dd>11/02–11/13（2 週）</dd><dt>完成</dt><dd>11/13</dd><dt>需求</dt><dd>進入遊戲測速、運營報表、GA 事件追蹤</dd><dt>工時</dt><dd>164 小時（前端 46／後端 54／測試 64）</dd></dl>
+</a>
+<a class="card" href="phase2.html">
+  <span class="ph">第 2 階段</span>
+  <h3>查詢與分析</h3>
+  <p>客服能跨供應商查注單與資金往來，營運與財務能按維度分析投注和現金流。</p>
+  <dl><dt>期間</dt><dd>11/09–11/27（3 週）</dd><dt>完成</dt><dd>11/27</dd><dt>需求</dt><dd>投注紀錄、存取款紀錄、投注報表、存取款報表</dd><dt>工時</dt><dd>246 小時（前端 74／後端 126／測試 46）</dd></dl>
+</a>
+<a class="card" href="phase3.html">
+  <span class="ph">第 3 階段</span>
+  <h3>儀表盤與收尾</h3>
+  <p>打開後台就掌握當日營運與待辦，並修完缺陷、完成整體回歸。</p>
+  <dl><dt>期間</dt><dd>11/23–12/11（3 週）</dd><dt>完成</dt><dd>12/11</dd><dt>需求</dt><dd>後台儀表盤＋緩衝</dd><dt>工時</dt><dd>57 小時（前端 28／後端 19／測試 10）</dd></dl>
+</a>
+  </div>
+</section>
+<section id="timeline">
+  <h2>時間軸</h2>
+  <div class="legend">
+    <span><i class="sw f"></i>定稿</span>
+    <span><i class="sw d"></i>開發／測試／驗收</span>
+    <span><i class="sw b"></i>緩衝</span>
+    <span><i class="sw r"></i>週五發版</span>
+  </div>
+  <div class="frame">
+    <div class="gantt" id="gantt" role="table" aria-label="本期時間軸，6 週、每週五發版"></div>
+  </div>
+</section>
+<section>
+  <h2>每週工時與人力</h2>
+  <p class="assume">每人每週以 32 小時有效工時計算（40 小時的 80%）；橘色＝該週需要 2 人以上。W6 為緩衝週，不排新工作。</p>
+  <div class="frame"><table class="load">
+    <thead><tr><th>開發週</th><th>需求</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">合計</th></tr></thead>
+    <tbody>
+<tr><td class="id">W1 11/02–11/06</td><td>進入遊戲測速</td><td class="n">—</td><td class="n">4<small> · 1 人</small></td><td class="n hot">38<small> · 2 人</small></td><td class="n">42</td></tr>
+<tr><td class="id">W2 11/09–11/13</td><td>運營報表、GA 事件追蹤</td><td class="n hot">46<small> · 2 人</small></td><td class="n hot">50<small> · 2 人</small></td><td class="n">26<small> · 1 人</small></td><td class="n">122</td></tr>
+<tr><td class="id">W3 11/16–11/20</td><td>投注紀錄、存取款紀錄</td><td class="n hot">40<small> · 2 人</small></td><td class="n hot">64<small> · 2 人</small></td><td class="n">22<small> · 1 人</small></td><td class="n">126</td></tr>
+<tr><td class="id">W4 11/23–11/27</td><td>投注報表、存取款報表</td><td class="n hot">34<small> · 2 人</small></td><td class="n hot">62<small> · 2 人</small></td><td class="n">24<small> · 1 人</small></td><td class="n">120</td></tr>
+<tr><td class="id">W5 11/30–12/04</td><td>後台儀表盤</td><td class="n">28<small> · 1 人</small></td><td class="n">19<small> · 1 人</small></td><td class="n">10<small> · 1 人</small></td><td class="n">57</td></tr>
+    </tbody>
+  </table></div>
+</section>
+</div>
+<script>
+(function(){
+  // 30 working days: W1 Mon 11/02 = day 1 ... W6 Fri 12/11 = day 30; grid column = day + 1
+  var weeks=[["W1","11/02–11/06"],["W2","11/09–11/13"],["W3","11/16–11/20"],["W4","11/23–11/27"],["W5","11/30–12/04"],["W6","12/07–12/11"]];
+  var rows=[
+    {id:"REQ-0028",name:"進入遊戲測速",bars:[["f",1,2,"定稿"],["d",3,5,"測試執行"]]},
+    {id:"REQ-0021",name:"運營報表",bars:[["f",1,5,"定稿"],["d",6,10,"開發與測試"]]},
+    {id:"REQ-0027",name:"GA 事件追蹤",bars:[["f",1,5,"定稿"],["d",6,10,"規格與埋點"]]},
+    {id:"REQ-0025",name:"投注紀錄",bars:[["f",6,10,"定稿"],["d",11,15,"開發與測試"]]},
+    {id:"REQ-0026",name:"存取款紀錄",bars:[["f",6,10,"定稿"],["d",11,15,"開發與測試"]]},
+    {id:"REQ-0022",name:"投注報表",bars:[["f",11,15,"定稿"],["d",16,20,"開發與測試"]]},
+    {id:"REQ-0023",name:"存取款報表",bars:[["f",11,15,"定稿"],["d",16,20,"開發與測試"]]},
+    {id:"REQ-0024",name:"後台儀表盤",bars:[["f",16,20,"定稿"],["d",21,25,"開發與測試"]]},
+    {id:"",name:"緩衝：修復與回歸",bars:[["b",26,30,"缺陷修復、整體回歸"]]}
+  ];
+  var releases=[[5,"R1","11/06"],[10,"R2","11/13"],[15,"R3","11/20"],[20,"R4","11/27"],[25,"R5","12/04"],[30,"R6","12/11"]];
+  var g=document.getElementById("gantt"), r=1;
+  function el(cls,col,row,html){var d=document.createElement("div");d.className=cls;d.style.gridColumn=col;d.style.gridRow=row;if(html!=null)d.innerHTML=html;g.appendChild(d);return d;}
+  el("g-corner","1",r,"11/01 啟動");
+  weeks.forEach(function(w,i){el("g-week",(2+i*5)+" / span 5",r,"<b>"+w[0]+"</b>"+w[1]);});
+  function cells(row){for(var c=1;c<=30;c++){el("g-cell"+(c%5===1?" wk":""),String(c+1),row);}}
+  rows.forEach(function(x){
+    r++;
+    el("g-label","1",r,(x.id?"<small>"+x.id+"</small>":"")+x.name);
+    cells(r);
+    x.bars.forEach(function(b){el("bar "+b[0],(b[1]+1)+" / "+(b[2]+2),r,b[3]).title=x.name+"："+b[3];});
+  });
+  r++;
+  el("g-label","1",r,"週五發版");
+  cells(r);
+  releases.forEach(function(x){el("rel-mark",String(x[0]+1),r,"<i></i>"+x[1]);});
+  g.style.gridTemplateRows="auto repeat("+(r-1)+",40px)";
+})();
+</script>
+</body>
+</html>

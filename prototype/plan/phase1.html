@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>第 1 階段 · OKADA 本期需求規劃</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">OKADA 後台 · 本期需求規劃 · 11/02 開工 · 每週五發版</div>
+  <h1>第 1 階段：建立口徑與數據基礎</h1>
+  <nav class="tabs" aria-label="規劃頁面"><a href="./">總覽</a><a href="impact.html">平台提升</a><a href="phase1.html" aria-current="page">第 1 階段</a><a href="phase2.html">第 2 階段</a><a href="phase3.html">第 3 階段</a></nav>
+</header>
+<ul class="kv">
+  <li><span>期間</span><b>11/02–11/13</b></li>
+  <li><span>需時</span><b>2 週</b></li>
+  <li><span>預計完成</span><b>11/13</b></li>
+  <li><span>發版</span><b>R1 11/06、R2 11/13</b></li>
+  <li><span>總工時</span><b>164 小時</b></li>
+</ul>
+<section>
+  <h2>主要目標</h2>
+  <ol class="goals"><li>統一 GGR、NGR、活躍玩家等營運指標的計算口徑，第 2、3 階段的報表與儀表盤都沿用</li><li>看得到前台「註冊 → 首存 → 進遊戲」每一步的轉換與流失</li><li>取得 14 家供應商進遊戲時間與 API 承載上限的基準數據</li></ol>
+</section>
+<section>
+  <h2>需求範圍與工時</h2>
+  <p class="assume">工時為真實開發工程師的預估（小時），未含需求溝通與發版作業；1 人天＝8 小時。後台與後端沒有原始碼可查，跨供應商注單（REQ-0022、0025）與狀態紀錄（REQ-0026）取決於現有資料結構，誤差可能到 ±30%，開發前需後端確認。</p>
+<article class="req">
+  <div class="req-head"><span class="id">REQ-0028</span><h3>進入遊戲測速</h3><span class="rel">R1 11/06</span></div>
+  <div class="req-meta"><span>功能點 <b>6</b></span><span>工時 <b>42 小時</b>（約 5.3 人天）</span><span>不做：不下注、不改前台程式</span></div>
+  <div class="frame"><table class="imp"><thead><tr><th>指標</th><th>現況</th><th>完成後</th><th>提升幅度</th><th>依據</th></tr></thead><tbody>
+<tr><td>有效能基準數據的供應商</td><td>0／14 家</td><td>14／14 家</td><td class="chg">+100%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>最慢 3 家供應商進遊戲速度（依報告另開優化需求）</td><td>R1 報告量測</td><td>P95 縮短 30%</td><td class="chg">+30%</td><td><span class="tag new">目標值</span></td></tr>
+  </tbody></table></div>
+  <div class="frame"><table class="fp">
+    <thead><tr><th>功能點</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">小計</th></tr></thead>
+    <tbody>
+<tr><td>量測腳本：點擊遊戲到畫面可操作的時間（Playwright）</td><td class="n z">—</td><td class="n z">—</td><td class="n">8</td><td class="n">8</td></tr>
+<tr><td>壓測腳本：login API 逐步加壓與併發（k6）</td><td class="n z">—</td><td class="n z">—</td><td class="n">8</td><td class="n">8</td></tr>
+<tr><td>14 家供應商 × 桌機／手機 4G 量測執行</td><td class="n z">—</td><td class="n z">—</td><td class="n">10</td><td class="n">10</td></tr>
+<tr><td>加壓與 10／50 人併發執行（後端陪同監看）</td><td class="n z">—</td><td class="n">4</td><td class="n">4</td><td class="n">8</td></tr>
+<tr><td>未登入、維護中、逾時情境驗證</td><td class="n z">—</td><td class="n z">—</td><td class="n">4</td><td class="n">4</td></tr>
+<tr><td>測速報告：每家 P50／P95／錯誤率與最慢請求</td><td class="n z">—</td><td class="n z">—</td><td class="n">4</td><td class="n">4</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（小時）</td><td class="n z">—</td><td class="n">4</td><td class="n">38</td><td class="n">42</td></tr></tfoot>
+  </table></div>
+</article>
+<article class="req">
+  <div class="req-head"><span class="id">REQ-0021</span><h3>運營報表</h3><span class="rel">R2 11/13</span></div>
+  <div class="req-meta"><span>功能點 <b>8</b></span><span>工時 <b>84 小時</b>（約 10.5 人天）</span><span>不做：不改 Revenue Report、不做即時推播</span></div>
+  <div class="frame"><table class="imp"><thead><tr><th>指標</th><th>現況</th><th>完成後</th><th>提升幅度</th><th>依據</th></tr></thead><tbody>
+<tr><td>看一天營運數據的效率（要開的報表）</td><td>4 份</td><td>1 份</td><td class="chg">+75%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>營運數據自動計算的欄位</td><td>0／20 個</td><td>20／20 個</td><td class="chg">+100%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>產出每日營運報告的效率</td><td>約 30 分鐘</td><td>約 5 分鐘</td><td class="chg">+83%</td><td><span class="tag new">目標值</span></td></tr>
+  </tbody></table></div>
+  <div class="frame"><table class="fp">
+    <thead><tr><th>功能點</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">小計</th></tr></thead>
+    <tbody>
+<tr><td>每日彙總排程：註冊、首存、活躍、存提款、投注、派彩、4 類優惠成本</td><td class="n z">—</td><td class="n">24</td><td class="n z">—</td><td class="n">24</td></tr>
+<tr><td>週／月彙總與不重複人數計算</td><td class="n z">—</td><td class="n">8</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>查詢 API：日期區間、維度、排序、分頁、合計列</td><td class="n z">—</td><td class="n">8</td><td class="n z">—</td><td class="n">8</td></tr>
+<tr><td>CSV 非同步匯出（接 Download Center）</td><td class="n z">—</td><td class="n">4</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>報表頁面：篩選、表格、合計列、空狀態</td><td class="n">16</td><td class="n z">—</td><td class="n z">—</td><td class="n">16</td></tr>
+<tr><td>權限 view:operations-report 與選單</td><td class="n">2</td><td class="n">2</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>口徑對帳：與 Deposit／Game Report 核對數字</td><td class="n z">—</td><td class="n z">—</td><td class="n">8</td><td class="n">8</td></tr>
+<tr><td>功能與回歸測試（14 條用例）</td><td class="n z">—</td><td class="n z">—</td><td class="n">12</td><td class="n">12</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（小時）</td><td class="n">18</td><td class="n">46</td><td class="n">20</td><td class="n">84</td></tr></tfoot>
+  </table></div>
+</article>
+<article class="req">
+  <div class="req-head"><span class="id">REQ-0027</span><h3>GA 事件追蹤</h3><span class="rel">R2 11/13</span></div>
+  <div class="req-meta"><span>功能點 <b>6</b></span><span>工時 <b>38 小時</b>（約 4.8 人天）</span><span>不做：不改正式環境既有 GA 設定以外的追蹤</span></div>
+  <div class="frame"><table class="imp"><thead><tr><th>指標</th><th>現況</th><th>完成後</th><th>提升幅度</th><th>依據</th></tr></thead><tbody>
+<tr><td>前台轉換漏斗有追蹤的關鍵步驟</td><td>0／7</td><td>7／7</td><td class="chg">+100%</td><td><span class="tag">依現況計算</span></td></tr>
+<tr><td>可衡量首存來源的活動與渠道</td><td>0%</td><td>100%</td><td class="chg">+100%</td><td><span class="tag">依現況計算</span></td></tr>
+  </tbody></table></div>
+  <div class="frame"><table class="fp">
+    <thead><tr><th>功能點</th><th class="n">前端</th><th class="n">後端</th><th class="n">測試</th><th class="n">小計</th></tr></thead>
+    <tbody>
+<tr><td>追蹤規格：7 個事件的名稱、觸發時機、參數</td><td class="n">6</td><td class="n z">—</td><td class="n z">—</td><td class="n">6</td></tr>
+<tr><td>GA4 後台：自訂事件、轉換與漏斗設定</td><td class="n">4</td><td class="n z">—</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>前台埋點 7 處：註冊、登入、開始存款、存款成功、提款、進入遊戲、報名活動</td><td class="n">14</td><td class="n z">—</td><td class="n z">—</td><td class="n">14</td></tr>
+<tr><td>後端提供是否首存、金額等事件參數</td><td class="n z">—</td><td class="n">4</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>cookie 同意與個資遮蔽（依待確認結果）</td><td class="n">4</td><td class="n z">—</td><td class="n z">—</td><td class="n">4</td></tr>
+<tr><td>DebugView 逐一驗證事件與參數</td><td class="n z">—</td><td class="n z">—</td><td class="n">6</td><td class="n">6</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（小時）</td><td class="n">28</td><td class="n">4</td><td class="n">6</td><td class="n">38</td></tr></tfoot>
+  </table></div>
+</article>
+
+</section>
+<section>
+  <h2>本階段開工前要決定</h2>
+  <div class="decide"><div><b>REQ-0028 加壓測試的維運同意與時段</b><p>11/02 前</p></div><div><b>REQ-0021 剩 3 條待確認</b><p>11/06 前</p></div><div><b>REQ-0027 事件清單與個資規範</b><p>11/06 前</p></div></div>
+</section>
+</div>
+</body>
+</html>
